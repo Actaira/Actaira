@@ -1,0 +1,17 @@
+{
+  "date": "2026-09-29T13:36:22Z",
+  "commit": "fd6845f468dd4a4111887a643d1bcf95ee67470b",
+  "environment": {
+    "os": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "go": "go version go1.27.1 linux/amd64",
+    "python": "3.12.3"
+  },
+  "command": "go build -trimpath -o /tmp/tmpfkh9i2gk/actaira ./cmd/actaira && 200 x actaira version (after 20 warm-up runs), timed from Python",
+  "runs": 200,
+  "median_ms": 1.017,
+  "p95_ms": 1.219,
+  "min_ms": 0.874,
+  "max_ms": 2.893,
+  "binary_bytes": 2365913,
+  "note": "the time includes starting the process from Python"
+}

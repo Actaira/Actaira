@@ -1,0 +1,18 @@
+# E1 paso 1.1: verificación de las herramientas y estándares externos (verificador-apis, 2026-09-29)
+Resultado: 10 afirmaciones, 0 contradichas, 1 sin confirmar por el verificador (el sha256 de la licencia), que se confirmó al descargar el texto.
+
+golangci-lint v2.14.0 (release del 2026-09-24T11:27:54Z)
+1. Configuración v2: `version: "2"` es el único valor; `linters.default: standard` por defecto; el conjunto estándar es errcheck, govet, ineffassign, staticcheck y unused. https://golangci-lint.run/docs/configuration/file/ y .golangci.reference.yml del tag v2.14.0.
+2. nolintlint: `linters.settings.nolintlint` con `require-explanation`, `require-specific` y `allow-unused` (los tres false por defecto en el código; el JSON schema oficial dice lo contrario de allow-unused, por eso se escribe `allow-unused: false`). No está en el conjunto estándar: se activa en `linters.enable`.
+3. Un binario compilado con un Go anterior al del proyecto falla con "the Go language version (%s) used to build golangci-lint is lower than the targeted Go version (%s)", comparando mayor.menor. v2.14.0 se compiló con Go 1.27.0 (release.yml del tag; `golangci-lint version` dice "built with go1.27.0"), así que acepta `go 1.27.1`. Fallaría con una directiva `toolchain go1.28`.
+4. Instalación fijada: tar.gz de la release verificado con el sha256 del `golangci-lint-2.14.0-checksums.txt` oficial; miembro `golangci-lint-2.14.0-linux-amd64/golangci-lint` (.goreleaser.yml, wrap_in_directory). El Makefile fija los cuatro hashes.
+5. `golangci-lint run ./...`; código 1 si hay problemas (`--issues-exit-code`, por defecto 1). Caché en el directorio de caché del usuario, cambiable con GOLANGCI_LINT_CACHE.
+
+RFC 8785 (https://www.rfc-editor.org/rfc/rfc8785)
+6. Claves ordenadas por unidades de código UTF-16 (sección 3.2.3).
+7. Números con el algoritmo de ECMA-262 (sección 3.2.2.3); los enteros hasta 2^53 salen con sus dígitos.
+8. Sin normalización Unicode: las cadenas se conservan tal cual (sección 3.1).
+9. Escapes (sección 3.2.2.2): U+0000 a U+001F como \uhhhh en minúsculas, salvo \b \t \n \f \r; " y \ con barra; el resto tal cual, también U+2028/U+2029. encoding/json de Go (go1.27.1, implementación v2): escapa <, >, & y U+2028/U+2029, y U+2028/U+2029 siguen escapados con SetEscapeHTML(false); cambia el UTF-8 inválido por U+FFFD; ordena las claves de los mapas por bytes. Go 1.27 trae encoding/json/jsontext.Value.Canonicalize, que implementa JCS (https://pkg.go.dev/encoding/json/jsontext#Value.Canonicalize), con el aviso de que los enteros de más de 2^53 pierden precisión.
+
+Licencia
+10. Texto oficial en https://www.apache.org/licenses/LICENSE-2.0.txt; se incluye entero en LICENSE; el aviso del apéndice, rellenado, va en las cabeceras de los ficheros. sha256 del texto descargado el 2026-09-29: cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30 (lo fija internal/repotest::TestLicenseIsTheOfficialApache2).

@@ -1,0 +1,49 @@
+# E1 paso 1.1: ejecución real de la CLI
+fecha: 2026-09-29T13:36:35Z
+commit: fd6845f468dd4a4111887a643d1bcf95ee67470b
+entorno: Linux 6.6.87.2-microsoft-standard-WSL2, go version go1.27.1 linux/amd64
+
+comando: go build -o actaira ./cmd/actaira (en un directorio temporal)
+exit: 0
+file: ELF 64-bit LSB executable, x86-64
+
+comando: ./actaira version
+actaira dev
+exit: 0
+
+comando: ./actaira help
+usage: actaira <command>
+
+commands:
+  version  print the version of actaira
+  help     print this help
+exit: 0
+
+comando: ./actaira 
+usage: actaira <command>
+
+commands:
+  version  print the version of actaira
+  help     print this help
+exit: 2
+
+comando: ./actaira nada
+actaira: unknown command "nada"
+usage: actaira <command>
+
+commands:
+  version  print the version of actaira
+  help     print this help
+exit: 2
+
+comando: ./actaira version extra
+actaira: "version" takes no arguments
+exit: 2
+
+comando: ./actaira --help
+usage: actaira <command>
+
+commands:
+  version  print the version of actaira
+  help     print this help
+exit: 0

@@ -43,7 +43,7 @@ Por el runner y el proxy de las fases 3 y 4, por un solo lenguaje en todas las p
 
 ## Latencia
 
-La primera medición, en el paso 1.1, es de `actaira version`: 200 ejecuciones en WSL2 con go1.27.1 dan una mediana de algo menos de 1 ms, con un binario de unos 2,4 MB (`evals/results/2026-09-29-arranque-cli.json`, con el commit y el comando). Se vuelve a medir con los extractores (paso 1.2) y con el runner (fase 3).
+La primera medición, en el paso 1.1, es de `actaira version`: 200 ejecuciones en WSL2 con go1.27.1, contando el arranque del proceso desde Python, dan una mediana de 1,02 ms y un p95 de 1,22 ms, con un binario de 2,4 MB (`evals/results/2026-09-29-arranque-cli.json`, con el commit y el comando). Se vuelve a medir con los extractores (paso 1.2) y con el runner (fase 3).
 
 ## Errores
 
