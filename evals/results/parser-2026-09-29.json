@@ -62,5 +62,26 @@
         "apps/docs/app/[lang]/unauthenticated-ai-gateway/page.tsx"
       ]
     }
-  ]
+  ],
+  "ci": {
+    "commit": "154722afafa50cf71aed03000543438c8aa3f3b0",
+    "note": "CI of the commit that adds these results: the same code as the measured commit. check is the required job, on Linux (ubuntu-latest, amd64); check-macos compiles with cgo and runs the Go tests on macOS 26 arm64; check-ubuntu-26 runs make check on Ubuntu 26.04",
+    "runs": [
+      {
+        "conclusion": "success",
+        "job": "check",
+        "url": "https://github.com/Actaira/Actaira/actions/runs/36594544249/job/109495950421"
+      },
+      {
+        "conclusion": "success",
+        "job": "check-macos",
+        "url": "https://github.com/Actaira/Actaira/actions/runs/36594544309/job/109495959056"
+      },
+      {
+        "conclusion": "success",
+        "job": "check-ubuntu-26",
+        "url": "https://github.com/Actaira/Actaira/actions/runs/36594544309/job/109495959237"
+      }
+    ]
+  }
 }
