@@ -1,0 +1,93 @@
+# E1 paso 0, PR del harness: correo de contacto del proyecto y F-0019
+fecha: 2026-09-29T13:07:54Z
+
+## Tests nuevos en rojo antes de construir
+== en rojo antes de construir (2026-09-29T13:05:24Z, rama e1/paso-0-harness)
+check-personal: correo de un proveedor personal en web/.well-known/security.txt:1): esperado [0], obtenido [1]
+--- FAIL: test_project_contact_email_passes_outside_code
+--- FAIL: test_contact_email_fixed_in_code_fails
+    tres consultas: dos sin checks y una con: esperado [3], obtenido [0]
+--- FAIL: test_waits_for_the_checks_of_a_new_pr
+    sin checks no se fusiona: esperado [1], obtenido [0]
+--- FAIL: test_gives_up_when_no_check_appears
+
+## Mutaciones
+comando: python3 evals/sessions/2026-09-29-e1-paso-0-harness-mutate.py
+copia de e3d65a611c8481e1271faf072bdc37051178d8bb en un directorio temporal; el repo no se toca
+
+### contacto: ningún correo permitido
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_project_contact_email_passes_outside_code
+con la mutacion (debe ser rojo): exit 1
+    correo de contacto en la web y en la documentación (check-personal: correo de un proveedor personal en config/contact.env:2
+check-personal: correo de un proveedor personal en docs/contacto.md:1
+check-personal: correo de un proveedor personal en web/.well-known/security.txt:1): esperado [0], obtenido [1]
+--- FAIL: test_project_contact_email_passes_outside_code
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_project_contact_email_passes_outside_code
+resultado: OK
+
+### contacto: el correo en mayúsculas no se reconoce
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_project_contact_email_passes_outside_code
+con la mutacion (debe ser rojo): exit 1
+    correo de contacto en la web y en la documentación (check-personal: correo de un proveedor personal en docs/contacto.md:1): esperado [0], obtenido [1]
+--- FAIL: test_project_contact_email_passes_outside_code
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_project_contact_email_passes_outside_code
+resultado: OK
+
+### contacto: con correo de contacto, cualquier gmail pasa
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_other_personal_email_fails_next_to_the_contact_email
+con la mutacion (debe ser rojo): exit 1
+    otro gmail junto al de contacto: esperado [1], obtenido [0]
+--- FAIL: test_other_personal_email_fails_next_to_the_contact_email
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_other_personal_email_fails_next_to_the_contact_email
+resultado: OK
+
+### contacto: también fijo en el código
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_contact_email_fixed_in_code_fails
+con la mutacion (debe ser rojo): exit 1
+    correo de contacto fijo en el código: esperado [1], obtenido [0]
+--- FAIL: test_contact_email_fixed_in_code_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_contact_email_fixed_in_code_fails
+resultado: OK
+
+### contacto: los ficheros de código no se distinguen
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_contact_email_fixed_in_code_fails
+con la mutacion (debe ser rojo): exit 1
+    correo de contacto fijo en el código: esperado [1], obtenido [0]
+--- FAIL: test_contact_email_fixed_in_code_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_contact_email_fixed_in_code_fails
+resultado: OK
+
+### contacto: un correo fijo si falta config/contact.env
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_contact_email_without_its_config_fails
+con la mutacion (debe ser rojo): exit 1
+    sin config/contact.env no hay correo permitido: esperado [1], obtenido [0]
+--- FAIL: test_contact_email_without_its_config_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_contact_email_without_its_config_fails
+resultado: OK
+
+### merge-pr: sin esperar a que haya checks (F-0019)
+fichero: scripts/harness/merge-pr.sh; test: scripts/harness/tests/merge-pr_test.sh::test_waits_for_the_checks_of_a_new_pr
+con la mutacion (debe ser rojo): exit 1
+    tres consultas: dos sin checks y una con: esperado [3], obtenido [0]
+--- FAIL: test_waits_for_the_checks_of_a_new_pr
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_waits_for_the_checks_of_a_new_pr
+resultado: OK
+
+### merge-pr: espera sin límite (F-0019)
+fichero: scripts/harness/merge-pr.sh; test: scripts/harness/tests/merge-pr_test.sh::test_gives_up_when_no_check_appears
+con la mutacion (debe ser rojo): exit 1
+    sin checks no se fusiona: esperado [1], obtenido [0]
+--- FAIL: test_gives_up_when_no_check_appears
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_gives_up_when_no_check_appears
+resultado: OK
+
+repo en uso sin cambios
+TODAS OK
