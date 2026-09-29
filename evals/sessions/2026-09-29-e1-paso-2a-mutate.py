@@ -24,6 +24,8 @@ TOOLS = [GITLEAKS, "golangci-lint-2.14.0"]
 TS = "pkg/extract/treesitter/treesitter.go"
 TS_T = "go:./pkg/extract/treesitter"
 CI_T = "scripts/harness/tests/ci_test.sh"
+MERGE = "scripts/harness/merge-pr.sh"
+MERGE_T = "scripts/harness/tests/merge-pr_test.sh"
 
 # (title, file, fragment, replacement, test file, test name)
 MUTATIONS = [
@@ -48,6 +50,22 @@ MUTATIONS = [
     ("ci: platforms.yml con permisos de escritura", ".github/workflows/platforms.yml",
      "permissions:\n  contents: read\n\njobs:", "permissions:\n  contents: write\n\njobs:",
      CI_T, "test_every_workflow_but_release_is_read_only"),
+    # Review round 1.
+    ("treesitter: Parse no cierra el parser", TS,
+     "\tparser := sitter.NewParser()\n\tdefer parser.Close()\n", "\tparser := sitter.NewParser()\n",
+     TS_T, "TestParsingTwentyThousandTinyFilesDoesNotLeakParsers"),
+    ("treesitter: el plazo no para el parseo", TS,
+     "ProgressCallback: func(sitter.ParseState) bool { return ctx.Err() != nil }", "ProgressCallback: func(sitter.ParseState) bool { return false }",
+     TS_T, "TestADeadlineStopsAHostileParse"),
+    ("treesitter: un contexto cancelado parsea igual", TS,
+     '\tif err := ctx.Err(); err != nil {\n\t\treturn nil, fmt.Errorf("treesitter: parse not started: %w", err)\n\t}\n', "",
+     TS_T, "TestACanceledContextParsesNothing"),
+    ("treesitter: el error de lenguaje no dice cuál", TS,
+     'fmt.Errorf("treesitter: unknown language %v", l)', 'fmt.Errorf("treesitter: %v", l)',
+     TS_T, "TestUnknownLanguageIsAnError"),
+    ("merge-pr: espera a todos los checks (F-0023)", MERGE,
+     '  gh pr checks "$pr" --required --watch --fail-fast\n', '  gh pr checks "$pr" --watch --fail-fast\n',
+     MERGE_T, "test_a_failing_check_that_is_not_required_does_not_block_the_merge"),
 ]
 
 

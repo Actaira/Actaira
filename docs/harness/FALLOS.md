@@ -279,3 +279,17 @@ Cada fallo encontrado (test en rojo que no era esperado, bug, hallazgo crítico 
 - corrección: `HARNESS_TOOLS` reúne las herramientas fijadas que usan los tests del harness, y `fallos`, `test-harness` y `tools` dependen de esa lista. Rama `e1/paso-1-estructura`.
 - guardia: test:scripts/harness/tests/makefile_test.sh::test_fallos_and_test_harness_fetch_every_harness_tool
 - lección: una herramienta nueva que usa un test del harness entra en `HARNESS_TOOLS`, no en un solo objetivo. Lo que solo pasa en local por lo que ya hay en `.tools/` lo ve la CI, que parte de un clon limpio. Por eso el PR no se fusiona hasta que `check` está en verde.
+
+## F-0023 merge-pr.sh esperaba a todos los checks, también a los que no son obligatorios
+- fecha: 2026-09-29
+- épica y paso: E1 / 1.2a, ronda adversarial 1
+- síntoma: `merge-pr.sh` fusionaba tras `gh pr checks <pr> --watch --fail-fast`, que espera a todos los checks del PR y sale con error al primero que falla. Con los jobs de `platforms.yml` (`check-macos`, `check-ubuntu-26`), que son informativos, un fallo en macOS habría bloqueado todos los PR, y la regla de la épica de seguir solo con Linux habría sido imposible de aplicar. Además, esos jobs no tenían tiempo máximo: un runner en cola dejaba la espera colgada hasta 6 horas.
+- causa raíz: `merge-pr.sh` se escribió cuando `ci.yml` tenía un único job, que era el obligatorio. Esperar a todos o solo al obligatorio daba igual, y nada lo distinguía.
+- corrección:
+  - `merge-pr.sh` espera solo a los checks obligatorios (`gh pr checks --required --watch --fail-fast`, https://cli.github.com/manual/gh_pr_checks);
+  - la espera de F-0019 también mira solo los obligatorios;
+  - los jobs de `platforms.yml` tienen `timeout-minutes: 30`.
+  - Rama `e1/paso-2a-parser`.
+- guardia: test:scripts/harness/tests/merge-pr_test.sh::test_a_failing_check_that_is_not_required_does_not_block_the_merge
+- guardia: test:scripts/harness/tests/merge-pr_test.sh::test_waits_for_the_checks_of_a_new_pr
+- lección: un check que no es obligatorio informa, no bloquea. Si algo tiene que bloquear, se hace obligatorio en la protección de `main`.
