@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# git commit-msg hook: rejects a message with Claude co-authorship or
+# attribution (Marcos, 2026-09-28). Installed by scripts/harness/install.sh
+# and `make install-hooks`. Self-contained on purpose: the hooks directory is
+# shared by every worktree and branch, including those without scripts/harness/.
+# Same pattern as scripts/harness/check-attribution.sh (a test keeps them equal).
+pattern='^[[:space:]#>*-]*co-authored-by:[[:space:]]*(claude([[:space:]]+(code|opus|sonnet|haiku|fable|[0-9.]+)[^<]*)?[[:space:]]*<|.*anthropic)|^[[:space:]#>*-]*[a-z-]+:.*noreply@anthropic\.com|generated with \[claude code\]'
+if grep -qiE -- "$pattern" "$1"; then
+  echo "commit-msg: el mensaje lleva atribución de Claude (coautoría o 'Generated with'); quítala y vuelve a hacer el commit" >&2
+  exit 1
+fi
+exit 0

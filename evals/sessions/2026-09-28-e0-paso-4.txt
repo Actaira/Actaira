@@ -1,0 +1,99 @@
+# E0 paso 0.4: CI y protección de main, ejecución real
+fecha: 2026-09-28
+rama: e0/paso-4-ci-proteccion (PR #4)
+entorno local: WSL2 6.6.87.2-microsoft-standard-WSL2, gh version 2.45.0 (2025-07-18 Ubuntu 2.45.0-1ubuntu0.3), git version 2.43.0, jq-1.7
+Las salidas van completas; donde un comando lleva filtro --jq, el filtro está en la línea comando:.
+
+## 1. Tests primero
+Antes de construir (sin ci.yml, sin branch-protection.json, sin check-protection.sh), en 6b0692b~: 13 FAIL de 13 en ci_test.sh y check-protection_test.sh:
+--- FAIL: test_actions_are_pinned_by_commit_sha
+--- FAIL: test_branch_protection_requires_pr_check_and_binds_admins
+--- FAIL: test_checkout_fetches_full_history_without_credentials
+--- FAIL: test_permissions_are_read_only
+--- FAIL: test_workflow_has_a_single_check_job_running_make_check
+--- FAIL: test_workflow_runs_on_every_pull_request_and_push_to_main
+--- FAIL: test_admins_not_bound_fails
+--- FAIL: test_branch_not_up_to_date_fails
+--- FAIL: test_force_pushes_or_deletions_allowed_fail
+--- FAIL: test_matching_protection_passes
+--- FAIL: test_missing_required_check_fails
+--- FAIL: test_pull_request_not_required_fails
+--- FAIL: test_unprotected_branch_fails
+Después de construir, en 6b0692b: los 13 en PASS.
+
+Ronda 1 de la pasada adversarial (F-0014 y hallazgos 2 y 6), tests nuevos o cambiados antes de corregir:
+## ci_test
+--- FAIL: test_branch_protection_requires_pr_check_and_binds_admins
+exit: 1
+## makefile_test
+exit: 0
+## check-weakeners_test
+--- FAIL: test_continue_on_error_with_expression_fails
+exit: 1
+## check-protection_test
+--- FAIL: test_admins_not_bound_fails
+--- FAIL: test_branch_not_up_to_date_fails
+--- FAIL: test_check_from_any_app_fails
+--- FAIL: test_force_pushes_or_deletions_allowed_fail
+--- FAIL: test_matching_protection_passes
+--- FAIL: test_missing_required_check_fails
+--- FAIL: test_pull_request_bypass_fails
+--- FAIL: test_pull_request_not_required_fails
+--- FAIL: test_repo_comes_from_the_origin_remote
+--- FAIL: test_unprotected_branch_fails
+exit: 1
+Después de corregir, en f013344: 53 PASS y 0 FAIL en esos cuatro ficheros. Las guardias exactas de F-0014 pasan con los ficheros revisados; su rojo con las variantes del revisor está en 2026-09-28-e0-paso-4-mutaciones.txt.
+
+## 2. CI en el PR #4
+- https://github.com/Actaira/Actaira/actions/runs/36484807145 (6b0692b, primera ejecución): check success, 21:15:01Z a 21:16:00Z (59 s), Go 1.27.1, 173 PASS y 0 FAIL, check: OK.
+- https://github.com/Actaira/Actaira/actions/runs/36485191246 (245bfbd): check success.
+- https://github.com/Actaira/Actaira/actions/runs/36488994142 (f013344, tras la ronda 1): check success, 21:53:04Z a 21:53:56Z (52 s), 180 PASS y 0 FAIL, check: OK.
+- Avisos de las ejecuciones: la caché de setup-go no encuentra /home/runner/go/pkg/mod (el módulo no tiene dependencias), y GitHub anuncia que ubuntu-latest pasa a Ubuntu 26 desde el 19 de octubre de 2026 (al backlog).
+
+Nombre y origen del check (el job no tiene name:, así que publica su id):
+comando: gh api repos/Actaira/Actaira/commits/f0133447ec38b5c5ddb70a733f016284f4470a23/check-runs --jq '.check_runs[] | [.name, .app.slug, (.app.id|tostring), .conclusion] | @tsv'
+check	github-actions	15368	success
+
+## 3. Protección aplicada
+Primera vez a las 21:17:21Z con el JSON sin app_id (GitHub eligió la app 15368, la que había dado el check); tras la ronda 1, otra vez con el JSON que fija app_id 15368:
+comando: gh api -X PUT repos/Actaira/Actaira/branches/main/protection --input docs/estado/branch-protection.json
+fecha: 2026-09-28T21:53:17Z
+{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection","required_status_checks":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_status_checks","strict":true,"contexts":["check"],"contexts_url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_status_checks/contexts","checks":[{"context":"check","app_id":15368}]},"required_pull_request_reviews":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_pull_request_reviews","dismiss_stale_reviews":false,"require_code_owner_reviews":false,"require_last_push_approval":false,"required_approving_review_count":0},"required_signatures":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_signatures","enabled":false},"enforce_admins":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/enforce_admins","enabled":true},"required_linear_history":{"enabled":false},"allow_force_pushes":{"enabled":false},"allow_deletions":{"enabled":false},"block_creations":{"enabled":false},"required_conversation_resolution":{"enabled":false},"lock_branch":{"enabled":false},"allow_fork_syncing":{"enabled":false}}
+exit: 0
+
+## 4. Comprobación con gh api y check-protection.sh
+comando: gh api repos/Actaira/Actaira/branches/main/protection
+fecha: 2026-09-28T21:53:17Z
+{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection","required_status_checks":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_status_checks","strict":true,"contexts":["check"],"contexts_url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_status_checks/contexts","checks":[{"context":"check","app_id":15368}]},"required_pull_request_reviews":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_pull_request_reviews","dismiss_stale_reviews":false,"require_code_owner_reviews":false,"require_last_push_approval":false,"required_approving_review_count":0},"required_signatures":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_signatures","enabled":false},"enforce_admins":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/enforce_admins","enabled":true},"required_linear_history":{"enabled":false},"allow_force_pushes":{"enabled":false},"allow_deletions":{"enabled":false},"block_creations":{"enabled":false},"required_conversation_resolution":{"enabled":false},"lock_branch":{"enabled":false},"allow_fork_syncing":{"enabled":false}}
+exit: 0
+
+comando: scripts/harness/check-protection.sh
+protección de main en Actaira/Actaira: OK {"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":true,"pull_request_bypass":0,"pull_request_reviews":{"approvals":0,"dismiss_stale_reviews":false,"require_code_owner_reviews":false},"required_checks":[{"app_id":15368,"context":"check"}],"restrictions":null,"strict":true}
+exit: 0
+
+## 5. Push directo a main, que el servidor tiene que rechazar (pedido por Marcos)
+Primera ejecución a las 21:17:40Z con la versión anterior del script: rechazado con GH006 y main sin moverse (284b7f4). Segunda, con el script corregido en la ronda 1:
+comando: GH_TOKEN=<token de la cuenta Actaira; no se imprime> bash evals/sessions/2026-09-28-e0-paso-4-real.sh
+fecha: 2026-09-28T21:53:38Z
+== 1. repo e identidad
+repo de origin: Actaira/Actaira
+cuenta de gh: Actaira
+administradora del repo: true
+== 2. protección de main en GitHub
+protección de main en Actaira/Actaira: OK {"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":true,"pull_request_bypass":0,"pull_request_reviews":{"approvals":0,"dismiss_stale_reviews":false,"require_code_owner_reviews":false},"required_checks":[{"app_id":15368,"context":"check"}],"restrictions":null,"strict":true}
+main en GitHub antes: 284b7f473483ad2ee0e7286dce8a268891ad75a5
+== 3. push directo a main desde un clon temporal, sin hooks locales
+git -c core.hooksPath=/dev/null -c credential.https://github.com.helper= -c 'credential.https://github.com.helper=!gh auth git-credential' push origin HEAD:refs/heads/main
+remote: error: GH006: Protected branch update failed for refs/heads/main.        
+remote: 
+remote: - Changes must be made through a pull request.        
+remote: 
+remote: - Required status check "check" is expected.        
+To https://github.com/Actaira/Actaira.git
+ ! [remote rejected] HEAD -> main (protected branch hook declined)
+error: failed to push some refs to 'https://github.com/Actaira/Actaira.git'
+exit: 1
+main en GitHub después: 284b7f473483ad2ee0e7286dce8a268891ad75a5
+== 4. resultado
+OK: el servidor rechazó el push directo a main por la protección, y main no se movió
+exit: 0

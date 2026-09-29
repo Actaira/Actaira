@@ -1,0 +1,38 @@
+# E0 paso 0.2: rojo sin la corrección y verde con ella de F-0001 a F-0004
+Copiado de la descripción del PR #2 del repo anterior (líneas 19 a 52), que desapareció al recrear el repo el 2026-09-29 (F-0015).
+La descripción completa está fuera de git, en ~/actaira-ws/privado/prs-antiguos.json.
+
+F-0001, before / after:
+```
+    "additionalContext": "gofmt failed on /tmp/tmp.okH8w8zWTO/probe.go: /home/usuario/actaira-ws/actaira/scripts/harness/post-edit.sh: line 18: gofmt: command n
+--- FAIL: test_gofmt_found_when_path_lacks_go
+make: go: No such file or directory
+make: *** [Makefile:2: check] Error 127): esperado [0], obtenido [2]
+--- FAIL: test_make_check_finds_go_when_path_lacks_go
+---- after
+--- PASS: test_gofmt_found_when_path_lacks_go
+--- PASS: test_make_check_finds_go_when_path_lacks_go
+```
+
+F-0002 to F-0004, before / after:
+```
+### F-0002 sin la correccion
+6:58PM WRN leaks found: 1): esperado [0], obtenido [1]
+--- FAIL: test_nested_repo_is_not_scanned
+### F-0002 con la correccion
+--- PASS: test_nested_repo_is_not_scanned
+### F-0003 sin la correccion (receta antigua: sin GITLEAKS)
+F-0001: test_every_hook_script_sources_env no existe o no pasa
+F-0002: test_nested_repo_is_not_scanned no existe o no pasa
+F-0003: test_nested_repo_is_not_scanned (la guardia de F-0002 solo pasa en `make fallos` si el Makefile le da `GITLEAKS`) no es un test (los tests de shell se l
+exit: 1
+### F-0003 con la correccion (make fallos)
+F-0001: test_every_hook_script_sources_env no existe o no pasa
+F-0003: test_nested_repo_is_not_scanned (la guardia de F-0002 solo pasa en `make fallos` si el Makefile le da `GITLEAKS`) no es un test (los tests de shell se l
+exit: 2
+### F-0004 sin la correccion
+    tras cambiar ficheros sin seguir, make check vuelve a ejecutarse: esperado [2], obtenido [0]
+--- FAIL: test_untracked_file_change_invalidates_cache
+### F-0004 con la correccion
+--- PASS: test_untracked_file_change_invalidates_cache
+```

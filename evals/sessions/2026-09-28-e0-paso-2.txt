@@ -1,0 +1,99 @@
+# E0 paso 0.2: ejecucion real
+fecha: 2026-09-28T17:29:59Z
+commit: 9fb72692bb23d60c25e0a4cf831b155b575c97b0 (rama e0/paso-2-make-check)
+entorno: WSL2 6.6.87.2-microsoft-standard-WSL2, go version go1.27.1 linux/amd64, make 4.3, git 2.43.0
+
+## 1. Hook de parada con el PATH real del proceso de Claude Code (binario nativo de la extension de VS Code), sin Go
+comando: env -i HOME=$HOME PATH=<PATH de /proc/<pid de claude>/environ> CLAUDE_PROJECT_DIR=$PWD scripts/harness/stop-gate.sh
+go en ese PATH: no
+(el arbol tiene ficheros sin commitear, asi que el hook ejecuta make check)
+salida: <vacia>
+exit: 0, duracion: 14 s
+
+## 2. make install-hooks
+comando: make install-hooks && diff scripts/harness/pre-push .git/hooks/pre-push
+pre-push instalado en /home/usuario/actaira-ws/actaira/.git/hooks/pre-push
+identicos
+
+## 3. make gate (terminal con ~/.local/go/bin en el PATH, como deja ~/.bashrc)
+comando: make gate
+scripts/harness/check-weakeners.sh
+scripts/harness/check-fallos.sh
+go vet ./...
+go test -count=1 -shuffle=on ./...
+ok  	github.com/actaira/actaira/internal/version	0.001s
+determinism: sin prueba de determinismo todavía (llega en E1 con actaira.lock)
+bash scripts/harness/tests/run.sh
+== check-fallos_test.sh
+--- PASS: test_duplicate_id_fails
+--- PASS: test_entry_without_guard_fails
+--- PASS: test_failing_go_test_fails
+--- PASS: test_failing_guard_shows_its_output
+--- PASS: test_format_example_in_code_block_does_not_count
+--- PASS: test_lint_hook_and_rule_guards
+--- PASS: test_missing_go_test_fails
+--- PASS: test_passing_go_test_passes
+--- PASS: test_shell_test_guards_are_executed
+--- PASS: test_skipped_go_test_fails
+== fetch-tool_test.sh
+--- PASS: test_download_has_retries_and_time_limits
+--- PASS: test_installs_when_checksum_matches
+--- PASS: test_refuses_when_checksum_differs
+--- PASS: test_refuses_without_pinned_checksum
+== guard-git_test.sh
+--- PASS: test_blocks_push_to_main_without_home
+== install_test.sh
+--- PASS: test_failed_reinstall_keeps_fallos_entries
+--- PASS: test_installs_settings_scripts_and_pre_push
+--- PASS: test_pre_push_rejects_main
+--- PASS: test_reinstall_keeps_fallos_with_entries
+--- PASS: test_stale_package_is_refused_before_touching_the_repo
+--- PASS: test_subdirectory_of_a_repo_is_refused
+== lib_test.sh
+--- PASS: test_failing_assertion_fails_the_test
+--- PASS: test_helper_is_not_a_test
+--- PASS: test_missing_test_fails
+--- PASS: test_runner_fails_file_that_never_runs_tests
+--- PASS: test_runner_fails_on_any_red_test
+--- PASS: test_runner_passes_green_suite
+== makefile_test.sh
+--- PASS: test_fmt_check_fails_on_unformatted_go
+--- PASS: test_fmt_check_skips_testdata_fixtures
+--- PASS: test_goflags_from_environment_cannot_filter_tests
+--- PASS: test_goflags_in_go_env_file_fails
+--- PASS: test_test_target_fails_on_red_go_test
+== post-edit_test.sh
+--- PASS: test_gofmt_found_when_path_lacks_go
+== secrets-scan_test.sh
+--- PASS: test_allow_comment_with_unknown_fallo_fails
+--- PASS: test_allow_comment_without_fallo_fails
+--- PASS: test_clean_repo_passes
+--- PASS: test_committed_sentinel_fails
+--- PASS: test_deleted_tracked_file_does_not_break_scan
+--- PASS: test_environment_cannot_replace_the_config
+--- PASS: test_gitleaksignore_entry_with_unknown_fallo_fails
+--- PASS: test_gitleaksignore_entry_without_fallo_fails
+--- PASS: test_ignored_files_are_not_scanned
+--- PASS: test_justified_allow_comment_hides_the_finding
+--- PASS: test_justified_gitleaksignore_entry_hides_the_finding
+--- PASS: test_modified_tracked_sentinel_fails
+--- PASS: test_nested_repo_is_not_scanned
+--- PASS: test_repo_config_is_used_without_config_flag
+--- PASS: test_repo_config_without_default_rules_fails
+--- PASS: test_repo_without_commits_passes
+--- PASS: test_staged_sentinel_removed_from_worktree_fails
+--- PASS: test_untracked_gitleaksignore_fails
+--- PASS: test_untracked_repo_config_fails
+--- PASS: test_untracked_sentinel_fails_with_repo_relative_path
+== settings_test.sh
+--- PASS: test_every_hook_script_sources_env_first
+== stop-gate_test.sh
+--- PASS: test_hook_leaves_the_real_index_untouched
+--- PASS: test_make_check_finds_go_when_path_lacks_go
+--- PASS: test_untracked_file_change_invalidates_cache
+scripts/harness/secrets-scan.sh ".tools/gitleaks-8.30.1"
+check: OK
+evals-paso: sin evals todavía
+e2e-rapido: sin e2e todavía
+gate: OK
+exit: 0

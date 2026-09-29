@@ -1,0 +1,98 @@
+# Cierre de la E0, punto 5: documentación contra realidad
+fecha: 2026-09-29T10:21:55Z
+commit: a73eb8bfc32d4c55d618c69c06822cac1719be46 (previo a la importación limpia) más la evidencia del cierre
+comando: bash evals/sessions/2026-09-29-e0-cierre-docs.sh
+
+== 1. tests citados en la documentación: 61
+OK   stop-gate_test.sh::test_make_check_finds_go_when_path_lacks_go
+OK   makefile_test.sh::test_fmt_check_fails_on_unformatted_go
+OK   makefile_test.sh::test_fmt_check_skips_testdata_fixtures
+OK   makefile_test.sh::test_test_target_fails_on_red_go_test
+OK   makefile_test.sh::test_goflags_from_environment_cannot_filter_tests
+OK   makefile_test.sh::test_goflags_in_go_env_file_fails
+OK   secrets-scan_test.sh::test_untracked_sentinel_fails_with_repo_relative_path
+OK   secrets-scan_test.sh::test_environment_cannot_replace_the_config
+OK   guard-git_test.sh::test_blocks_push_to_main_without_home
+OK   stop-gate_test.sh::test_untracked_file_change_invalidates_cache
+OK   stop-gate_test.sh::test_hook_leaves_the_real_index_untouched
+OK   install_test.sh::test_stale_package_is_refused_before_touching_the_repo
+OK   install_test.sh::test_installs_settings_scripts_and_pre_push
+OK   stop-gate_test.sh::test_pause_file_allows_stop_and_shows_reason
+OK   stop-gate_test.sh::test_red_check_blocks_three_times_then_allows
+OK   guard-git_test.sh::test_blocks_a_push_without_python3
+OK   ci_test.sh::test_workflow_has_a_single_check_job_running_make_check
+OK   ci_test.sh::test_workflow_runs_on_every_pull_request_and_push_to_main
+OK   ci_test.sh::test_workflow_is_exactly_the_reviewed_one
+OK   ci_test.sh::test_no_other_workflow_publishes_a_check_job
+OK   ci_test.sh::test_actions_are_pinned_by_commit_sha
+OK   ci_test.sh::test_permissions_are_read_only
+OK   ci_test.sh::test_checkout_fetches_full_history_without_credentials
+OK   makefile_test.sh::test_check_runs_every_harness_check
+OK   check-weakeners_test.sh::test_continue_on_error_with_expression_fails
+OK   lib_test.sh::test_no_test_takes_its_target_from_the_environment
+OK   ci_test.sh::test_branch_protection_requires_pr_check_and_binds_admins
+OK   post-edit_test.sh::test_gofmt_found_when_path_lacks_go
+OK   settings_test.sh::test_every_hook_script_sources_env_first
+OK   secrets-scan_test.sh::test_nested_repo_is_not_scanned
+OK   check-fallos_test.sh::test_failing_guard_shows_its_output
+OK   secrets-scan_test.sh::test_repo_config_without_default_rules_fails
+OK   secrets-scan_test.sh::test_gitleaksignore_entry_without_fallo_fails
+OK   secrets-scan_test.sh::test_allow_comment_without_fallo_fails
+OK   guard-git_test.sh::test_blocks_quoted_or_chained_main
+OK   attribution_test.sh::test_attribution_already_in_main_does_not_block_branches
+OK   attribution_test.sh::test_product_text_mentioning_claude_passes
+OK   merge-pr_test.sh::test_refuses_a_squash_message_with_attribution
+OK   guard-git_test.sh::test_blocks_line_continuations
+OK   guard-git_test.sh::test_allows_only_the_closing_tag_from_main
+OK   guard-git_test.sh::test_orders_in_claude_md_and_skills_pass_the_guard
+OK   check-pipes_test.sh::test_pipe_into_head_fails
+OK   guard-git_test.sh::test_blocks_quoted_values_in_global_options
+OK   personal_test.sh::test_term_in_a_tracked_file_fails_without_printing_it
+OK   personal_test.sh::test_commit_message_and_identity_fail
+OK   personal_test.sh::test_term_only_in_the_index_or_in_an_earlier_commit_fails
+OK   personal_test.sh::test_only_the_commits_of_the_branch_are_scanned
+OK   personal_test.sh::test_default_private_list_is_used
+OK   merge-pr_test.sh::test_checks_the_author_of_the_commit_that_entered_main
+OK   merge-pr_test.sh::test_refuses_a_squash_message_with_personal_data
+OK   settings_test.sh::test_settings_keep_foreign_pr_code_and_credentials_out
+OK   check-skips_test.sh::test_build_is_judged_on_the_platform_of_the_required_check
+OK   secrets-scan_test.sh::test_sentinel_only_on_another_branch_passes
+OK   makefile_test.sh::test_install_hooks_installs_both_hooks
+OK   secrets-scan_test.sh::test_sentinel_in_a_commit_message_fails
+OK   secrets-scan_test.sh::test_repo_config_applies_to_commit_messages
+OK   merge-pr_test.sh::test_refuses_a_squash_message_with_a_secret
+OK   merge-pr_test.sh::test_refuses_a_pr_description_with_a_secret
+OK   merge-pr_test.sh::test_refuses_without_the_pinned_gitleaks
+OK   check-fallos_test.sh::test_shell_test_guards_are_executed
+OK   guard-git_test.sh::test_blocks_everything_without_jq
+== 2. recuentos de tests citados
+OK   attribution_test.sh: 16
+OK   check-pipes_test.sh: 5
+OK   check-protection_test.sh: 10
+OK   check-skips_test.sh: 14
+OK   check-weakeners_test.sh: 29
+OK   fetch-tool_test.sh: 4
+OK   guard-git_test.sh: 25
+OK   merge-pr_test.sh: 11
+OK   stop-gate_test.sh: 8
+TODO OK
+exit: 0
+
+## Comandos de la documentación ejecutados en el cierre
+comando: jq . .claude/settings.json > /dev/null
+exit: 0
+comando: ls -a .claude scripts/harness docs/harness docs/epicas | wc -l
+49
+comando: make install-hooks
+for name in pre-push commit-msg; do \
+  hook="$(git rev-parse --path-format=absolute --git-path "hooks/$name")"; \
+  mkdir -p "$(dirname "$hook")"; \
+  cp "scripts/harness/$name" "$hook"; \
+  chmod +x "$hook"; \
+  echo "$name instalado en $hook"; \
+done
+pre-push instalado en /home/usuario/actaira-ws/actaira/.git/hooks/pre-push
+commit-msg instalado en /home/usuario/actaira-ws/actaira/.git/hooks/commit-msg
+exit: 0
+hook pre-push instalado idéntico a scripts/harness/pre-push
+hook commit-msg instalado idéntico a scripts/harness/commit-msg

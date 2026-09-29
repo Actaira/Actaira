@@ -1,0 +1,158 @@
+# E0 paso 0.2: pruebas por mutacion de las rondas adversariales
+fecha: 2026-09-28T17:29:34Z
+commit: 9fb72692bb23d60c25e0a4cf831b155b575c97b0 (rama e0/paso-2-make-check)
+entorno: WSL2 6.6.87.2-microsoft-standard-WSL2, go version go1.27.1 linux/amd64, gitleaks 8.30.1 fijado
+comando: python3 evals/sessions/2026-09-28-e0-paso-2-mutate.py ( por cada correccion, la quita del fichero, ejecuta su test, que debe salir en rojo, restaura el fichero byte a byte y lo vuelve a ejecutar, que debe salir en verde)
+
+### M1: sin el unset de GITLEAKS_CONFIG*
+fichero: scripts/harness/secrets-scan.sh; test: scripts/harness/tests/secrets-scan_test.sh::test_environment_cannot_replace_the_config
+con la mutacion (debe ser rojo): exit 1
+    GITLEAKS_CONFIG del entorno no puede apagar el escaneo: esperado [1], obtenido [0]
+--- FAIL: test_environment_cannot_replace_the_config
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_environment_cannot_replace_the_config
+resultado: OK
+
+### M2: escaneo del arbol con ruta absoluta
+fichero: scripts/harness/secrets-scan.sh; test: scripts/harness/tests/secrets-scan_test.sh::test_untracked_sentinel_fails_with_repo_relative_path
+con la mutacion (debe ser rojo): exit 1
+    huella relativa al repo, estable para .gitleaksignore: no contiene [Fingerprint: new.txt:actaira-test-sentinel:1]; salida: [Finding:     value REDACTED
+Secret:      REDACTED
+RuleID:      actaira-test-sentinel
+Entropy:     3.797903
+File:        /tmp/tmp.WNeRIRP3eU/scantmp/tmp.4xvEAZwQmY/new.txt
+Line:        1
+Fingerprint: /tmp/tmp.WNeRIRP3eU/scantmp/tmp.4xvEAZwQmY/new.txt:actaira-test-sentinel:1
+7:29PM WRN leaks found: 1]
+--- FAIL: test_untracked_sentinel_fails_with_repo_relative_path
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_untracked_sentinel_fails_with_repo_relative_path
+resultado: OK
+
+### M3a: sin exigir useDefault
+fichero: scripts/harness/secrets-scan.sh; test: scripts/harness/tests/secrets-scan_test.sh::test_repo_config_without_default_rules_fails
+con la mutacion (debe ser rojo): exit 1
+    un .gitleaks.toml que no extiende las reglas por defecto las apaga: esperado [1], obtenido [0]
+--- FAIL: test_repo_config_without_default_rules_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_repo_config_without_default_rules_fails
+resultado: OK
+
+### M3b: sin justificar .gitleaksignore
+fichero: scripts/harness/secrets-scan.sh; test: scripts/harness/tests/secrets-scan_test.sh::test_gitleaksignore_entry_without_fallo_fails
+con la mutacion (debe ser rojo): exit 1
+    entrada de .gitleaksignore sin F-NNNN encima: esperado [1], obtenido [0]
+--- FAIL: test_gitleaksignore_entry_without_fallo_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_gitleaksignore_entry_without_fallo_fails
+resultado: OK
+
+### M3c: sin justificar comentarios allow
+fichero: scripts/harness/secrets-scan.sh; test: scripts/harness/tests/secrets-scan_test.sh::test_allow_comment_without_fallo_fails
+con la mutacion (debe ser rojo): exit 1
+    comentario allow sin F-NNNN: esperado [1], obtenido [0]
+--- FAIL: test_allow_comment_without_fallo_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_allow_comment_without_fallo_fails
+resultado: OK
+
+### Bajo: git add -A sobre el indice real
+fichero: scripts/harness/stop-gate.sh; test: scripts/harness/tests/stop-gate_test.sh::test_hook_leaves_the_real_index_untouched
+con la mutacion (debe ser rojo): exit 1
+    índice real tras el hook: esperado [100644 e31de1f3a235fd5e8f97207b8e43cd2aa06a6417 0	README.md], obtenido [100644 14c55dc06beb7b8813586f1f1ec44ccec224b0d8 0	Makefile
+100644 482f4d104658e1ebfa07543b688a0a701c68b19f 0	README.md
+100644 36080d9445992b815600e3a40351e75c8c842ea5 0	untracked.txt]
+--- FAIL: test_hook_leaves_the_real_index_untouched
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_hook_leaves_the_real_index_untouched
+resultado: OK
+
+### Bajo: curl sin --max-time
+fichero: scripts/harness/fetch-tool.sh; test: scripts/harness/tests/fetch-tool_test.sh::test_download_has_retries_and_time_limits
+con la mutacion (debe ser rojo): exit 1
+    curl con --max-time: no contiene [--max-time ]; salida: [curl -fsSL --retry 3 --connect-timeout 15 -o "$tmp/archive" "$url"]
+--- FAIL: test_download_has_retries_and_time_limits
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_download_has_retries_and_time_limits
+resultado: OK
+
+### Bajo: install.sh sin comprobar la raiz del repo
+fichero: scripts/harness/install.sh; test: scripts/harness/tests/install_test.sh::test_subdirectory_of_a_repo_is_refused
+con la mutacion (debe ser rojo): exit 1
+    instalar en un subdirectorio del repo: esperado [1], obtenido [0]
+--- FAIL: test_subdirectory_of_a_repo_is_refused
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_subdirectory_of_a_repo_is_refused
+resultado: OK
+
+### Bajo: install.sh sin restaurar en el trap
+fichero: scripts/harness/install.sh; test: scripts/harness/tests/install_test.sh::test_failed_reinstall_keeps_fallos_entries
+con la mutacion (debe ser rojo): exit 1
+ts/secrets-scan_test.sh::test_untracked_sentinel_fails_with_repo_relative_path
+- guardia: regla:.claude/rules/tests.md
+- lección: L-002
+## F-0006 Los ficheros de excepción de gitleaks apagaban el escaneo sin revisión
+- fecha: 2026-09-28
+- épica y paso: E0 / 0.2 (pasada adversarial, ronda 2, hallazgo medio 3)
+- síntoma: un `.gitleaks.toml` sin `[extend] useDefault = true` sustituye todas las reglas por defecto, y el escaneo queda en verde con cualquier secreto. Una línea de `.gitleaksignore` o un comentario allow en línea de gitleaks ocultan un hallazgo. Nada lo comprobaba.
+- causa raíz: `secrets-scan.sh` trataba los mecanismos de excepción de gitleaks como entrada de confianza, y `check-weakeners.sh` solo mira el Makefile, los workflows y los scripts del proyecto.
+- corrección: `.gitleaks.toml` y `.gitleaksignore` tienen que estar en git; `.gitleaks.toml` tiene que extender las reglas por defecto; cada entrada de `.gitleaksignore` lleva encima un comentario con un `F-NNNN` que exista en FALLOS.md, y cada comentario allow en línea cita en la misma línea un `F-NNNN` que exista. Si no, `make check` falla.
+- guardia: test:scripts/harness/tests/secrets-scan_test.sh::test_repo_config_without_default_rules_fails
+- guardia: test:scripts/harness/tests/secrets-scan_test.sh::test_gitleaksignore_entry_without_fallo_fails
+- guardia: test:scripts/harness/tests/secrets-scan_test.sh::test_allow_comment_without_fallo_fails
+- lección: L-003]
+--- FAIL: test_failed_reinstall_keeps_fallos_entries
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_failed_reinstall_keeps_fallos_entries
+resultado: OK
+
+### Medio: GOFLAGS del entorno llega a go test
+fichero: Makefile; test: scripts/harness/tests/makefile_test.sh::test_goflags_from_environment_cannot_filter_tests
+con la mutacion (debe ser rojo): exit 1
+    make test con GOFLAGS en el entorno (GOFLAGS no vacío (-run=^NoSuchTest$): puede filtrar o saltar tests. Quítalo con go env -u GOFLAGS
+make: *** [Makefile:60: test] Error 1): esperado [0], obtenido [2]
+--- FAIL: test_goflags_from_environment_cannot_filter_tests
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_goflags_from_environment_cannot_filter_tests
+resultado: OK
+
+### Medio: sin comprobar go env GOFLAGS
+fichero: Makefile; test: scripts/harness/tests/makefile_test.sh::test_goflags_in_go_env_file_fails
+con la mutacion (debe ser rojo): exit 1
+    make test con GOFLAGS en go env: esperado [2], obtenido [0]
+--- FAIL: test_goflags_in_go_env_file_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_goflags_in_go_env_file_fails
+resultado: OK
+
+### Makefile: fmt-check sin exit 1
+fichero: Makefile; test: scripts/harness/tests/makefile_test.sh::test_fmt_check_fails_on_unformatted_go
+con la mutacion (debe ser rojo): exit 1
+    fmt-check con un .go sin formatear: esperado [2], obtenido [0]
+--- FAIL: test_fmt_check_fails_on_unformatted_go
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_fmt_check_fails_on_unformatted_go
+resultado: OK
+
+### Makefile: fmt-check entra en testdata
+fichero: Makefile; test: scripts/harness/tests/makefile_test.sh::test_fmt_check_skips_testdata_fixtures
+con la mutacion (debe ser rojo): exit 1
+    fixtures sin formatear en testdata (gofmt: ficheros sin formatear:
+./pkg/demo/testdata/trap.go
+make: *** [/home/usuario/actaira-ws/actaira/Makefile:49: fmt-check] Error 1): esperado [0], obtenido [2]
+--- FAIL: test_fmt_check_skips_testdata_fixtures
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_fmt_check_skips_testdata_fixtures
+resultado: OK
+
+### Makefile: go test que traga el rojo
+fichero: Makefile; test: scripts/harness/tests/makefile_test.sh::test_test_target_fails_on_red_go_test
+con la mutacion (debe ser rojo): exit 1
+    make test con un test Go en rojo: esperado [2], obtenido [0]
+--- FAIL: test_test_target_fails_on_red_go_test
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_test_target_fails_on_red_go_test
+resultado: OK
+
+TODAS OK
+exit: 0

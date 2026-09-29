@@ -1,0 +1,96 @@
+# Cierre de la E0: pruebas por mutacion de las correcciones de la ronda 1 de conjunto
+fecha: 2026-09-28T23:04:34Z
+commit: 171d5c4860da9170f7dff3fb0240fd1674711e9a (rama e0/paso-6-cierre)
+entorno: WSL2 6.6.87.2-microsoft-standard-WSL2, go version go1.27.1 linux/amd64, gitleaks 8.30.1 fijado, Python 3.12.3
+comando: python3 evals/sessions/2026-09-29-e0-cierre-mutate.py
+
+copia de 171d5c4860da9170f7dff3fb0240fd1674711e9a en un directorio temporal; el repo no se toca
+
+### check-skips: juzga la compilacion del sistema en que corre
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_build_is_judged_on_the_platform_of_the_required_check
+con la mutacion (debe ser rojo): exit 1
+    tests solo de Linux, con check-skips en darwin (check-skips: test que make check nunca compila, sin un F-NNNN de FALLOS.md en su cabecera: pkg/demo/a_test.go
+check-skips: test que make check nunca compila, sin un F-NNNN de FALLOS.md en su cabecera: pkg/demo/b_linux_test.go): esperado [0], obtenido [1]
+--- FAIL: test_build_is_judged_on_the_platform_of_the_required_check
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_build_is_judged_on_the_platform_of_the_required_check
+resultado: OK
+
+### secrets-scan: historia de todas las refs
+fichero: scripts/harness/secrets-scan.sh; test: scripts/harness/tests/secrets-scan_test.sh::test_sentinel_only_on_another_branch_passes
+con la mutacion (debe ser rojo): exit 1
+    centinela solo en otra rama (Finding:     value REDACTED
+Secret:      REDACTED
+RuleID:      actaira-test-sentinel
+Entropy:     3.797903
+File:        leak.txt
+Line:        1
+Commit:      18b5954035067f17b58cbef6112861279ea98b07
+Author:      harness test
+Email:       harness-test@example.invalid
+Date:        2026-09-28T23:04:35Z
+Fingerprint: 18b5954035067f17b58cbef6112861279ea98b07:leak.txt:actaira-test-sentinel:1
+1:04AM WRN leaks found: 1): esperado [0], obtenido [1]
+--- FAIL: test_sentinel_only_on_another_branch_passes
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_sentinel_only_on_another_branch_passes
+resultado: OK
+
+### secrets-scan: sin escanear los mensajes de commit
+fichero: scripts/harness/secrets-scan.sh; test: scripts/harness/tests/secrets-scan_test.sh::test_sentinel_in_a_commit_message_fails
+con la mutacion (debe ser rojo): exit 1
+    centinela en un mensaje de commit: esperado [1], obtenido [0]
+--- FAIL: test_sentinel_in_a_commit_message_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_sentinel_in_a_commit_message_fails
+resultado: OK
+
+### secrets-scan: mensajes sin la configuracion del repo
+fichero: scripts/harness/secrets-scan.sh; test: scripts/harness/tests/secrets-scan_test.sh::test_repo_config_applies_to_commit_messages
+con la mutacion (debe ser rojo): exit 1
+    el .gitleaks.toml del repo se aplica a los mensajes de commit: esperado [1], obtenido [0]
+--- FAIL: test_repo_config_applies_to_commit_messages
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_repo_config_applies_to_commit_messages
+resultado: OK
+
+### merge-pr: sin escanear el mensaje del squash
+fichero: scripts/harness/merge-pr.sh; test: scripts/harness/tests/merge-pr_test.sh::test_refuses_a_squash_message_with_a_secret
+con la mutacion (debe ser rojo): exit 1
+    cuerpo del squash con un secreto: esperado [1], obtenido [0]
+--- FAIL: test_refuses_a_squash_message_with_a_secret
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_refuses_a_squash_message_with_a_secret
+resultado: OK
+
+### merge-pr: solo el mensaje del squash, no el texto del PR
+fichero: scripts/harness/merge-pr.sh; test: scripts/harness/tests/merge-pr_test.sh::test_refuses_a_pr_description_with_a_secret
+con la mutacion (debe ser rojo): exit 1
+    descripción del PR con un secreto: esperado [1], obtenido [0]
+--- FAIL: test_refuses_a_pr_description_with_a_secret
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_refuses_a_pr_description_with_a_secret
+resultado: OK
+
+### merge-pr: sin comprobar que existe el gitleaks fijado
+fichero: scripts/harness/merge-pr.sh; test: scripts/harness/tests/merge-pr_test.sh::test_refuses_without_the_pinned_gitleaks
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [falta el gitleaks fijado]; salida: [/tmp/mutate-v_pi02x0/repo/scripts/harness/merge-pr.sh: line 50: /tmp/tmp.IeOBc8IJwk/missing/gitleaks: No such file or directory
+merge-pr: el mensaje del squash o el texto del PR contienen un secreto; no se fusiona]
+--- FAIL: test_refuses_without_the_pinned_gitleaks
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_refuses_without_the_pinned_gitleaks
+resultado: OK
+
+### make install-hooks: solo pre-push
+fichero: Makefile; test: scripts/harness/tests/makefile_test.sh::test_install_hooks_installs_both_hooks
+con la mutacion (debe ser rojo): exit 1
+    commit-msg no está instalado igual que scripts/harness/commit-msg
+--- FAIL: test_install_hooks_installs_both_hooks
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_install_hooks_installs_both_hooks
+resultado: OK
+
+repo en uso sin cambios
+TODAS OK
+exit: 0

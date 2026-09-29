@@ -1,0 +1,272 @@
+# Cierre de la E0: pruebas por mutacion de las guardias de las decisiones A, B y C de Marcos y de la revision de la importacion limpia
+fecha: 2026-09-29T10:21:41Z
+commit: a73eb8bfc32d4c55d618c69c06822cac1719be46 (commit local previo a la importacion limpia; su arbol es el de la importacion salvo esta evidencia y la de la documentacion)
+entorno: WSL2 6.6.87.2-microsoft-standard-WSL2, go version go1.27.1 linux/amd64, gitleaks 8.30.1 fijado, Python 3.12.3
+comando: python3 evals/sessions/2026-09-29-e0-cierre-2-mutate.py
+
+copia de a73eb8bfc32d4c55d618c69c06822cac1719be46 en un directorio temporal; el repo no se toca
+
+### personal: sin quitar los acentos
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_term_in_a_tracked_file_fails_without_printing_it
+con la mutacion (debe ser rojo): exit 1
+    término en un fichero seguido: esperado [1], obtenido [0]
+--- FAIL: test_term_in_a_tracked_file_fails_without_printing_it
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_term_in_a_tracked_file_fails_without_printing_it
+resultado: OK
+
+### personal: sin quitar los caracteres invisibles
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_term_in_a_path_other_encodings_or_with_invisible_characters_fails
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [dato personal (cuenta de prueba) en zw.txt:1]; salida: [check-personal: dato personal (cuenta de prueba) en el nombre de docs/cuentaficticia.md
+check-personal: dato personal (nombre de prueba) en latin1.txt:1
+check-personal: dato personal (cuenta de prueba) en u16.txt:1]
+--- FAIL: test_term_in_a_path_other_encodings_or_with_invisible_characters_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_term_in_a_path_other_encodings_or_with_invisible_characters_fails
+resultado: OK
+
+### personal: solo palabras sueltas, no frases
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_term_in_a_tracked_file_fails_without_printing_it
+con la mutacion (debe ser rojo): exit 1
+    término en un fichero seguido: esperado [1], obtenido [0]
+--- FAIL: test_term_in_a_tracked_file_fails_without_printing_it
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_term_in_a_tracked_file_fails_without_printing_it
+resultado: OK
+
+### personal: el hallazgo enseña el texto
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_term_in_a_tracked_file_fails_without_printing_it
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [dato personal (nombre de prueba) en notes.md:2]; salida: [check-personal: dato personal (nombre de prueba) Hola.
+Escribe a PERSONA   Fictícia si hace falta.
+ en notes.md:2
+check-personal: dato personal (nombre de prueba) Hola.
+Escribe a PERSONA   Fictícia si hace falta. en el índice]
+--- FAIL: test_term_in_a_tracked_file_fails_without_printing_it
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_term_in_a_tracked_file_fails_without_printing_it
+resultado: OK
+
+### personal: sin los ficheros sin seguir
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_untracked_file_fails_and_ignored_file_passes
+con la mutacion (debe ser rojo): exit 1
+    fichero sin seguir: esperado [1], obtenido [0]
+--- FAIL: test_untracked_file_fails_and_ignored_file_passes
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_untracked_file_fails_and_ignored_file_passes
+resultado: OK
+
+### personal: sin los nombres de fichero
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_term_in_a_path_other_encodings_or_with_invisible_characters_fails
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [dato personal (cuenta de prueba) en el nombre de docs/cuentaficticia.md]; salida: [check-personal: dato personal (nombre de prueba) en latin1.txt:1
+check-personal: dato personal (cuenta de prueba) en u16.txt:1
+check-personal: dato personal (cuenta de prueba) en zw.txt:1]
+--- FAIL: test_term_in_a_path_other_encodings_or_with_invisible_characters_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_term_in_a_path_other_encodings_or_with_invisible_characters_fails
+resultado: OK
+
+### personal: sin UTF-16
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_term_in_a_path_other_encodings_or_with_invisible_characters_fails
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [dato personal (cuenta de prueba) en u16.txt:1]; salida: [check-personal: dato personal (cuenta de prueba) en el nombre de docs/cuentaficticia.md
+check-personal: dato personal (nombre de prueba) en latin1.txt:1
+check-personal: dato personal (cuenta de prueba) en zw.txt:1]
+--- FAIL: test_term_in_a_path_other_encodings_or_with_invisible_characters_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_term_in_a_path_other_encodings_or_with_invisible_characters_fails
+resultado: OK
+
+### personal: sin cp1252
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_term_in_a_path_other_encodings_or_with_invisible_characters_fails
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [dato personal (nombre de prueba) en latin1.txt:1]; salida: [check-personal: dato personal (cuenta de prueba) en el nombre de docs/cuentaficticia.md
+check-personal: dato personal (cuenta de prueba) en u16.txt:1
+check-personal: dato personal (cuenta de prueba) en zw.txt:1]
+--- FAIL: test_term_in_a_path_other_encodings_or_with_invisible_characters_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_term_in_a_path_other_encodings_or_with_invisible_characters_fails
+resultado: OK
+
+### personal: sin el indice
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_term_only_in_the_index_or_in_an_earlier_commit_fails
+con la mutacion (debe ser rojo): exit 1
+    término solo en el índice: esperado [1], obtenido [0]
+--- FAIL: test_term_only_in_the_index_or_in_an_earlier_commit_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_term_only_in_the_index_or_in_an_earlier_commit_fails
+resultado: OK
+
+### personal: sin las lineas que añaden los commits
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_term_only_in_the_index_or_in_an_earlier_commit_fails
+con la mutacion (debe ser rojo): exit 1
+    término en un commit anterior de la rama: esperado [1], obtenido [0]
+--- FAIL: test_term_only_in_the_index_or_in_an_earlier_commit_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_term_only_in_the_index_or_in_an_earlier_commit_fails
+resultado: OK
+
+### personal: sin la historia de la rama
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_commit_message_and_identity_fail
+con la mutacion (debe ser rojo): exit 1
+    término en un mensaje de commit: esperado [1], obtenido [0]
+--- FAIL: test_commit_message_and_identity_fail
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_commit_message_and_identity_fail
+resultado: OK
+
+### personal: tambien la historia de main (F-0009)
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_only_the_commits_of_the_branch_are_scanned
+con la mutacion (debe ser rojo): exit 1
+    commit de main fuera del rango (check-personal: dato personal (nombre de prueba) en el commit 684e9e9 (mensaje, autor o líneas que añade)): esperado [0], obtenido [1]
+--- FAIL: test_only_the_commits_of_the_branch_are_scanned
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_only_the_commits_of_the_branch_are_scanned
+resultado: OK
+
+### personal: sin buscar correos
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_personal_email_fails_outside_testdata_and_identities
+con la mutacion (debe ser rojo): exit 1
+    correo de un proveedor personal: esperado [1], obtenido [0]
+--- FAIL: test_personal_email_fails_outside_testdata_and_identities
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_personal_email_fails_outside_testdata_and_identities
+resultado: OK
+
+### personal: correos tambien en testdata
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_personal_email_fails_outside_testdata_and_identities
+con la mutacion (debe ser rojo): exit 1
+    noreply, fixtures de testdata y correo de un colaborador (check-personal: correo de un proveedor personal en testdata/repo/package.json:1): esperado [0], obtenido [1]
+--- FAIL: test_personal_email_fails_outside_testdata_and_identities
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_personal_email_fails_outside_testdata_and_identities
+resultado: OK
+
+### personal: correos tambien en las identidades
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_personal_email_fails_outside_testdata_and_identities
+con la mutacion (debe ser rojo): exit 1
+    noreply, fixtures de testdata y correo de un colaborador (check-personal: correo de un proveedor personal en el commit e8227f6 (mensaje, autor o líneas que añade)): esperado [0], obtenido [1]
+--- FAIL: test_personal_email_fails_outside_testdata_and_identities
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_personal_email_fails_outside_testdata_and_identities
+resultado: OK
+
+### personal: sin lista en local, pasa
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_missing_list_fails_locally_and_is_announced_in_ci
+con la mutacion (debe ser rojo): exit 1
+    sin lista privada en local: esperado [1], obtenido [0]
+--- FAIL: test_missing_list_fails_locally_and_is_announced_in_ci
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_missing_list_fails_locally_and_is_announced_in_ci
+resultado: OK
+
+### personal: --files no mira los ficheros
+fichero: scripts/harness/check-personal.sh; test: scripts/harness/tests/personal_test.sh::test_files_mode_scans_only_the_given_files
+con la mutacion (debe ser rojo): exit 1
+    término en el mensaje del squash: esperado [1], obtenido [0]
+--- FAIL: test_files_mode_scans_only_the_given_files
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_files_mode_scans_only_the_given_files
+resultado: OK
+
+### merge-pr: sin buscar datos personales en el squash
+fichero: scripts/harness/merge-pr.sh; test: scripts/harness/tests/merge-pr_test.sh::test_refuses_a_squash_message_with_personal_data
+con la mutacion (debe ser rojo): exit 1
+    cuerpo del squash con un dato personal: esperado [1], obtenido [0]
+--- FAIL: test_refuses_a_squash_message_with_personal_data
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_refuses_a_squash_message_with_personal_data
+resultado: OK
+
+### personal: fuera de make check
+fichero: Makefile; test: scripts/harness/tests/makefile_test.sh::test_check_runs_every_harness_check
+con la mutacion (debe ser rojo): exit 1
+    prerrequisitos de check: esperado [check: weakeners pipes fallos skips attribution personal fmt-check lint test determinism test-harness secrets], obtenido [check: weakeners pipes fallos skips attribution fmt-check lint test determinism test-harness secrets]
+--- FAIL: test_check_runs_every_harness_check
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_check_runs_every_harness_check
+resultado: OK
+
+### permisos: gh pr checkout sin denegar
+fichero: .claude/settings.json; test: scripts/harness/tests/settings_test.sh::test_settings_keep_foreign_pr_code_and_credentials_out
+con la mutacion (debe ser rojo): exit 1
+    falta la denegación Bash(gh pr checkout*)
+--- FAIL: test_settings_keep_foreign_pr_code_and_credentials_out
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_settings_keep_foreign_pr_code_and_credentials_out
+resultado: OK
+
+### permisos: lectura de ~/.config/gh sin denegar
+fichero: .claude/settings.json; test: scripts/harness/tests/settings_test.sh::test_settings_keep_foreign_pr_code_and_credentials_out
+con la mutacion (debe ser rojo): exit 1
+    falta la denegación Read(~/.config/gh/**)
+--- FAIL: test_settings_keep_foreign_pr_code_and_credentials_out
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_settings_keep_foreign_pr_code_and_credentials_out
+resultado: OK
+
+### permisos: gh pr * permitido otra vez
+fichero: .claude/settings.json; test: scripts/harness/tests/settings_test.sh::test_settings_keep_foreign_pr_code_and_credentials_out
+con la mutacion (debe ser rojo): exit 1
+    gh pr permitido sin preguntar: esperado [["Bash(gh pr create*)","Bash(gh pr view *)","Bash(gh pr checks *)","Bash(gh pr diff *)"]], obtenido [["Bash(gh pr *)","Bash(gh pr view *)","Bash(gh pr checks *)","Bash(gh pr diff *)"]]
+--- FAIL: test_settings_keep_foreign_pr_code_and_credentials_out
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_settings_keep_foreign_pr_code_and_credentials_out
+resultado: OK
+
+### L-007: CLAUDE.md manda una fusión que el guard bloquea
+fichero: CLAUDE.md; test: scripts/harness/tests/guard-git_test.sh::test_orders_in_claude_md_and_skills_pass_the_guard
+con la mutacion (debe ser rojo): exit 1
+    orden de la documentación: gh pr merge --squash --delete-branch: esperado [0], obtenido [2]
+--- FAIL: test_orders_in_claude_md_and_skills_pass_the_guard
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_orders_in_claude_md_and_skills_pass_the_guard
+resultado: OK
+
+### permisos: fetch de refs/pull/ sin denegar (patron con espacio)
+fichero: .claude/settings.json; test: scripts/harness/tests/settings_test.sh::test_settings_keep_foreign_pr_code_and_credentials_out
+con la mutacion (debe ser rojo): exit 1
+    falta la denegación Bash(git fetch *pull/*)
+--- FAIL: test_settings_keep_foreign_pr_code_and_credentials_out
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_settings_keep_foreign_pr_code_and_credentials_out
+resultado: OK
+
+### permisos: alias gh co sin denegar
+fichero: .claude/settings.json; test: scripts/harness/tests/settings_test.sh::test_settings_keep_foreign_pr_code_and_credentials_out
+con la mutacion (debe ser rojo): exit 1
+    falta la denegación Bash(gh co *)
+--- FAIL: test_settings_keep_foreign_pr_code_and_credentials_out
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_settings_keep_foreign_pr_code_and_credentials_out
+resultado: OK
+
+### merge-pr: fusion sin el correo noreply de autor
+fichero: scripts/harness/merge-pr.sh; test: scripts/harness/tests/merge-pr_test.sh::test_merges_a_clean_pr_after_green_checks
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [pr merge 7 --squash --delete-branch --match-head-commit abc1234 --subject E0 step 9: demo (#7) --body-file /tmp/tmp.IUOTjGLY9k/body.md --author-email 123+demo@users.noreply.github.com]; salida: [pr view 7 --json title,body,headRefOid
+pr checks 7 --watch --fail-fast
+api user --jq "\(.id)+\(.login)@users.noreply.github.com"
+pr merge 7 --squash --delete-branch --match-head-commit abc1234 --subject E0 step 9: demo (#7) --body-file /tmp/tmp.IUOTjGLY9k/body.md
+pr view 7 --json mergeCommit --jq .mergeCommit.oid
+api repos/{owner}/{repo}/commits/fedcba9 --jq .commit.message
+api repos/{owner}/{repo}/commits/fedcba9 --jq .commit.author.email]
+--- FAIL: test_merges_a_clean_pr_after_green_checks
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_merges_a_clean_pr_after_green_checks
+resultado: OK
+
+### merge-pr: sin comprobar el autor del commit que entro
+fichero: scripts/harness/merge-pr.sh; test: scripts/harness/tests/merge-pr_test.sh::test_checks_the_author_of_the_commit_that_entered_main
+con la mutacion (debe ser rojo): exit 1
+    commit en main con otro correo de autor: esperado [1], obtenido [0]
+--- FAIL: test_checks_the_author_of_the_commit_that_entered_main
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_checks_the_author_of_the_commit_that_entered_main
+resultado: OK
+
+repo en uso sin cambios
+TODAS OK
+exit: 0

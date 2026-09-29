@@ -1,0 +1,6 @@
+.harness/
+.env
+.env.*
+.tools/
+.claude/worktrees/
+.claude/settings.local.json

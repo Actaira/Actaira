@@ -1,0 +1,188 @@
+# E0 paso 0.4: verificación de las APIs y acciones externas
+fecha: 2026-09-28T21:53:58Z
+
+## 1. SHA fijados en ci.yml contra las etiquetas oficiales
+comando: gh api repos/actions/checkout/releases/latest --jq '.tag_name + " " + .published_at'
+v7.0.1 2026-07-20T15:10:05Z
+comando: gh api repos/actions/checkout/git/ref/tags/v7.0.1 --jq '.object.type + " " + .object.sha'
+commit 3d3c42e5aac5ba805825da76410c181273ba90b1
+comando: gh api repos/actions/setup-go/releases/latest --jq '.tag_name + " " + .published_at'
+v7.0.0 2026-07-16T02:50:50Z
+comando: gh api repos/actions/setup-go/git/ref/tags/v7.0.0 --jq '.object.type + " " + .object.sha'
+commit b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+
+## 2. App que publica el check obligatorio (app_id del JSON de protección)
+comando: gh api /apps/github-actions --jq '{id, slug, name, owner: .owner.login}'
+{"id":15368,"name":"GitHub Actions","owner":"github","slug":"github-actions"}
+
+## 3. Documentación oficial usada
+- API de protección de ramas (PUT y GET): https://docs.github.com/en/rest/branches/branch-protection
+- Ramas protegidas (enforce_admins, PR obligatorio, planes): https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches
+- Job saltado cuenta como verde: https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-jobs-with-conditions
+- Sintaxis de workflows y permisos: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+- Permisos del GITHUB_TOKEN: https://docs.github.com/en/actions/security-for-github-actions/security-guides/automatic-token-authentication
+- Versiones de la REST API: https://docs.github.com/en/rest/about-the-rest-api/api-versions
+- gh api: https://cli.github.com/manual/gh_api
+- actions/checkout v7.0.1: https://github.com/actions/checkout/blob/v7.0.1/action.yml
+- actions/setup-go v7.0.0: https://github.com/actions/setup-go/blob/v7.0.0/README.md
+- Migración de ubuntu-latest a 26.04: https://github.com/actions/runner-images/issues/14748
+
+## 4. Informe de verificador-apis (texto íntegro)
+## Verificación del paso 0.4 de E0 contra la documentación oficial (28-09-2026)
+
+**Conclusión:** ningún punto obliga a cambiar A. B tiene una discrepancia que hay que probar antes de construir encima (punto 1.5). No hay afirmaciones que contradigan la doc, hay 4 sin confirmar, y ubuntu-latest cambiará de imagen en octubre.
+
+### 1. PUT "Update branch protection"
+Fuente: https://docs.github.com/en/rest/branches/branch-protection?apiVersion=2022-11-28#update-branch-protection
+
+- **1.1 Parámetros obligatorios (confirmado).** Los cuatro están marcados "Required" y admiten null:
+  - `required_status_checks` es "object or null", "Set to null to disable."
+  - `enforce_admins` es "boolean or null".
+  - `required_pull_request_reviews` es "object or null".
+  - `restrictions` es "object or null".
+- **1.2 `strict` (confirmado).** "Require branches to be up to date before merging." Está marcado como Required.
+- **1.3 `checks[].context` y `app_id` (confirmado).** `context` es Required ("The name of the required check"). Sobre `app_id`: "Omit this field to automatically select the GitHub App that has recently provided this check, or any app if it was not set by a GitHub App. Pass -1 to explicitly allow any app to set the status."
+- **1.4 `contexts` está obsoleto (confirmado).** "Closing down notice: ... Use checks instead of contexts for more fine-grained control."
+- **1.5 Cuerpo con solo `checks` y sin `contexts` (sin confirmar).**
+  - El esquema oficial sigue marcando `contexts` como **Required**, tanto en 2022-11-28 como en 2026-03-10: https://docs.github.com/en/rest/branches/branch-protection?apiVersion=2026-03-10
+  - La doc no dice en ningún sitio que un cuerpo con solo `checks` se acepte. Hay issues de terceros que muestran que el servidor valida con `anyOf` (terraform-provider-github #1307, go-github #2467), pero no sirven como confirmación.
+  - **Prueba:** en un repo público de prueba de una cuenta personal:
+    - ejecuta `gh api -X PUT repos/<owner>/<prueba>/branches/main/protection --input docs/estado/branch-protection.json` y espera HTTP 200;
+    - luego `gh api repos/<owner>/<prueba>/branches/main/protection --jq '.required_status_checks|{strict,contexts,checks}'` y espera `strict: true` y `checks[0].context == "check"`;
+    - si da 422, la forma documentada es la que lleva `contexts`.
+- **1.6 `required_approving_review_count: 0` (confirmado).** "Use a number between 1 and 6 or 0 to not require reviewers."
+- **1.7 `dismiss_stale_reviews` y `require_code_owner_reviews` (confirmado).**
+  - `dismiss_stale_reviews`: "Set to true if you want to automatically dismiss approving reviews when someone pushes a new commit."
+  - `require_code_owner_reviews`: "Blocks merging pull requests until code owners review them."
+- **1.8 `restrictions: null` (confirmado).** "User, app, and team restrictions are only available for organization-owned repositories. Set to null to disable."
+- **1.9 `allow_force_pushes` y `allow_deletions` (confirmado).**
+  - `allow_force_pushes`: "Set to false or null to block force pushes. Default: false."
+  - `allow_deletions`: "Set to false to prevent deletion of the protected branch. Default: false."
+- **1.10 Permiso necesario (confirmado).**
+  - La doc dice: "Protecting a branch requires admin or owner permissions to the repository."
+  - Con token de grano fino, el PUT pide "Administration" en escritura y el GET en lectura: https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens (la tabla equivalente para Apps está en https://docs.github.com/en/rest/authentication/permissions-required-for-github-apps).
+- **1.11 Versión de la API (confirmado, el endpoint no cambia).**
+  - Existe la versión `2026-03-10`. La `2022-11-28` tiene soporte hasta "March 10, 2028", y "Requests without the X-GitHub-Api-Version header will default to use the 2022-11-28 version": https://docs.github.com/en/rest/about-the-rest-api/api-versions
+  - Ninguno de los cambios incompatibles de 2026-03-10 toca la protección de ramas, `contexts` ni `checks`: https://docs.github.com/en/rest/about-the-rest-api/breaking-changes
+- **1.12 `gh api -X PUT --input` (confirmado).** "--input <file>: The file to use as body for the HTTP request": https://cli.github.com/manual/gh_api
+
+### 2. Forma de la respuesta del GET (confirmado)
+- El esquema de respuesta incluye todos los campos que vais a comprobar:
+  - `enforce_admins.enabled`;
+  - `required_status_checks.strict`;
+  - `required_status_checks.checks[].context` y `app_id`, este último "integer or null";
+  - `required_pull_request_reviews.required_approving_review_count`;
+  - `allow_force_pushes.enabled` y `allow_deletions.enabled`.
+- La respuesta trae además `contexts` y `enforcement_level`. Fuente: la misma página, "Get branch protection".
+- Por 1.3, `app_id` no será null si GitHub Actions ya dio el check `check` hace poco. La comprobación con `jq` no debería fijar un valor de `app_id`.
+
+### 3. Disponibilidad (confirmado)
+- La doc REST dice: "Protected branches are available in public repositories with GitHub Free and GitHub Free for organizations, and in public and private repositories with GitHub Pro, GitHub Team, GitHub Enterprise Cloud, and GitHub Enterprise Server."
+- Por tanto, con GitHub Free en una cuenta personal: sí en repos públicos, no en privados.
+- La página de planes lo apoya: Free trabaja con privados "with a limited feature set", y Pro lista "Protected branches" en "Advanced tools and insights in private repositories": https://docs.github.com/en/get-started/learning-about-github/githubs-plans
+
+### 4. Comportamiento
+Fuente principal: https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches
+
+- **4.1 El push directo a `main` se rechaza también al propietario (confirmado).**
+  - "By default, the restrictions of a branch protection rule don't apply to people with admin permissions..."
+  - "You can optionally apply the restrictions to administrators..."
+  - `enforce_admins` se describe como "Enforce all configured restrictions for administrators."
+  - Sobre las revisiones: "collaborators can only push changes to a protected branch via a pull request that is approved by the required number of reviewers".
+- **4.2 Texto exacto del error (sin confirmar).**
+  - La doc solo muestra el prefijo "remote: error: GH006: Protected branch update failed for refs/heads/main.", seguido de "Changes have been requested." o de `Required status check "ci-build" is failing` (esta última en la página de troubleshooting de checks obligatorios).
+  - No documenta la segunda línea cuando lo que se exige es un PR.
+  - **Prueba:** en el repo de prueba ya protegido, haz un commit y `git push origin main`, y espera `GH006`. Tiene que ejecutarlo Marcos (Terminal: WSL), porque guard-git bloquea cualquier push a main.
+- **4.3 Fusionar un PR propio con 0 aprobaciones (confirmado).**
+  - La API dice "0 to not require reviewers".
+  - En la interfaz, las aprobaciones son opcionales: "Optionally, to require approvals ... select Require approvals" (https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule).
+- **4.4 Qué hace `strict: true` (confirmado).**
+  - "The branch must be up to date with the base branch before merging." y "This is the default behavior for required status checks."
+  - Además, los checks obligatorios cuentan como pasados con estado `successful`, `skipped` o `neutral`.
+
+### 5. Nombre del check `check` (sin confirmar)
+- La doc dice "Workflow: The name format is `<job name>`" (https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/troubleshooting-rules).
+- También dice "Use `jobs.<job_id>.name` to set a name for the job, which is displayed in the GitHub UI" (https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax).
+- Ninguna frase oficial dice que, sin `name:`, el nombre sea el `job_id`.
+- Otra frase relevante: "A required status check must have completed successfully in the chosen repository during the past seven days." (https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks). Junto con 1.3, esto significa que el orden importa: el check tiene que haber corrido antes de aplicar la protección.
+- **Prueba:** tras la primera ejecución en un PR, lanza `gh api repos/Actaira/Actaira/commits/<head_sha>/check-runs --jq '.check_runs[]|[.name,.app.slug]|@tsv'` y espera `check	github-actions`. El endpoint está en https://docs.github.com/en/rest/checks/runs
+
+### 6. actions/checkout
+- **6.1 Última versión y SHA (confirmado).**
+  - La última publicación es v7.0.1, del 20-07-2026 (https://api.github.com/repos/actions/checkout/releases/latest).
+  - La etiqueta v7.0.1 apunta al commit `3d3c42e5aac5ba805825da76410c181273ba90b1`, tipo "commit" (https://api.github.com/repos/actions/checkout/git/ref/tags/v7.0.1). La etiqueta `v7` apunta al mismo.
+  - No hay etiquetas más nuevas.
+- **6.2 `fetch-depth: 0` (confirmado).** "Number of commits to fetch. 0 indicates all history for all branches and tags." El valor por defecto es 1 (https://github.com/actions/checkout/blob/v7.0.1/action.yml).
+- **6.3 `persist-credentials: false` (confirmado).** "Whether to configure the token or SSH key with the local git config", con valor por defecto true.
+- **6.4 Requisitos (confirmado).**
+  - La acción declara `using: node24`, y la v5 ya dice "This requires a minimum Actions Runner version of v2.327.1".
+  - La v7 solo cambia `pull_request_target` y `workflow_run`: "Same-repository pull requests aren't affected, and the pull_request event is unchanged." (https://github.blog/changelog/2026-06-18-safer-pull_request_target-defaults-for-github-actions-checkout/)
+
+### 7. actions/setup-go
+- **7.1 Última versión y SHA (confirmado).**
+  - La última publicación es v7.0.0, del 16-07-2026 (https://api.github.com/repos/actions/setup-go/releases/latest).
+  - La etiqueta apunta al commit `b7ad1dad31e06c5925ef5d2fc7ad053ef454303e`, tipo "commit". La etiqueta `v7` apunta al mismo.
+- **7.2 `go-version-file: go.mod` (confirmado).**
+  - "If the `toolchain` directive is present, its version is used; otherwise, the action falls back to the `go` directive."
+  - En `src/installer.ts`, la directiva `toolchain` se ignora si `GOTOOLCHAIN=local`, y la expresión `^go (\d+(\.\d+)*)` devuelve `1.27.1`.
+  - go1.27.1 existe y es la última estable (https://go.dev/dl/?mode=json). No está en la caché del runner, que tiene 1.24.13, 1.25.14 y 1.26.8, así que la acción la descarga.
+  - La acción exporta `GOTOOLCHAIN=local` (`src/main.ts`).
+- **7.3 Caché y ausencia de `go.sum` (confirmado).**
+  - "caching is enabled by default".
+  - "By default, the action looks for `go.mod` in the repository root and uses its hash as part of the cache key." En el código, `dependencyFilePattern: 'go.mod'`, así que `go.sum` no hace falta.
+  - Los fallos de caché solo dan aviso: "Restore cache failed: ..." y "Cache folder path is retrieved but doesn't exist on disk". El código no llama nunca a `core.setFailed`. Este segundo aviso es probable, porque sin dependencias puede no existir GOMODCACHE.
+  - Fuentes: https://github.com/actions/setup-go/blob/v7.0.0/README.md y `src/` en v7.0.0.
+
+### 8. Permisos
+- **8.1 `permissions: contents: read` en el workflow y en el job (confirmado).**
+  - "You can use `permissions` either as a top-level key, to apply to all jobs in the workflow, or within specific jobs."
+  - "all of those that are not specified are set to `none`."
+- **8.2 El GITHUB_TOKEN no puede leer la protección (confirmado).**
+  - La lista de permisos del GITHUB_TOKEN no incluye `administration`: actions, artifact-metadata, attestations, checks, code-quality, contents, deployments, discussions, id-token, issues, packages, pages, pull-requests, security-events, statuses, vulnerability-alerts.
+  - El GET de protección exige Administration en lectura. Por tanto, esa comprobación no puede ir en la CI con el GITHUB_TOKEN. Tiene que ser local con un token de administrador, o con un token de App o PAT: "create a GitHub App and generate an installation access token" (https://docs.github.com/en/actions/security-for-github-actions/security-guides/automatic-token-authentication).
+  - Nota: `GET /repos/{o}/{r}/branches/{b}` solo pide Contents en lectura y su esquema incluye `protected` y `protection`. Qué devuelve a un token sin permisos de administración no está documentado.
+
+### 9. ubuntu-latest
+- **9.1 Imagen de hoy (confirmado, con aviso).**
+  - Hoy es Ubuntu 24.04.5 LTS, imagen 20260920.314.1 (https://github.com/actions/runner-images).
+  - **Cambio reciente:** "The `ubuntu-latest` label will migrate from Ubuntu 24.04 to Ubuntu 26.04. This migration will roll out gradually between October 19 and November 19, 2026." La nota avisa de que "may break builds" (https://github.blog/changelog/2026-09-17-ubuntu-26-generally-available-and-latest-migration/ y https://github.com/actions/runner-images/issues/14748).
+- **9.2 Herramientas en 24.04 (confirmado).** Todas aparecen en https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md:
+
+  | Herramienta | Versión en la imagen |
+  |---|---|
+  | Bash | 5.2.21 |
+  | Python | 3.12.3 |
+  | Git | 2.55.0 |
+  | jq | 1.7 |
+  | make | 4.3-4.1build2 |
+  | curl | 8.5.0-2ubuntu10.13 |
+  | tar | 1.35+dfsg-3ubuntu0.4 |
+  | coreutils | 9.4-3ubuntu6.3 |
+
+  `sha256sum` lo trae el paquete coreutils de esa misma versión (https://manpages.ubuntu.com/manpages/noble/man1/sha256sum.1.html).
+- **9.3 Herramientas en 26.04 tras la migración (sin confirmar para `sha256sum`).**
+  - Aparecen make 4.4.1, Bash 5.3.9, Python 3.14.4, Git 2.55.0, jq 1.8.1, curl y tar.
+  - Pero `coreutils` ahí es un "coreutils meta package" que depende de `coreutils-from-uutils` o de `coreutils-from-gnu` (https://packages.ubuntu.com/resolute/coreutils), y el `sha256sum` de GNU viene en `gnu-coreutils`. No sé cuál trae la imagen.
+  - **Prueba antes del 19 de octubre:** lanza un job con `runs-on: ubuntu-26.04` que ejecute `for t in make bash jq python3 git curl tar sha256sum; do command -v "$t"; done; sha256sum --version | head -1` y después `make check`.
+
+### 10. Disparadores de A (confirmado)
+- "By default, a workflow only runs when a `pull_request` event's activity type is `opened`, `synchronize`, or `reopened`."
+- También: "Workflows will not run on `pull_request` activity if the pull request has a merge conflict."
+- El filtro `push: branches` es válido.
+- Fuente: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
+
+### Qué obliga a cambiar A o B
+- **A:** nada. Los SHA, las versiones y las opciones coinciden con la doc.
+- **B:** ninguna contradicción firme. Antes de construir encima hay que resolver 1.5: la doc marca `contexts` como Required y el borrador solo envía `checks`.
+- **Dos consecuencias para la comprobación:**
+  - El GET no puede ir en la CI con el GITHUB_TOKEN (8.2).
+  - El valor de `app_id` depende de si `check` ya había corrido cuando se aplicó la protección (1.3 y 5).
+
+Total: 32 (contradice 0, sin confirmar 4)
+
+## 5. Cómo quedaron los 4 puntos sin confirmar
+- 1.5 (PUT solo con `checks`): confirmado por la ejecución real; el PUT respondió 200 y el GET devuelve `checks` con `context: check` (`evals/sessions/2026-09-28-e0-paso-4.txt`).
+- 4.2 (texto del rechazo): confirmado por la ejecución real: `GH006: Protected branch update failed for refs/heads/main`, "Changes must be made through a pull request." y `Required status check "check" is expected.`. Lo ejecutó Claude desde un clon temporal y a propósito, porque Marcos pidió la demostración (el guard no lee scripts: es un límite conocido del ADR 0000).
+- 5 (nombre del check sin `name:`): confirmado con la API de check-runs: `check`, `github-actions`, app 15368.
+- 9.3 (Ubuntu 26.04): al backlog, con fecha (`docs/BACKLOG.md`).
+- Sobre la nota de 1.3 y 2 (no fijar `app_id` en la comprobación): tras la ronda 1 de la pasada adversarial (hallazgo 2), el JSON fija `app_id: 15368` (sección 2 de este fichero), así que el PUT ya no depende de qué app dio el check la última vez, y `check-protection.sh` compara la app.

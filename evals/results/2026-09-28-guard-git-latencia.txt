@@ -1,0 +1,8 @@
+# Latencia de guard-git.sh (hook PreToolUse) por comando de shell
+fecha: 2026-09-28T21:03:52Z
+commit: 6b7f99019878d7cc1c3c87e644baae7bbe448617 (rama e0/paso-3-tests-harness)
+entorno: WSL2 6.6.87.2-microsoft-standard-WSL2, GNU bash, version 5.2.21(1)-release (x86_64-pc-linux-gnu), jq-1.7, Python 3.12.3, 14 CPU
+comando: bash evals/results/guard-git-latencia.sh 50
+
+orden sin push (git status)              n=50  min=8ms  mediana=9ms  p90=10ms  max=10ms
+push de una rama de paso (con python3)   n=50  min=24ms  mediana=25ms  p90=26ms  max=28ms

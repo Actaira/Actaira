@@ -1,0 +1,67 @@
+# E0 paso 0.3: ejecucion real
+fecha: 2026-09-28T19:10:26Z
+commit: 2b9addc97d1ac3267d30429ede728d5221e39eec (rama e0/paso-3-tests-harness)
+entorno: WSL2 6.6.87.2-microsoft-standard-WSL2, go version go1.27.1 linux/amd64, make 4.3, git 2.43.0
+
+## 1. guard-git.sh en vivo (PreToolUse de esta sesion de Claude Code)
+comando lanzado con la herramienta Bash: git push origin 'main'   (con comillas: antes de F-0007 pasaba)
+respuesta del hook (version de 33b0c9c): harness: push prohibido (main): force, no-verify, --all, --mirror, refspec forzado o main. Usa rama + PR.
+(bloqueado antes de ejecutarse; el texto es el que devolvio Claude Code)
+comando lanzado con la herramienta Bash, partido con una continuacion de linea (F-0010):
+  git push \
+    --no-verify origin e0/paso-3-tests-harness
+respuesta del hook: harness: push prohibido (--no-verify). Usa rama + PR; desde main solo se sube la etiqueta e<N>-cerrada.
+comando lanzado con la herramienta Bash, con un valor citado con espacio en -c (F-0013):
+  git -c 'user.name=a b' push --no-verify origin e0/paso-3-tests-harness
+respuesta del hook: harness: push prohibido (--no-verify). Usa rama + PR; desde main solo se sube la etiqueta e<N>-cerrada.
+
+## 2. make install-hooks en el repo real
+pre-push instalado en /home/usuario/actaira-ws/actaira/.git/hooks/pre-push
+commit-msg instalado en /home/usuario/actaira-ws/actaira/.git/hooks/commit-msg
+pre-push instalado identico a scripts/harness/pre-push
+commit-msg instalado identico a scripts/harness/commit-msg
+
+## 3. commit-msg en un clon real del repo (sin arriesgar un commit con atribucion en el repo)
+comando: git clone <repo> <tmp>; make install-hooks; git commit --allow-empty -m 'Probe' -m '<trailer Co-Authored-By de Claude>'
+commit-msg: el mensaje lleva atribución de Claude (coautoría o 'Generated with'); quítala y vuelve a hacer el commit
+exit del commit con atribucion: 1; HEAD sin cambios: si
+exit del commit limpio: 0
+
+## 4. Hook de parada con el PATH real del proceso de Claude Code, sin Go
+go en ese PATH: no
+salida: <vacia>
+exit: 0, duracion: 21 s
+
+## 5. make gate
+scripts/harness/check-weakeners.sh
+scripts/harness/check-pipes.sh
+scripts/harness/check-fallos.sh
+scripts/harness/check-skips.sh
+scripts/harness/check-attribution.sh
+go vet ./...
+go test -count=1 -shuffle=on ./...
+ok  	github.com/actaira/actaira/internal/version	0.002s
+determinism: sin prueba de determinismo todavía (llega en E1 con actaira.lock)
+bash scripts/harness/tests/run.sh
+== attribution_test.sh
+== check-fallos_test.sh
+== check-pipes_test.sh
+== check-skips_test.sh
+== check-weakeners_test.sh
+== fetch-tool_test.sh
+== guard-git_test.sh
+== install_test.sh
+== lib_test.sh
+== makefile_test.sh
+== merge-pr_test.sh
+== post-edit_test.sh
+== secrets-scan_test.sh
+== settings_test.sh
+== stop-gate_test.sh
+scripts/harness/secrets-scan.sh ".tools/gitleaks-8.30.1"
+check: OK
+evals-paso: sin evals todavía
+e2e-rapido: sin e2e todavía
+gate: OK
+exit: 0
+tests del harness en verde en ese make gate: 159

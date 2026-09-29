@@ -1,0 +1,677 @@
+# E0 paso 0.4: pruebas por mutacion (CI y proteccion de main, tras las rondas 1 y 2 de la pasada adversarial)
+fecha: 2026-09-28T22:19:58Z
+commit: d1ab562eaa7bc3bf1d884dc2a31c731cbf5fd31c (rama e0/paso-4-ci-proteccion)
+entorno: WSL2 6.6.87.2-microsoft-standard-WSL2, go version go1.27.1 linux/amd64, jq-1.7, Python 3.12.3
+comando: python3 evals/sessions/2026-09-28-e0-paso-4-mutate.py
+
+copia de d1ab562eaa7bc3bf1d884dc2a31c731cbf5fd31c en un directorio temporal; el repo no se toca
+
+### ci: el job lleva name (cambia el nombre del check)
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_workflow_has_a_single_check_job_running_make_check
+con la mutacion (debe ser rojo): exit 1
+    el job check no debe tener name: (cambiaría el nombre del check obligatorio)
+--- FAIL: test_workflow_has_a_single_check_job_running_make_check
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_workflow_has_a_single_check_job_running_make_check
+resultado: OK
+
+### ci: un segundo job
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_workflow_has_a_single_check_job_running_make_check
+con la mutacion (debe ser rojo): exit 1
+    jobs del workflow: esperado [  check:], obtenido [  check:
+  other:]
+--- FAIL: test_workflow_has_a_single_check_job_running_make_check
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_workflow_has_a_single_check_job_running_make_check
+resultado: OK
+
+### ci: no ejecuta make check
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_workflow_has_a_single_check_job_running_make_check
+con la mutacion (debe ser rojo): exit 1
+    el job no ejecuta make check
+--- FAIL: test_workflow_has_a_single_check_job_running_make_check
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_workflow_has_a_single_check_job_running_make_check
+resultado: OK
+
+### ci: otro sistema
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_workflow_has_a_single_check_job_running_make_check
+con la mutacion (debe ser rojo): exit 1
+    el job no corre en ubuntu-latest
+--- FAIL: test_workflow_has_a_single_check_job_running_make_check
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_workflow_has_a_single_check_job_running_make_check
+resultado: OK
+
+### ci: sin pull_request
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_workflow_runs_on_every_pull_request_and_push_to_main
+con la mutacion (debe ser rojo): exit 1
+    no corre en pull_request
+--- FAIL: test_workflow_runs_on_every_pull_request_and_push_to_main
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_workflow_runs_on_every_pull_request_and_push_to_main
+resultado: OK
+
+### ci: filtro de rutas
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_workflow_runs_on_every_pull_request_and_push_to_main
+con la mutacion (debe ser rojo): exit 1
+    un filtro de rutas o ramas deja el check obligatorio pendiente
+--- FAIL: test_workflow_runs_on_every_pull_request_and_push_to_main
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_workflow_runs_on_every_pull_request_and_push_to_main
+resultado: OK
+
+### ci: sin los push a main
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_workflow_runs_on_every_pull_request_and_push_to_main
+con la mutacion (debe ser rojo): exit 1
+    no corre en los push a main
+--- FAIL: test_workflow_runs_on_every_pull_request_and_push_to_main
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_workflow_runs_on_every_pull_request_and_push_to_main
+resultado: OK
+
+### ci: accion fijada por etiqueta
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_actions_are_pinned_by_commit_sha
+con la mutacion (debe ser rojo): exit 1
+    acciones sin fijar por SHA de 40 caracteres con su versión en comentario: esperado [], obtenido [uses: actions/checkout@v7.0.1      - uses: actions/checkout@v7.0.1]
+--- FAIL: test_actions_are_pinned_by_commit_sha
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_actions_are_pinned_by_commit_sha
+resultado: OK
+
+### ci: SHA corto
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_actions_are_pinned_by_commit_sha
+con la mutacion (debe ser rojo): exit 1
+    acciones sin fijar por SHA de 40 caracteres con su versión en comentario: esperado [], obtenido [uses: actions/setup-go@b7ad1da]
+--- FAIL: test_actions_are_pinned_by_commit_sha
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_actions_are_pinned_by_commit_sha
+resultado: OK
+
+### ci: accion sin fijar en estilo flujo (F-0014)
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_actions_are_pinned_by_commit_sha
+con la mutacion (debe ser rojo): exit 1
+    acciones sin fijar por SHA de 40 caracteres con su versión en comentario: esperado [], obtenido [uses: some-owner/some-action@main      - {uses: some-owner/some-action@main}]
+--- FAIL: test_actions_are_pinned_by_commit_sha
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_actions_are_pinned_by_commit_sha
+resultado: OK
+
+### ci: contents write en el workflow
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_permissions_are_read_only
+con la mutacion (debe ser rojo): exit 1
+    el workflow no limita contents a read
+--- FAIL: test_permissions_are_read_only
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_permissions_are_read_only
+resultado: OK
+
+### ci: un permiso de escritura en el job
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_permissions_are_read_only
+con la mutacion (debe ser rojo): exit 1
+    hay permisos de escritura
+--- FAIL: test_permissions_are_read_only
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_permissions_are_read_only
+resultado: OK
+
+### ci: sin fetch-depth 0
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_checkout_fetches_full_history_without_credentials
+con la mutacion (debe ser rojo): exit 1
+    sin fetch-depth: 0 el escaneo de secretos y el de atribución solo ven un commit
+--- FAIL: test_checkout_fetches_full_history_without_credentials
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_checkout_fetches_full_history_without_credentials
+resultado: OK
+
+### ci: credenciales guardadas
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_checkout_fetches_full_history_without_credentials
+con la mutacion (debe ser rojo): exit 1
+    el token no debe quedarse en .git/config
+--- FAIL: test_checkout_fetches_full_history_without_credentials
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_checkout_fetches_full_history_without_credentials
+resultado: OK
+
+### F-0014: if en el job (un job saltado cuenta como verde)
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_workflow_is_exactly_the_reviewed_one
+con la mutacion (debe ser rojo): exit 1
+un if, continue-on-error, shell, paso o job nuevo cambia lo que significa check en verde (F-0014): esperado [name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: make check], obtenido [name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: make check]
+--- FAIL: test_workflow_is_exactly_the_reviewed_one
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_workflow_is_exactly_the_reviewed_one
+resultado: OK
+
+### F-0014: paso make check con if: false
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_workflow_is_exactly_the_reviewed_one
+con la mutacion (debe ser rojo): exit 1
+    ci.yml no es el revisado: un if, continue-on-error, shell, paso o job nuevo cambia lo que significa check en verde (F-0014): esperado [name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: make check], obtenido [name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: make check
+        if: false]
+--- FAIL: test_workflow_is_exactly_the_reviewed_one
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_workflow_is_exactly_the_reviewed_one
+resultado: OK
+
+### F-0014: continue-on-error con una expresion
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_workflow_is_exactly_the_reviewed_one
+con la mutacion (debe ser rojo): exit 1
+revisado: un if, continue-on-error, shell, paso o job nuevo cambia lo que significa check en verde (F-0014): esperado [name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: make check], obtenido [name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: make check
+        continue-on-error: ${{ true }}]
+--- FAIL: test_workflow_is_exactly_the_reviewed_one
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_workflow_is_exactly_the_reviewed_one
+resultado: OK
+
+### F-0014: otro shell que no ejecuta nada
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_workflow_is_exactly_the_reviewed_one
+con la mutacion (debe ser rojo): exit 1
+ es el revisado: un if, continue-on-error, shell, paso o job nuevo cambia lo que significa check en verde (F-0014): esperado [name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: make check], obtenido [name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: make check
+        shell: bash -c true {0}]
+--- FAIL: test_workflow_is_exactly_the_reviewed_one
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_workflow_is_exactly_the_reviewed_one
+resultado: OK
+
+### F-0014: un paso previo escribe un GNUmakefile
+fichero: .github/workflows/ci.yml; test: scripts/harness/tests/ci_test.sh::test_workflow_is_exactly_the_reviewed_one
+con la mutacion (debe ser rojo): exit 1
+-on-error, shell, paso o job nuevo cambia lo que significa check en verde (F-0014): esperado [name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: make check], obtenido [name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: printf 'check:\n\t@echo check: OK\n' > GNUmakefile
+      - run: make check]
+--- FAIL: test_workflow_is_exactly_the_reviewed_one
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_workflow_is_exactly_the_reviewed_one
+resultado: OK
+
+### F-0014: otro workflow con un job check
+fichero: .github/workflows/lint.yml (creado); test: scripts/harness/tests/ci_test.sh::test_no_other_workflow_publishes_a_check_job
+con la mutacion (debe ser rojo): exit 1
+    workflows, además de ci.yml, con un job check: esperado [], obtenido [lint.yml ]
+--- FAIL: test_no_other_workflow_publishes_a_check_job
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_no_other_workflow_publishes_a_check_job
+resultado: OK
+
+### F-0014: otro workflow con un job llamado check
+fichero: .github/workflows/lint.yml (creado); test: scripts/harness/tests/ci_test.sh::test_no_other_workflow_publishes_a_check_job
+con la mutacion (debe ser rojo): exit 1
+    workflows, además de ci.yml, con un job check: esperado [], obtenido [lint.yml ]
+--- FAIL: test_no_other_workflow_publishes_a_check_job
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_no_other_workflow_publishes_a_check_job
+resultado: OK
+
+### F-0014: otro workflow con una accion sin fijar
+fichero: .github/workflows/lint.yml (creado); test: scripts/harness/tests/ci_test.sh::test_actions_are_pinned_by_commit_sha
+con la mutacion (debe ser rojo): exit 1
+    acciones sin fijar por SHA de 40 caracteres con su versión en comentario: esperado [], obtenido [uses: actions/checkout@v7      - uses: actions/checkout@v7]
+--- FAIL: test_actions_are_pinned_by_commit_sha
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_actions_are_pinned_by_commit_sha
+resultado: OK
+
+### F-0014: check sin test-harness ni secrets
+fichero: Makefile; test: scripts/harness/tests/makefile_test.sh::test_check_runs_every_harness_check
+con la mutacion (debe ser rojo): exit 1
+    prerrequisitos de check: esperado [check: weakeners pipes fallos skips attribution fmt-check lint test determinism test-harness secrets], obtenido [check: weakeners pipes fallos skips attribution fmt-check lint test determinism]
+--- FAIL: test_check_runs_every_harness_check
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_check_runs_every_harness_check
+resultado: OK
+
+### F-0014: gate sin check
+fichero: Makefile; test: scripts/harness/tests/makefile_test.sh::test_check_runs_every_harness_check
+con la mutacion (debe ser rojo): exit 1
+    prerrequisitos de gate: esperado [gate: check evals-paso e2e-rapido], obtenido [gate: evals-paso e2e-rapido]
+--- FAIL: test_check_runs_every_harness_check
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_check_runs_every_harness_check
+resultado: OK
+
+### F-0014: weakeners solo con continue-on-error literal
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_continue_on_error_with_expression_fails
+con la mutacion (debe ser rojo): exit 1
+    continue-on-error: ${{ true }}: esperado [1], obtenido [0]
+--- FAIL: test_continue_on_error_with_expression_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_continue_on_error_with_expression_fails
+resultado: OK
+
+### proteccion pedida: sin enforce_admins
+fichero: docs/estado/branch-protection.json; test: scripts/harness/tests/ci_test.sh::test_branch_protection_requires_pr_check_and_binds_admins
+con la mutacion (debe ser rojo): exit 1
+    protección pedida (PR con 0 aprobaciones, check de GitHub Actions al día con main, enforce_admins, sin push forzado ni borrado): esperado [{"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":true,"required_pull_request_reviews":{"dismiss_stale_reviews":false,"require_code_owner_reviews":false,"required_approving_review_count":0},"required_status_checks":{"checks":[{"app_id":15368,"context":"check"}],"strict":true},"restrictions":null}], obtenido [{"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":false,"required_pull_request_reviews":{"dismiss_stale_reviews":false,"require_code_owner_reviews":false,"required_approving_review_count":0},"required_status_checks":{"checks":[{"app_id":15368,"context":"check"}],"strict":true},"restrictions":null}]
+--- FAIL: test_branch_protection_requires_pr_check_and_binds_admins
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_branch_protection_requires_pr_check_and_binds_admins
+resultado: OK
+
+### proteccion pedida: sin strict
+fichero: docs/estado/branch-protection.json; test: scripts/harness/tests/ci_test.sh::test_branch_protection_requires_pr_check_and_binds_admins
+con la mutacion (debe ser rojo): exit 1
+    protección pedida (PR con 0 aprobaciones, check de GitHub Actions al día con main, enforce_admins, sin push forzado ni borrado): esperado [{"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":true,"required_pull_request_reviews":{"dismiss_stale_reviews":false,"require_code_owner_reviews":false,"required_approving_review_count":0},"required_status_checks":{"checks":[{"app_id":15368,"context":"check"}],"strict":true},"restrictions":null}], obtenido [{"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":true,"required_pull_request_reviews":{"dismiss_stale_reviews":false,"require_code_owner_reviews":false,"required_approving_review_count":0},"required_status_checks":{"checks":[{"app_id":15368,"context":"check"}],"strict":false},"restrictions":null}]
+--- FAIL: test_branch_protection_requires_pr_check_and_binds_admins
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_branch_protection_requires_pr_check_and_binds_admins
+resultado: OK
+
+### proteccion pedida: sin el check
+fichero: docs/estado/branch-protection.json; test: scripts/harness/tests/ci_test.sh::test_branch_protection_requires_pr_check_and_binds_admins
+con la mutacion (debe ser rojo): exit 1
+    protección pedida (PR con 0 aprobaciones, check de GitHub Actions al día con main, enforce_admins, sin push forzado ni borrado): esperado [{"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":true,"required_pull_request_reviews":{"dismiss_stale_reviews":false,"require_code_owner_reviews":false,"required_approving_review_count":0},"required_status_checks":{"checks":[{"app_id":15368,"context":"check"}],"strict":true},"restrictions":null}], obtenido [{"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":true,"required_pull_request_reviews":{"dismiss_stale_reviews":false,"require_code_owner_reviews":false,"required_approving_review_count":0},"required_status_checks":{"checks":[],"strict":true},"restrictions":null}]
+--- FAIL: test_branch_protection_requires_pr_check_and_binds_admins
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_branch_protection_requires_pr_check_and_binds_admins
+resultado: OK
+
+### proteccion pedida: check de cualquier app
+fichero: docs/estado/branch-protection.json; test: scripts/harness/tests/ci_test.sh::test_branch_protection_requires_pr_check_and_binds_admins
+con la mutacion (debe ser rojo): exit 1
+    protección pedida (PR con 0 aprobaciones, check de GitHub Actions al día con main, enforce_admins, sin push forzado ni borrado): esperado [{"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":true,"required_pull_request_reviews":{"dismiss_stale_reviews":false,"require_code_owner_reviews":false,"required_approving_review_count":0},"required_status_checks":{"checks":[{"app_id":15368,"context":"check"}],"strict":true},"restrictions":null}], obtenido [{"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":true,"required_pull_request_reviews":{"dismiss_stale_reviews":false,"require_code_owner_reviews":false,"required_approving_review_count":0},"required_status_checks":{"checks":[{"context":"check"}],"strict":true},"restrictions":null}]
+--- FAIL: test_branch_protection_requires_pr_check_and_binds_admins
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_branch_protection_requires_pr_check_and_binds_admins
+resultado: OK
+
+### proteccion pedida: sin PR obligatorio
+fichero: docs/estado/branch-protection.json; test: scripts/harness/tests/ci_test.sh::test_branch_protection_requires_pr_check_and_binds_admins
+con la mutacion (debe ser rojo): exit 1
+    protección pedida (PR con 0 aprobaciones, check de GitHub Actions al día con main, enforce_admins, sin push forzado ni borrado): esperado [{"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":true,"required_pull_request_reviews":{"dismiss_stale_reviews":false,"require_code_owner_reviews":false,"required_approving_review_count":0},"required_status_checks":{"checks":[{"app_id":15368,"context":"check"}],"strict":true},"restrictions":null}], obtenido [{"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":true,"required_pull_request_reviews":null,"required_status_checks":{"checks":[{"app_id":15368,"context":"check"}],"strict":true},"restrictions":null}]
+--- FAIL: test_branch_protection_requires_pr_check_and_binds_admins
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_branch_protection_requires_pr_check_and_binds_admins
+resultado: OK
+
+### proteccion pedida: push forzado
+fichero: docs/estado/branch-protection.json; test: scripts/harness/tests/ci_test.sh::test_branch_protection_requires_pr_check_and_binds_admins
+con la mutacion (debe ser rojo): exit 1
+    protección pedida (PR con 0 aprobaciones, check de GitHub Actions al día con main, enforce_admins, sin push forzado ni borrado): esperado [{"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":true,"required_pull_request_reviews":{"dismiss_stale_reviews":false,"require_code_owner_reviews":false,"required_approving_review_count":0},"required_status_checks":{"checks":[{"app_id":15368,"context":"check"}],"strict":true},"restrictions":null}], obtenido [{"allow_deletions":false,"allow_force_pushes":true,"enforce_admins":true,"required_pull_request_reviews":{"dismiss_stale_reviews":false,"require_code_owner_reviews":false,"required_approving_review_count":0},"required_status_checks":{"checks":[{"app_id":15368,"context":"check"}],"strict":true},"restrictions":null}]
+--- FAIL: test_branch_protection_requires_pr_check_and_binds_admins
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_branch_protection_requires_pr_check_and_binds_admins
+resultado: OK
+
+### proteccion pedida: borrado
+fichero: docs/estado/branch-protection.json; test: scripts/harness/tests/ci_test.sh::test_branch_protection_requires_pr_check_and_binds_admins
+con la mutacion (debe ser rojo): exit 1
+    protección pedida (PR con 0 aprobaciones, check de GitHub Actions al día con main, enforce_admins, sin push forzado ni borrado): esperado [{"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":true,"required_pull_request_reviews":{"dismiss_stale_reviews":false,"require_code_owner_reviews":false,"required_approving_review_count":0},"required_status_checks":{"checks":[{"app_id":15368,"context":"check"}],"strict":true},"restrictions":null}], obtenido [{"allow_deletions":true,"allow_force_pushes":false,"enforce_admins":true,"required_pull_request_reviews":{"dismiss_stale_reviews":false,"require_code_owner_reviews":false,"required_approving_review_count":0},"required_status_checks":{"checks":[{"app_id":15368,"context":"check"}],"strict":true},"restrictions":null}]
+--- FAIL: test_branch_protection_requires_pr_check_and_binds_admins
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_branch_protection_requires_pr_check_and_binds_admins
+resultado: OK
+
+### comprobador: no compara el check
+fichero: scripts/harness/check-protection.sh; test: scripts/harness/tests/check-protection_test.sh::test_missing_required_check_fails
+con la mutacion (debe ser rojo): exit 1
+    sin el check obligatorio: esperado [1], obtenido [0]
+--- FAIL: test_missing_required_check_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_missing_required_check_fails
+resultado: OK
+
+### comprobador: no compara la app del check
+fichero: scripts/harness/check-protection.sh; test: scripts/harness/tests/check-protection_test.sh::test_check_from_any_app_fails
+con la mutacion (debe ser rojo): exit 1
+    check de cualquier app: esperado [1], obtenido [0]
+--- FAIL: test_check_from_any_app_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_check_from_any_app_fails
+resultado: OK
+
+### comprobador: no compara strict
+fichero: scripts/harness/check-protection.sh; test: scripts/harness/tests/check-protection_test.sh::test_branch_not_up_to_date_fails
+con la mutacion (debe ser rojo): exit 1
+    strict desactivado: esperado [1], obtenido [0]
+--- FAIL: test_branch_not_up_to_date_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_branch_not_up_to_date_fails
+resultado: OK
+
+### comprobador: no compara enforce_admins
+fichero: scripts/harness/check-protection.sh; test: scripts/harness/tests/check-protection_test.sh::test_admins_not_bound_fails
+con la mutacion (debe ser rojo): exit 1
+    enforce_admins desactivado: esperado [1], obtenido [0]
+--- FAIL: test_admins_not_bound_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_admins_not_bound_fails
+resultado: OK
+
+### comprobador: no compara el PR obligatorio
+fichero: scripts/harness/check-protection.sh; test: scripts/harness/tests/check-protection_test.sh::test_pull_request_not_required_fails
+con la mutacion (debe ser rojo): exit 1
+    sin PR obligatorio: esperado [1], obtenido [0]
+--- FAIL: test_pull_request_not_required_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_pull_request_not_required_fails
+resultado: OK
+
+### comprobador: no compara las excepciones al PR
+fichero: scripts/harness/check-protection.sh; test: scripts/harness/tests/check-protection_test.sh::test_pull_request_bypass_fails
+con la mutacion (debe ser rojo): exit 1
+    excepción al PR obligatorio: esperado [1], obtenido [0]
+--- FAIL: test_pull_request_bypass_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_pull_request_bypass_fails
+resultado: OK
+
+### comprobador: no compara el push forzado
+fichero: scripts/harness/check-protection.sh; test: scripts/harness/tests/check-protection_test.sh::test_force_pushes_or_deletions_allowed_fail
+con la mutacion (debe ser rojo): exit 1
+    push forzado permitido: esperado [1], obtenido [0]
+--- FAIL: test_force_pushes_or_deletions_allowed_fail
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_force_pushes_or_deletions_allowed_fail
+resultado: OK
+
+### comprobador: no compara el borrado
+fichero: scripts/harness/check-protection.sh; test: scripts/harness/tests/check-protection_test.sh::test_force_pushes_or_deletions_allowed_fail
+con la mutacion (debe ser rojo): exit 1
+    borrado permitido: esperado [1], obtenido [0]
+--- FAIL: test_force_pushes_or_deletions_allowed_fail
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_force_pushes_or_deletions_allowed_fail
+resultado: OK
+
+### comprobador: lee la respuesta sin .enabled
+fichero: scripts/harness/check-protection.sh; test: scripts/harness/tests/check-protection_test.sh::test_matching_protection_passes
+con la mutacion (debe ser rojo): exit 1
+    protección igual que el JSON (check-protection: la protección de main en o/r no es la de /tmp/mutate-3vnkzg96/repo/docs/estado/branch-protection.json:
+  allow_deletions: esperado false, en GitHub {"enabled":false}
+  allow_force_pushes: esperado false, en GitHub {"enabled":false}
+  enforce_admins: esperado true, en GitHub {"enabled":true}): esperado [0], obtenido [1]
+--- FAIL: test_matching_protection_passes
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_matching_protection_passes
+resultado: OK
+
+### comprobador: repo que adivina gh en vez del pedido
+fichero: scripts/harness/check-protection.sh; test: scripts/harness/tests/check-protection_test.sh::test_matching_protection_passes
+con la mutacion (debe ser rojo): exit 1
+    llamada a gh: esperado [api repos/o/r/branches/main/protection], obtenido [api repos/{owner}/{repo}/branches/main/protection]
+--- FAIL: test_matching_protection_passes
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_matching_protection_passes
+resultado: OK
+
+### comprobador: repo fijo en vez del de origin
+fichero: scripts/harness/check-protection.sh; test: scripts/harness/tests/check-protection_test.sh::test_repo_comes_from_the_origin_remote
+con la mutacion (debe ser rojo): exit 1
+    repo de https://github.com/acme/widget.git: esperado [api repos/acme/widget/branches/main/protection], obtenido [api repos/Actaira/Actaira/branches/main/protection]
+--- FAIL: test_repo_comes_from_the_origin_remote
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_repo_comes_from_the_origin_remote
+resultado: OK
+
+### comprobador: acepta un origin que no es de GitHub
+fichero: scripts/harness/check-protection.sh; test: scripts/harness/tests/check-protection_test.sh::test_repo_comes_from_the_origin_remote
+con la mutacion (debe ser rojo): exit 1
+    origin que no es de GitHub: esperado [1], obtenido [0]
+--- FAIL: test_repo_comes_from_the_origin_remote
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_repo_comes_from_the_origin_remote
+resultado: OK
+
+### comprobador: una rama sin proteccion no se detecta como tal
+fichero: scripts/harness/check-protection.sh; test: scripts/harness/tests/check-protection_test.sh::test_unprotected_branch_fails
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [main de o/r no está protegida o no se puede leer su protección]; salida: [gh: Branch not protected (HTTP 404)
+check-protection: la protección de main en o/r no es la de /tmp/mutate-3vnkzg96/repo/docs/estado/branch-protection.json:
+  allow_deletions: esperado false, en GitHub null
+  allow_force_pushes: esperado false, en GitHub null
+  enforce_admins: esperado true, en GitHub null
+  pull_request_reviews: esperado {"approvals":0,"dismiss_stale_reviews":false,"require_code_owner_reviews":false}, en GitHub null
+  required_checks: esperado [{"app_id":15368,"context":"check"}], en GitHub []
+  strict: esperado true, en GitHub null]
+--- FAIL: test_unprotected_branch_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_unprotected_branch_fails
+resultado: OK
+
+### comprobador: siempre OK
+fichero: scripts/harness/check-protection.sh; test: scripts/harness/tests/check-protection_test.sh::test_admins_not_bound_fails
+con la mutacion (debe ser rojo): exit 1
+    enforce_admins desactivado: esperado [1], obtenido [0]
+--- FAIL: test_admins_not_bound_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_admins_not_bound_fails
+resultado: OK
+
+### ronda 2: ci_test toma ci.yml del entorno
+fichero: scripts/harness/tests/ci_test.sh; test: scripts/harness/tests/lib_test.sh::test_no_test_takes_its_target_from_the_environment
+con la mutacion (debe ser rojo): exit 1
+    tests que toman del entorno el fichero que comprueban: esperado [], obtenido [/tmp/mutate-3vnkzg96/repo/scripts/harness/tests/ci_test.sh:11:CI="${CI_FILE:-$REPO_DIR/.github/workflows/ci.yml}"]
+--- FAIL: test_no_test_takes_its_target_from_the_environment
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_no_test_takes_its_target_from_the_environment
+resultado: OK
+
+### ronda 2: settings_test toma settings.json del entorno
+fichero: scripts/harness/tests/settings_test.sh; test: scripts/harness/tests/lib_test.sh::test_no_test_takes_its_target_from_the_environment
+con la mutacion (debe ser rojo): exit 1
+    tests que toman del entorno el fichero que comprueban: esperado [], obtenido [/tmp/mutate-3vnkzg96/repo/scripts/harness/tests/settings_test.sh:8:SETTINGS="${SETTINGS_FILE:-$REPO_DIR/.claude/settings.json}"]
+--- FAIL: test_no_test_takes_its_target_from_the_environment
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_no_test_takes_its_target_from_the_environment
+resultado: OK
+
+### ronda 2: la guardia de otros workflows mira un directorio sin ci.yml
+fichero: scripts/harness/tests/ci_test.sh; test: scripts/harness/tests/ci_test.sh::test_no_other_workflow_publishes_a_check_job
+con la mutacion (debe ser rojo): exit 1
+    ci.yml entre los workflows revisados (/tmp/mutate-3vnkzg96/repo/.github/workflow): esperado [1], obtenido [0]
+--- FAIL: test_no_other_workflow_publishes_a_check_job
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_no_other_workflow_publishes_a_check_job
+resultado: OK
+
+### ronda 2: test fuera de .PHONY
+fichero: Makefile; test: scripts/harness/tests/makefile_test.sh::test_check_runs_every_harness_check
+con la mutacion (debe ser rojo): exit 1
+    objetivos de check y gate fuera de .PHONY: esperado [], obtenido [test ]
+--- FAIL: test_check_runs_every_harness_check
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_check_runs_every_harness_check
+resultado: OK
+
+repo en uso sin cambios
+TODAS OK
+exit: 0

@@ -1,0 +1,945 @@
+# E0 paso 0.3: pruebas por mutacion (tras las rondas 1 y 2 de la pasada adversarial, la verificacion de la documentacion y el bajo de la ronda 3)
+fecha: 2026-09-28T21:02:45Z
+commit: 6b7f99019878d7cc1c3c87e644baae7bbe448617 (rama e0/paso-3-tests-harness)
+entorno: WSL2 6.6.87.2-microsoft-standard-WSL2, go version go1.27.1 linux/amd64, gitleaks 8.30.1 fijado, Python 3.12.3
+comando: python3 evals/sessions/2026-09-28-e0-paso-3-mutate.py
+
+copia de 6b7f99019878d7cc1c3c87e644baae7bbe448617 en un directorio temporal; el repo no se toca
+
+### F-0010: sin unir las continuaciones
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_line_continuations
+con la mutacion (debe ser rojo): exit 1
+    gh pr \
+  merge 3 --squash: esperado [2], obtenido [0]
+--- FAIL: test_blocks_line_continuations
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_line_continuations
+resultado: OK
+
+### F-0011: sin excepcion para la etiqueta de cierre
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_allows_only_the_closing_tag_from_main
+con la mutacion (debe ser rojo): exit 1
+    git push origin e0-cerrada: esperado [0], obtenido [2]
+--- FAIL: test_allows_only_the_closing_tag_from_main
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_allows_only_the_closing_tag_from_main
+resultado: OK
+
+### F-0007: sin quitar comillas
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_quoted_or_chained_main
+con la mutacion (debe ser rojo): exit 1
+    sh -c 'git push origin main': esperado [2], obtenido [0]
+--- FAIL: test_blocks_quoted_or_chained_main
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_quoted_or_chained_main
+resultado: OK
+
+### guard: sin grupos cortos con f
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_quoted_or_chained_main
+con la mutacion (debe ser rojo): exit 1
+    git push -uf origin x: esperado [2], obtenido [0]
+--- FAIL: test_blocks_quoted_or_chained_main
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_quoted_or_chained_main
+resultado: OK
+
+### guard: sin abreviaturas
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_abbreviations_refspec_patterns_and_inline_config
+con la mutacion (debe ser rojo): exit 1
+    git push --al origin: esperado [2], obtenido [0]
+--- FAIL: test_blocks_abbreviations_refspec_patterns_and_inline_config
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_abbreviations_refspec_patterns_and_inline_config
+resultado: OK
+
+### guard: sin refspec : ni comodines
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_abbreviations_refspec_patterns_and_inline_config
+con la mutacion (debe ser rojo): exit 1
+    git push origin :: esperado [2], obtenido [0]
+--- FAIL: test_blocks_abbreviations_refspec_patterns_and_inline_config
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_abbreviations_refspec_patterns_and_inline_config
+resultado: OK
+
+### guard: sin revisar la configuracion en linea
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_abbreviations_refspec_patterns_and_inline_config
+con la mutacion (debe ser rojo): exit 1
+    git -c push.default=matching push origin: esperado [2], obtenido [0]
+--- FAIL: test_blocks_abbreviations_refspec_patterns_and_inline_config
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_abbreviations_refspec_patterns_and_inline_config
+resultado: OK
+
+### guard: sin expandir alias
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_configured_push_alias
+con la mutacion (debe ser rojo): exit 1
+    git p origin main: esperado [2], obtenido [0]
+--- FAIL: test_blocks_configured_push_alias
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_configured_push_alias
+resultado: OK
+
+### guard: sin bloquear expansiones
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_shell_expansions_in_a_push
+con la mutacion (debe ser rojo): exit 1
+    b=main; git push origin $b: esperado [2], obtenido [0]
+--- FAIL: test_blocks_shell_expansions_in_a_push
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_shell_expansions_in_a_push
+resultado: OK
+
+### guard: sin xargs
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_shell_expansions_in_a_push
+con la mutacion (debe ser rojo): exit 1
+    echo main | xargs git push origin: esperado [2], obtenido [0]
+--- FAIL: test_blocks_shell_expansions_in_a_push
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_shell_expansions_in_a_push
+resultado: OK
+
+### guard: orden que empieza por push
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_shell_expansions_in_a_push
+con la mutacion (debe ser rojo): exit 1
+    $(command -v git) push origin main: esperado [2], obtenido [0]
+--- FAIL: test_blocks_shell_expansions_in_a_push
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_shell_expansions_in_a_push
+resultado: OK
+
+### guard: push en cualquier palabra (sin subcomando real)
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_allows_commands_that_only_mention_push
+con la mutacion (debe ser rojo): exit 1
+    git commit -m 'Reject push to main in the pre-push hook': esperado [0], obtenido [2]
+--- FAIL: test_allows_commands_that_only_mention_push
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_allows_commands_that_only_mention_push
+resultado: OK
+
+### guard: sin mirar los repos de git -C
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_push_from_another_repo_on_main
+con la mutacion (debe ser rojo): exit 1
+    git -C /tmp/tmp.MZL52MwI2g/other push: esperado [2], obtenido [0]
+--- FAIL: test_blocks_push_from_another_repo_on_main
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_push_from_another_repo_on_main
+resultado: OK
+
+### guard: sin bloquear el push desde main
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_any_push_from_main
+con la mutacion (debe ser rojo): exit 1
+    git push -u origin feature: esperado [2], obtenido [0]
+--- FAIL: test_blocks_any_push_from_main
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_any_push_from_main
+resultado: OK
+
+### weakeners: sin || true
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_or_true_in_makefile_fails
+con la mutacion (debe ser rojo): exit 1
+    || true en el Makefile: esperado [1], obtenido [0]
+--- FAIL: test_or_true_in_makefile_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_or_true_in_makefile_fails
+resultado: OK
+
+### weakeners: sin prefijo -
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_dash_prefixed_recipe_fails
+con la mutacion (debe ser rojo): exit 1
+    receta con -: esperado [1], obtenido [0]
+--- FAIL: test_dash_prefixed_recipe_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_dash_prefixed_recipe_fails
+resultado: OK
+
+### weakeners: sin .IGNORE
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_ignore_special_target_fails
+con la mutacion (debe ser rojo): exit 1
+    .IGNORE: esperado [1], obtenido [0]
+--- FAIL: test_ignore_special_target_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_ignore_special_target_fails
+resultado: OK
+
+### weakeners: sin make -i/-k
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_make_ignore_errors_in_workflow_fails
+con la mutacion (debe ser rojo): exit 1
+    make -i en un workflow: esperado [1], obtenido [0]
+--- FAIL: test_make_ignore_errors_in_workflow_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_make_ignore_errors_in_workflow_fails
+resultado: OK
+
+### weakeners: sin continue-on-error
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_continue_on_error_workflow_fails
+con la mutacion (debe ser rojo): exit 1
+    continue-on-error: true: esperado [1], obtenido [0]
+--- FAIL: test_continue_on_error_workflow_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_continue_on_error_workflow_fails
+resultado: OK
+
+### #13: sin exigir SHELL := bash
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_makefile_with_other_shell_fails
+con la mutacion (debe ser rojo): exit 1
+    SHELL := true: esperado [1], obtenido [0]
+--- FAIL: test_makefile_with_other_shell_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_makefile_with_other_shell_fails
+resultado: OK
+
+### #13: sin exigir -e en .SHELLFLAGS
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_shellflags_without_errexit_fails
+con la mutacion (debe ser rojo): exit 1
+    .SHELLFLAGS sin -e: esperado [1], obtenido [0]
+--- FAIL: test_shellflags_without_errexit_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_shellflags_without_errexit_fails
+resultado: OK
+
+### #11: .SHELLFLAGS sin exigir una sola asignacion
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_second_shellflags_assignment_fails
+con la mutacion (debe ser rojo): exit 1
+    segunda asignación de .SHELLFLAGS: esperado [1], obtenido [0]
+--- FAIL: test_second_shellflags_assignment_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_second_shellflags_assignment_fails
+resultado: OK
+
+### #11: SHELL sin exigir una sola asignacion
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_target_specific_shell_fails
+con la mutacion (debe ser rojo): exit 1
+    SHELL de un objetivo concreto: esperado [1], obtenido [0]
+--- FAIL: test_target_specific_shell_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_target_specific_shell_fails
+resultado: OK
+
+### #8: sin ::=
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_posix_assignment_of_shellflags_fails
+con la mutacion (debe ser rojo): exit 1
+    .SHELLFLAGS ::=: esperado [1], obtenido [0]
+--- FAIL: test_posix_assignment_of_shellflags_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_posix_assignment_of_shellflags_fails
+resultado: OK
+
+### #8: sin +e
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_errexit_turned_off_in_shellflags_fails
+con la mutacion (debe ser rojo): exit 1
+    .SHELLFLAGS con +e: esperado [1], obtenido [0]
+--- FAIL: test_errexit_turned_off_in_shellflags_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_errexit_turned_off_in_shellflags_fails
+resultado: OK
+
+### #8: sin define
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_define_block_for_shell_settings_fails
+con la mutacion (debe ser rojo): exit 1
+    define .SHELLFLAGS: esperado [1], obtenido [0]
+--- FAIL: test_define_block_for_shell_settings_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_define_block_for_shell_settings_fails
+resultado: OK
+
+### #8: sin include
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_include_directive_fails
+con la mutacion (debe ser rojo): exit 1
+    include de otro makefile: esperado [1], obtenido [0]
+--- FAIL: test_include_directive_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_include_directive_fails
+resultado: OK
+
+### #8: sin GNUmakefile ni makefile
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_makefiles_that_take_precedence_fail
+con la mutacion (debe ser rojo): exit 1
+    GNUmakefile junto al Makefile: esperado [1], obtenido [0]
+--- FAIL: test_makefiles_that_take_precedence_fail
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_makefiles_that_take_precedence_fail
+resultado: OK
+
+### #9: sin MAKEFLAGS en cualquier fichero
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_makeflags_in_workflow_env_fails
+con la mutacion (debe ser rojo): exit 1
+    MAKEFLAGS en el entorno de un workflow: esperado [1], obtenido [0]
+--- FAIL: test_makeflags_in_workflow_env_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_makeflags_in_workflow_env_fails
+resultado: OK
+
+### #9: sin variables de make en la linea de ordenes
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_make_variable_override_fails
+con la mutacion (debe ser rojo): exit 1
+    make check .SHELLFLAGS=-c: esperado [1], obtenido [0]
+--- FAIL: test_make_variable_override_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_make_variable_override_fails
+resultado: OK
+
+### #9: sin filtros de go test
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_go_test_filters_fail
+con la mutacion (debe ser rojo): exit 1
+    go test -short: esperado [1], obtenido [0]
+--- FAIL: test_go_test_filters_fail
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_go_test_filters_fail
+resultado: OK
+
+### stop-gate: sin mirar si hay check:
+fichero: scripts/harness/stop-gate.sh; test: scripts/harness/tests/stop-gate_test.sh::test_without_check_target_exits_zero
+con la mutacion (debe ser rojo): exit 1
+    sin objetivo check: esperado [0], obtenido [2]
+--- FAIL: test_without_check_target_exits_zero
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_without_check_target_exits_zero
+resultado: OK
+
+### stop-gate: escala al cuarto bloqueo
+fichero: scripts/harness/stop-gate.sh; test: scripts/harness/tests/stop-gate_test.sh::test_red_check_blocks_three_times_then_allows
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [sigue en rojo tras 3 intentos]; salida: [STOP GATE (3/3): make check falla (o supera 540 s). Corrige antes de terminar.
+Ultimas lineas de la salida:
+make: *** [Makefile:3: check] Error 1]
+--- FAIL: test_red_check_blocks_three_times_then_allows
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_red_check_blocks_three_times_then_allows
+resultado: OK
+
+### stop-gate: sin pausa para Marcos
+fichero: scripts/harness/stop-gate.sh; test: scripts/harness/tests/stop-gate_test.sh::test_pause_file_allows_stop_and_shows_reason
+con la mutacion (debe ser rojo): exit 1
+    pausa para Marcos: esperado [0], obtenido [2]
+--- FAIL: test_pause_file_allows_stop_and_shows_reason
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_pause_file_allows_stop_and_shows_reason
+resultado: OK
+
+### stop-gate: sin cache
+fichero: scripts/harness/stop-gate.sh; test: scripts/harness/tests/stop-gate_test.sh::test_green_is_cached_and_resets_counter
+con la mutacion (debe ser rojo): exit 1
+    el mismo árbol no vuelve a ejecutar make check: esperado [3], obtenido [4]
+--- FAIL: test_green_is_cached_and_resets_counter
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_green_is_cached_and_resets_counter
+resultado: OK
+
+### stop-gate: sin salida rapida con todo subido
+fichero: scripts/harness/stop-gate.sh; test: scripts/harness/tests/stop-gate_test.sh::test_clean_tree_without_unpushed_commits_exits_zero
+con la mutacion (debe ser rojo): exit 1
+    árbol limpio y todo subido: esperado [0], obtenido [2]
+--- FAIL: test_clean_tree_without_unpushed_commits_exits_zero
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_clean_tree_without_unpushed_commits_exits_zero
+resultado: OK
+
+### stop-gate: git add -A sobre el indice real
+fichero: scripts/harness/stop-gate.sh; test: scripts/harness/tests/stop-gate_test.sh::test_hook_leaves_the_real_index_untouched
+con la mutacion (debe ser rojo): exit 1
+    índice real tras el hook: esperado [100644 e31de1f3a235fd5e8f97207b8e43cd2aa06a6417 0	README.md], obtenido [100644 30e433787c60e1c0524261a2a07b02444b8a8495 0	Makefile
+100644 482f4d104658e1ebfa07543b688a0a701c68b19f 0	README.md
+100644 36080d9445992b815600e3a40351e75c8c842ea5 0	untracked.txt]
+--- FAIL: test_hook_leaves_the_real_index_untouched
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_hook_leaves_the_real_index_untouched
+resultado: OK
+
+### F-0004: clave de cache constante
+fichero: scripts/harness/stop-gate.sh; test: scripts/harness/tests/stop-gate_test.sh::test_untracked_file_change_invalidates_cache
+con la mutacion (debe ser rojo): exit 1
+    tras cambiar ficheros sin seguir, make check vuelve a ejecutarse: esperado [2], obtenido [0]
+--- FAIL: test_untracked_file_change_invalidates_cache
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_untracked_file_change_invalidates_cache
+resultado: OK
+
+### post-edit: sin informar del error de gofmt
+fichero: scripts/harness/post-edit.sh; test: scripts/harness/tests/post-edit_test.sh::test_syntax_error_is_reported_as_additional_context
+con la mutacion (debe ser rojo): exit 1
+    la salida no es el JSON de PostToolUse: []
+--- FAIL: test_syntax_error_is_reported_as_additional_context
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_syntax_error_is_reported_as_additional_context
+resultado: OK
+
+### #14: check-skips sin exigir la cita
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_unjustified_skip_fails
+con la mutacion (debe ser rojo): exit 1
+    t.Skip sin F-NNNN: esperado [1], obtenido [0]
+--- FAIL: test_unjustified_skip_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_unjustified_skip_fails
+resultado: OK
+
+### #10: la cita vale tambien en la ruta
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_fallo_in_the_path_does_not_justify_a_skip
+con la mutacion (debe ser rojo): exit 1
+    F-NNNN solo en la ruta: esperado [1], obtenido [0]
+--- FAIL: test_fallo_in_the_path_does_not_justify_a_skip
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_fallo_in_the_path_does_not_justify_a_skip
+resultado: OK
+
+### #10: solo Skip con parentesis
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_skip_used_as_a_value_is_checked
+con la mutacion (debe ser rojo): exit 1
+    t.SkipNow como valor: esperado [1], obtenido [0]
+--- FAIL: test_skip_used_as_a_value_is_checked
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_skip_used_as_a_value_is_checked
+resultado: OK
+
+### #14: check-skips entra en testdata
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_testdata_fixtures_are_ignored
+con la mutacion (debe ser rojo): exit 1
+    los fixtures de testdata no son tests del módulo (check-skips: test saltado sin un F-NNNN de FALLOS.md en esa línea: pkg/demo/testdata/trap/trap_test.go:6): esperado [0], obtenido [1]
+--- FAIL: test_testdata_fixtures_are_ignored
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_testdata_fixtures_are_ignored
+resultado: OK
+
+### R2 #5: sin mirar los tests que make check no compila
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_test_files_the_default_build_never_compiles_fail
+con la mutacion (debe ser rojo): exit 1
+    //go:build never: esperado [1], obtenido [0]
+--- FAIL: test_test_files_the_default_build_never_compiles_fail
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_test_files_the_default_build_never_compiles_fail
+resultado: OK
+
+### R2 #5: la cabecera no justifica
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_justified_ignored_test_file_passes
+con la mutacion (debe ser rojo): exit 1
+    fichero ignorado con F-NNNN en la cabecera (check-skips: test que make check nunca compila, sin un F-NNNN de FALLOS.md en su cabecera: pkg/demo/a_test.go): esperado [0], obtenido [1]
+--- FAIL: test_justified_ignored_test_file_passes
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_justified_ignored_test_file_passes
+resultado: OK
+
+### R2 #5: sin mirar los helpers
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_skip_in_a_test_helper_fails
+con la mutacion (debe ser rojo): exit 1
+    t.Skip en un helper: esperado [1], obtenido [0]
+--- FAIL: test_skip_in_a_test_helper_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_skip_in_a_test_helper_fails
+resultado: OK
+
+### R2 #5: Skip de produccion tratado como test
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_skip_method_in_production_code_passes
+con la mutacion (debe ser rojo): exit 1
+    un método Skip propio en código de producción (check-skips: test saltado sin un F-NNNN de FALLOS.md en esa línea: pkg/parse/cursor.go:7): esperado [0], obtenido [1]
+--- FAIL: test_skip_method_in_production_code_passes
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_skip_method_in_production_code_passes
+resultado: OK
+
+### F-0009: sin la regla noreply
+fichero: scripts/harness/check-attribution.sh; test: scripts/harness/tests/attribution_test.sh::test_anthropic_noreply_address_fails
+con la mutacion (debe ser rojo): exit 1
+    dirección noreply de Anthropic: esperado [1], obtenido [0]
+--- FAIL: test_anthropic_noreply_address_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_anthropic_noreply_address_fails
+resultado: OK
+
+### F-0009: sin la linea Generated with
+fichero: scripts/harness/check-attribution.sh; test: scripts/harness/tests/attribution_test.sh::test_generated_with_claude_footer_fails
+con la mutacion (debe ser rojo): exit 1
+    commit con la línea Generated with Claude Code: esperado [1], obtenido [0]
+--- FAIL: test_generated_with_claude_footer_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_generated_with_claude_footer_fails
+resultado: OK
+
+### F-0009: coautoria ancha otra vez
+fichero: scripts/harness/check-attribution.sh; test: scripts/harness/tests/attribution_test.sh::test_product_text_mentioning_claude_passes
+con la mutacion (debe ser rojo): exit 1
+    texto del producto (check-attribution: commits con atribución de Claude en el mensaje (coautoría o 'Generated with'):
+  4a225aa Parse .mcp.json files generated with claude mcp add): esperado [0], obtenido [1]
+--- FAIL: test_product_text_mentioning_claude_passes
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_product_text_mentioning_claude_passes
+resultado: OK
+
+### F-0009: toda la historia en vez de la rama
+fichero: scripts/harness/check-attribution.sh; test: scripts/harness/tests/attribution_test.sh::test_attribution_already_in_main_does_not_block_branches
+con la mutacion (debe ser rojo): exit 1
+    rama limpia sobre un main con atribución (check-attribution: commits con atribución de Claude en el mensaje (coautoría o 'Generated with'):
+  1c4f710 Squash from the past): esperado [0], obtenido [1]
+--- FAIL: test_attribution_already_in_main_does_not_block_branches
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_attribution_already_in_main_does_not_block_branches
+resultado: OK
+
+### F-0009: sin fallar en clon superficial
+fichero: scripts/harness/check-attribution.sh; test: scripts/harness/tests/attribution_test.sh::test_shallow_clone_fails
+con la mutacion (debe ser rojo): exit 1
+    clon superficial: esperado [1], obtenido [0]
+--- FAIL: test_shallow_clone_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_shallow_clone_fails
+resultado: OK
+
+### F-0009: sin mirar autor ni committer
+fichero: scripts/harness/check-attribution.sh; test: scripts/harness/tests/attribution_test.sh::test_claude_as_commit_author_fails
+con la mutacion (debe ser rojo): exit 1
+    commit con Claude como autor: esperado [1], obtenido [0]
+--- FAIL: test_claude_as_commit_author_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_claude_as_commit_author_fails
+resultado: OK
+
+### #12: --message sin -i
+fichero: scripts/harness/check-attribution.sh; test: scripts/harness/tests/attribution_test.sh::test_message_mode_ignores_letter_case
+con la mutacion (debe ser rojo): exit 1
+    coautoría en mayúsculas: esperado [1], obtenido [0]
+--- FAIL: test_message_mode_ignores_letter_case
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_message_mode_ignores_letter_case
+resultado: OK
+
+### #12: el # no se admite delante
+fichero: scripts/harness/check-attribution.sh; test: scripts/harness/tests/attribution_test.sh::test_message_mode_checks_comment_lines
+con la mutacion (debe ser rojo): exit 1
+    atribución en una línea que empieza por #: esperado [1], obtenido [0]
+--- FAIL: test_message_mode_checks_comment_lines
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_message_mode_checks_comment_lines
+resultado: OK
+
+### atribucion: solo el ultimo commit de la rama
+fichero: scripts/harness/check-attribution.sh; test: scripts/harness/tests/attribution_test.sh::test_attribution_in_an_old_commit_of_the_branch_fails
+con la mutacion (debe ser rojo): exit 1
+    atribución en un commit anterior de la rama: esperado [1], obtenido [0]
+--- FAIL: test_attribution_in_an_old_commit_of_the_branch_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_attribution_in_an_old_commit_of_the_branch_fails
+resultado: OK
+
+### commit-msg: no rechaza
+fichero: scripts/harness/commit-msg; test: scripts/harness/tests/attribution_test.sh::test_commit_msg_hook_rejects_attribution
+con la mutacion (debe ser rojo): exit 1
+    el hook dejó pasar un commit con coautoría de Claude
+--- FAIL: test_commit_msg_hook_rejects_attribution
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_commit_msg_hook_rejects_attribution
+resultado: OK
+
+### commit-msg: depende de scripts/harness
+fichero: scripts/harness/commit-msg; test: scripts/harness/tests/attribution_test.sh::test_commit_msg_hook_works_without_the_harness_scripts
+con la mutacion (debe ser rojo): exit 1
+    rechazó un commit limpio: .git/hooks/commit-msg: line 8: /tmp/tmp.vXw3jWyjzh/repo/scripts/harness/check-attribution.sh: No such file or directory
+commit-msg: el mensaje lleva atribución de Claude (coautoría o 'Generated with'); quítala y vuelve a hacer el commit
+--- FAIL: test_commit_msg_hook_works_without_the_harness_scripts
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_commit_msg_hook_works_without_the_harness_scripts
+resultado: OK
+
+### commit-msg: patron distinto del script
+fichero: scripts/harness/commit-msg; test: scripts/harness/tests/attribution_test.sh::test_hook_and_script_use_the_same_pattern
+con la mutacion (debe ser rojo): exit 1
+    patrón del hook y del script: esperado [pattern='^[[:space:]#>*-]*co-authored-by:[[:space:]]*(claude([[:space:]]+(code|opus|sonnet|haiku|fable|[0-9.]+)[^<]*)?[[:space:]]*<|.*anthropic)|^[[:space:]#>*-]*[a-z-]+:.*noreply@anthropic\.com|generated with \[claude code\]'], obtenido [pattern='^[[:space:]#>*-]*co-authored-by:[[:space:]]*(claude([[:space:]]+(code|opus|sonnet|haiku|fable|[0-9.]+)[^<]*)?[[:space:]]*<|.*anthropic)|^[[:space:]#>*-]*[a-z-]+:.*noreply@anthropic\.com|generated with \[claude\]']
+--- FAIL: test_hook_and_script_use_the_same_pattern
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_hook_and_script_use_the_same_pattern
+resultado: OK
+
+### F-0009: merge-pr sin revisar el mensaje del squash
+fichero: scripts/harness/merge-pr.sh; test: scripts/harness/tests/merge-pr_test.sh::test_refuses_a_squash_message_with_attribution
+con la mutacion (debe ser rojo): exit 1
+    cuerpo del squash con atribución: esperado [1], obtenido [0]
+--- FAIL: test_refuses_a_squash_message_with_attribution
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_refuses_a_squash_message_with_attribution
+resultado: OK
+
+### merge-pr: sin revisar el PR
+fichero: scripts/harness/merge-pr.sh; test: scripts/harness/tests/merge-pr_test.sh::test_refuses_a_pr_description_with_attribution
+con la mutacion (debe ser rojo): exit 1
+    descripción del PR con atribución: esperado [1], obtenido [0]
+--- FAIL: test_refuses_a_pr_description_with_attribution
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_refuses_a_pr_description_with_attribution
+resultado: OK
+
+### merge-pr: sin esperar los checks
+fichero: scripts/harness/merge-pr.sh; test: scripts/harness/tests/merge-pr_test.sh::test_does_not_merge_when_checks_fail
+con la mutacion (debe ser rojo): exit 1
+    checks en rojo: esperado [1], obtenido [0]
+--- FAIL: test_does_not_merge_when_checks_fail
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_does_not_merge_when_checks_fail
+resultado: OK
+
+### merge-pr: sin fijar el commit comprobado
+fichero: scripts/harness/merge-pr.sh; test: scripts/harness/tests/merge-pr_test.sh::test_merges_a_clean_pr_after_green_checks
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [pr merge 7 --squash --delete-branch --match-head-commit abc1234 --subject E0 step 9: demo (#7) --body-file /tmp/tmp.FYmzGMuNaO/body.md]; salida: [pr view 7 --json title,body,headRefOid
+pr checks 7 --watch --fail-fast
+pr merge 7 --squash --delete-branch --subject E0 step 9: demo (#7) --body-file /tmp/tmp.FYmzGMuNaO/body.md
+pr view 7 --json mergeCommit --jq .mergeCommit.oid
+api repos/{owner}/{repo}/commits/fedcba9 --jq .commit.message]
+--- FAIL: test_merges_a_clean_pr_after_green_checks
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_merges_a_clean_pr_after_green_checks
+resultado: OK
+
+### #10: la cita del allow vale en la ruta
+fichero: scripts/harness/secrets-scan.sh; test: scripts/harness/tests/secrets-scan_test.sh::test_fallo_in_the_path_does_not_justify_an_allow_comment
+con la mutacion (debe ser rojo): exit 1
+    F-NNNN solo en la ruta: esperado [1], obtenido [0]
+--- FAIL: test_fallo_in_the_path_does_not_justify_an_allow_comment
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_fallo_in_the_path_does_not_justify_an_allow_comment
+resultado: OK
+
+### install.sh sin instalar commit-msg
+fichero: scripts/harness/install.sh; test: scripts/harness/tests/install_test.sh::test_installs_settings_scripts_and_pre_push
+con la mutacion (debe ser rojo): exit 1
+    falta el commit-msg
+--- FAIL: test_installs_settings_scripts_and_pre_push
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_installs_settings_scripts_and_pre_push
+resultado: OK
+
+### settings: sin denegar el push forzado
+fichero: .claude/settings.json; test: scripts/harness/tests/settings_test.sh::test_settings_denies_dangerous_commands
+con la mutacion (debe ser rojo): exit 1
+    falta la denegación Bash(git push --force*)
+--- FAIL: test_settings_denies_dangerous_commands
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_settings_denies_dangerous_commands
+resultado: OK
+
+### settings: sin quitar la atribucion
+fichero: .claude/settings.json; test: scripts/harness/tests/settings_test.sh::test_settings_disable_claude_attribution
+con la mutacion (debe ser rojo): exit 1
+    attribution: esperado [{"commit":"","pr":"","sessionUrl":false}], obtenido [{}]
+--- FAIL: test_settings_disable_claude_attribution
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_settings_disable_claude_attribution
+resultado: OK
+
+### settings: el hook Stop apunta a otro script
+fichero: .claude/settings.json; test: scripts/harness/tests/settings_test.sh::test_settings_is_valid_json_with_the_three_hooks
+con la mutacion (debe ser rojo): exit 1
+    Stop: esperado ["$CLAUDE_PROJECT_DIR"/scripts/harness/stop-gate.sh], obtenido ["$CLAUDE_PROJECT_DIR"/scripts/harness/check-fallos.sh]
+--- FAIL: test_settings_is_valid_json_with_the_three_hooks
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_settings_is_valid_json_with_the_three_hooks
+resultado: OK
+
+### settings: un hook que no carga env.sh
+fichero: .claude/settings.json; test: scripts/harness/tests/settings_test.sh::test_every_hook_script_sources_env_first
+con la mutacion (debe ser rojo): exit 1
+    scripts/harness/check-fallos.sh: segunda línea de código: esperado [source "$(dirname "${BASH_SOURCE[0]}")/env.sh"], obtenido [f="docs/harness/FALLOS.md"]
+--- FAIL: test_every_hook_script_sources_env_first
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_every_hook_script_sources_env_first
+resultado: OK
+
+### F-0013: sin la lectura tokenizada
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_quoted_values_in_global_options
+con la mutacion (debe ser rojo): exit 1
+    git -c 'user.name=a b' push --no-verify origin e0/paso-2-x: esperado [2], obtenido [0]
+--- FAIL: test_blocks_quoted_values_in_global_options
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_quoted_values_in_global_options
+resultado: OK
+
+### R2: los heredocs no se quitan de la lectura tokenizada
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_heredocs
+con la mutacion (debe ser rojo): exit 1
+    cat > notes.txt <<'EOF'
+we don't push to main by hand
+EOF: esperado [0], obtenido [2]
+--- FAIL: test_heredocs
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_heredocs
+resultado: OK
+
+### R2 #2: orden que se decide al ejecutarse
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_git_behind_variables_functions_or_aliases
+con la mutacion (debe ser rojo): exit 1
+    g=git; $g push --no-verify origin e0/paso-2-x: esperado [2], obtenido [0]
+--- FAIL: test_blocks_git_behind_variables_functions_or_aliases
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_git_behind_variables_functions_or_aliases
+resultado: OK
+
+### R2 #2: funciones, alias y eval
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_git_behind_variables_functions_or_aliases
+con la mutacion (debe ser rojo): exit 1
+    f() { git "$@"; }; f push --no-verify origin e0/paso-2-x: esperado [2], obtenido [0]
+--- FAIL: test_blocks_git_behind_variables_functions_or_aliases
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_git_behind_variables_functions_or_aliases
+resultado: OK
+
+### R2 #2: sin detectar nombre() {
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_git_behind_variables_functions_or_aliases
+con la mutacion (debe ser rojo): exit 1
+    f() { git "$@"; }; f push --no-verify origin e0/paso-2-x: esperado [2], obtenido [0]
+--- FAIL: test_blocks_git_behind_variables_functions_or_aliases
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_git_behind_variables_functions_or_aliases
+resultado: OK
+
+### R2 #2: sin detectar function, alias y eval como orden
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_git_behind_variables_functions_or_aliases
+con la mutacion (debe ser rojo): exit 1
+    function f { git "$@"; }; f push origin e0/paso-2-x: esperado [2], obtenido [0]
+--- FAIL: test_blocks_git_behind_variables_functions_or_aliases
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_git_behind_variables_functions_or_aliases
+resultado: OK
+
+### R2: function suelto en un mensaje bloquea
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_allows_commands_that_only_mention_push
+con la mutacion (debe ser rojo): exit 1
+    git commit -m 'Move the push check into a function and drop an alias': esperado [0], obtenido [2]
+--- FAIL: test_allows_commands_that_only_mention_push
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_allows_commands_that_only_mention_push
+resultado: OK
+
+### R2 #3: send-pack
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_other_push_paths_and_config_from_the_environment
+con la mutacion (debe ser rojo): exit 1
+    git send-pack origin refs/heads/e0/paso-2-x: esperado [2], obtenido [0]
+--- FAIL: test_blocks_other_push_paths_and_config_from_the_environment
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_other_push_paths_and_config_from_the_environment
+resultado: OK
+
+### R2 #3: configuracion por entorno
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_other_push_paths_and_config_from_the_environment
+con la mutacion (debe ser rojo): exit 1
+    GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null git push origin e0/paso-2-x: esperado [2], obtenido [0]
+--- FAIL: test_blocks_other_push_paths_and_config_from_the_environment
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_other_push_paths_and_config_from_the_environment
+resultado: OK
+
+### R2 #3: alias escrito en el mismo comando
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_other_push_paths_and_config_from_the_environment
+con la mutacion (debe ser rojo): exit 1
+    printf '[alias]\n p = push\n' >> .git/config && git p origin e0/paso-2-x: esperado [2], obtenido [0]
+--- FAIL: test_blocks_other_push_paths_and_config_from_the_environment
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_other_push_paths_and_config_from_the_environment
+resultado: OK
+
+### R2 #3: --get en cualquier sitio cuenta como lectura
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_other_push_paths_and_config_from_the_environment
+con la mutacion (debe ser rojo): exit 1
+    git config user.nick foo --get && git config alias.p push --get: esperado [2], obtenido [0]
+--- FAIL: test_blocks_other_push_paths_and_config_from_the_environment
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_other_push_paths_and_config_from_the_environment
+resultado: OK
+
+### R2 #3: git-push con guion en posicion de orden
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_other_push_paths_and_config_from_the_environment
+con la mutacion (debe ser rojo): exit 1
+    /usr/lib/git-core/git-push origin main: esperado [2], obtenido [0]
+--- FAIL: test_blocks_other_push_paths_and_config_from_the_environment
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_other_push_paths_and_config_from_the_environment
+resultado: OK
+
+### R2: git-push suelto en un mensaje bloquea
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_allows_commands_that_only_mention_push
+con la mutacion (debe ser rojo): exit 1
+    git commit -m 'Block the dashed git-push binary': esperado [0], obtenido [2]
+--- FAIL: test_allows_commands_that_only_mention_push
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_allows_commands_that_only_mention_push
+resultado: OK
+
+### R2 #4: sin seguir cd y pushd
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_follows_cd_and_git_c_to_the_repo_that_pushes
+con la mutacion (debe ser rojo): exit 1
+    cd /tmp/tmp.JUnHRqgOgp/other && git push: esperado [2], obtenido [0]
+--- FAIL: test_follows_cd_and_git_c_to_the_repo_that_pushes
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_follows_cd_and_git_c_to_the_repo_that_pushes
+resultado: OK
+
+### R2 #9: el numero de 2>&1 cuenta como argumento
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_closing_tag_with_redirections
+con la mutacion (debe ser rojo): exit 1
+    git push origin e0-cerrada 2>&1: esperado [0], obtenido [2]
+--- FAIL: test_closing_tag_with_redirections
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_closing_tag_with_redirections
+resultado: OK
+
+### R2 #7: fusion directa de un PR
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_direct_pull_request_merges
+con la mutacion (debe ser rojo): exit 1
+    gh pr merge 3 --squash --delete-branch: esperado [2], obtenido [0]
+--- FAIL: test_blocks_direct_pull_request_merges
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_direct_pull_request_merges
+resultado: OK
+
+### R2 #6: MAKEFLAGS solo con la primera opcion
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_makeflags_with_several_options_fails
+con la mutacion (debe ser rojo): exit 1
+    MAKEFLAGS += -s -i: esperado [1], obtenido [0]
+--- FAIL: test_makeflags_with_several_options_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_makeflags_with_several_options_fails
+resultado: OK
+
+### R2 #6: sin abreviaturas de --ignore y --keep
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_long_option_abbreviations_fail
+con la mutacion (debe ser rojo): exit 1
+    make --ignore check: esperado [1], obtenido [0]
+--- FAIL: test_long_option_abbreviations_fail
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_long_option_abbreviations_fail
+resultado: OK
+
+### R2 #6: .IGNORE con sangria
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_indented_ignore_fails
+con la mutacion (debe ser rojo): exit 1
+    .IGNORE con sangría: esperado [1], obtenido [0]
+--- FAIL: test_indented_ignore_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_indented_ignore_fails
+resultado: OK
+
+### R2 #6: sin set +o errexit
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_set_plus_o_fails
+con la mutacion (debe ser rojo): exit 1
+    set +o errexit: esperado [1], obtenido [0]
+--- FAIL: test_set_plus_o_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_set_plus_o_fails
+resultado: OK
+
+### R2 #6: sin true por ruta
+fichero: scripts/harness/check-weakeners.sh; test: scripts/harness/tests/check-weakeners_test.sh::test_true_by_path_fails
+con la mutacion (debe ser rojo): exit 1
+    go vet ./... || /bin/true: esperado [1], obtenido [0]
+--- FAIL: test_true_by_path_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_true_by_path_fails
+resultado: OK
+
+### R2 #7: merge-pr sin mirar el commit que entro en main
+fichero: scripts/harness/merge-pr.sh; test: scripts/harness/tests/merge-pr_test.sh::test_checks_the_commit_that_entered_main
+con la mutacion (debe ser rojo): exit 1
+    commit en main con atribución: esperado [1], obtenido [0]
+--- FAIL: test_checks_the_commit_that_entered_main
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_checks_the_commit_that_entered_main
+resultado: OK
+
+### docs: la pausa por stderr con exit 0
+fichero: scripts/harness/stop-gate.sh; test: scripts/harness/tests/stop-gate_test.sh::test_pause_file_allows_stop_and_shows_reason
+con la mutacion (debe ser rojo): exit 1
+    el motivo llega a Marcos: no contiene [falta az login de Marcos]; salida: []
+--- FAIL: test_pause_file_allows_stop_and_shows_reason
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_pause_file_allows_stop_and_shows_reason
+resultado: OK
+
+### docs: parar en rojo sin avisar a Marcos
+fichero: scripts/harness/stop-gate.sh; test: scripts/harness/tests/stop-gate_test.sh::test_red_check_blocks_three_times_then_allows
+con la mutacion (debe ser rojo): exit 1
+    Marcos ve que Claude paró con check en rojo: no contiene [make check sigue en rojo]; salida: []
+--- FAIL: test_red_check_blocks_three_times_then_allows
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_red_check_blocks_three_times_then_allows
+resultado: OK
+
+### docs: sin mirar el cwd de la sesion
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_uses_the_cwd_of_the_session
+con la mutacion (debe ser rojo): exit 1
+    push con el cwd de la sesión en un repo en main: esperado [2], obtenido [0]
+--- FAIL: test_uses_the_cwd_of_the_session
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_uses_the_cwd_of_the_session
+resultado: OK
+
+### guard: sin jq deja pasar
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_everything_without_jq
+con la mutacion (debe ser rojo): exit 1
+    sin jq: esperado [2], obtenido [0]
+--- FAIL: test_blocks_everything_without_jq
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_everything_without_jq
+resultado: OK
+
+### docs: matcher solo Bash
+fichero: .claude/settings.json; test: scripts/harness/tests/settings_test.sh::test_settings_is_valid_json_with_the_three_hooks
+con la mutacion (debe ser rojo): exit 1
+    PreToolUse de Bash, Monitor y PowerShell: esperado ["$CLAUDE_PROJECT_DIR"/scripts/harness/guard-git.sh], obtenido []
+--- FAIL: test_settings_is_valid_json_with_the_three_hooks
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_settings_is_valid_json_with_the_three_hooks
+resultado: OK
+
+### F-0012: check-pipes no encuentra nada
+fichero: scripts/harness/check-pipes.sh; test: scripts/harness/tests/check-pipes_test.sh::test_pipe_into_head_fails
+con la mutacion (debe ser rojo): exit 1
+    | head: esperado [1], obtenido [0]
+--- FAIL: test_pipe_into_head_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_pipe_into_head_fails
+resultado: OK
+
+### F-0012: check-pipes confunde || con |
+fichero: scripts/harness/check-pipes.sh; test: scripts/harness/tests/check-pipes_test.sh::test_or_list_and_here_strings_pass
+con la mutacion (debe ser rojo): exit 1
+    || no es una tubería (scripts/x.sh:3:if [ -z "$a" ] || grep -q x <<< "$v"; then echo y; fi
+scripts/x.sh: tubería hacia un lector que sale antes (head, grep -q/-m/-l): con pipefail da 141 según el tamaño; usa una variable y <<<): esperado [0], obtenido [1]
+--- FAIL: test_or_list_and_here_strings_pass
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_or_list_and_here_strings_pass
+resultado: OK
+
+### F-0012: el test de settings vuelve a usar | head
+fichero: scripts/harness/tests/settings_test.sh; test: scripts/harness/tests/settings_test.sh::test_every_hook_script_sources_env_first
+con la mutacion (debe ser rojo): exit 1
+--- FAIL: test_every_hook_script_sources_env_first
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_every_hook_script_sources_env_first
+resultado: OK
+
+### F-0008: SETTINGS_FILE relativo
+fichero: scripts/harness/tests/settings_test.sh; test: scripts/harness/tests/settings_test.sh::test_settings_file_can_be_relative
+con la mutacion (debe ser rojo): exit 1
+    SETTINGS_FILE relativo (jq: error: Could not open file copy/settings.json: No such file or directory
+    settings.json no es JSON válido
+--- FAIL: test_settings_is_valid_json_with_the_three_hooks): esperado [0], obtenido [1]
+--- FAIL: test_settings_file_can_be_relative
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_settings_file_can_be_relative
+resultado: OK
+
+### guard: sin python3 se salta la lectura tokenizada
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_a_push_without_python3
+con la mutacion (debe ser rojo): exit 1
+    sin python3, el push: esperado [2], obtenido [0]
+--- FAIL: test_blocks_a_push_without_python3
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_a_push_without_python3
+resultado: OK
+
+### guard: sin bloquear cuando falta python3
+fichero: scripts/harness/guard-git.sh; test: scripts/harness/tests/guard-git_test.sh::test_blocks_a_push_without_python3
+con la mutacion (debe ser rojo): exit 1
+    sin python3, el push: esperado [2], obtenido [0]
+--- FAIL: test_blocks_a_push_without_python3
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_blocks_a_push_without_python3
+resultado: OK
+
+repo en uso sin cambios
+TODAS OK
+exit: 0

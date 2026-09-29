@@ -1,0 +1,14 @@
+# Cierre de la E0: check-personal.sh sobre el árbol del main anterior (b3d6843)
+fecha: 2026-09-29T10:16:59Z
+método: git archive b3d6843 en un repo temporal con un único commit, y scripts/harness/check-personal.sh con la lista privada (fuera de git).
+La salida solo da categoría y lugar, nunca el texto. Resumen (hallazgos por categoría y fichero):
+      1 check-personal: dato personal (correo) en docs/epicas/E3.md
+      2 check-personal: dato personal (correo) en docs/epicas/E4.md
+      3 check-personal: dato personal (cuenta personal) en docs/PLAN.md
+      3 check-personal: dato personal (gestoria) en docs/PLAN.md
+      2 check-personal: dato personal (gestoria) en docs/epicas/E3.md
+      1 check-personal: dato personal (gestoria) en docs/epicas/E4.md
+      2 check-personal: dato personal (nombre completo) en scripts/harness/tests/attribution_test.sh
+      6 check-personal: dato personal (planes personales) en docs/PLAN.md
+     13 check-personal: dato personal (situacion laboral) en docs/PLAN.md
+exit: 1
