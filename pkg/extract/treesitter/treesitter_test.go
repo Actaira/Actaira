@@ -1,7 +1,11 @@
 package treesitter
 
 import (
+	"context"
+	"errors"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestParsesEachLanguage(t *testing.T) {
@@ -17,7 +21,7 @@ func TestParsesEachLanguage(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tree, err := Parse(tc.lang, []byte(tc.src))
+			tree, err := Parse(context.Background(), tc.lang, []byte(tc.src))
 			if err != nil {
 				t.Fatalf("Parse: %v", err)
 			}
@@ -35,7 +39,7 @@ func TestParsesEachLanguage(t *testing.T) {
 // TSX needs its own grammar: the TypeScript one reads JSX as an error. The
 // extractors pick the grammar by extension (.ts or .tsx).
 func TestTSXIsNotTypeScript(t *testing.T) {
-	tree, err := Parse(TypeScript, []byte("const a = <div className=\"x\">hi</div>;\n"))
+	tree, err := Parse(context.Background(), TypeScript, []byte("const a = <div className=\"x\">hi</div>;\n"))
 	if err != nil {
 		t.Fatalf("Parse: %v", err)
 	}
@@ -49,7 +53,7 @@ func TestTSXIsNotTypeScript(t *testing.T) {
 // tree comes back with its errors marked (ERROR and MISSING nodes).
 func TestBrokenSyntaxIsATreeWithErrors(t *testing.T) {
 	for _, lang := range []Language{Python, TypeScript, TSX} {
-		tree, err := Parse(lang, []byte("def (:\n  ]]] const = ;\n"))
+		tree, err := Parse(context.Background(), lang, []byte("def (:\n  ]]] const = ;\n"))
 		if err != nil {
 			t.Fatalf("%v: Parse: %v", lang, err)
 		}
@@ -61,16 +65,46 @@ func TestBrokenSyntaxIsATreeWithErrors(t *testing.T) {
 }
 
 func TestUnknownLanguageIsAnError(t *testing.T) {
-	if _, err := Parse(Language(99), []byte("x")); err == nil {
-		t.Fatal("Parse with an unknown language returned no error")
+	_, err := Parse(context.Background(), Language(99), []byte("x"))
+	if err == nil || !strings.Contains(err.Error(), "unknown language") {
+		t.Fatalf("Parse with an unknown language: err = %v, want an unknown language error", err)
 	}
 }
 
 func TestCloseTwiceIsSafe(t *testing.T) {
-	tree, err := Parse(Python, []byte("x = 1\n"))
+	tree, err := Parse(context.Background(), Python, []byte("x = 1\n"))
 	if err != nil {
 		t.Fatalf("Parse: %v", err)
 	}
 	tree.Close()
 	tree.Close()
+}
+
+// A hostile file costs seconds and a GB of memory to parse (review round 1 of
+// step 1.2a: 1 MB of "a<" in TypeScript). The caller's deadline stops it, and
+// the error says why, so the extractors can record it as unresolved.
+func TestADeadlineStopsAHostileParse(t *testing.T) {
+	src := []byte(strings.Repeat("a<", 1<<19))
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+	start := time.Now()
+	tree, err := Parse(ctx, TypeScript, src)
+	if err == nil {
+		tree.Close()
+		t.Fatal("a 1 MB hostile file was parsed within 50 ms: the deadline was not used")
+	}
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("err = %v, want one that wraps context.DeadlineExceeded", err)
+	}
+	if took := time.Since(start); took > time.Second {
+		t.Fatalf("the parse stopped %v after starting, want well under a second", took)
+	}
+}
+
+func TestACanceledContextParsesNothing(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err := Parse(ctx, Python, []byte("x = 1\n")); !errors.Is(err, context.Canceled) {
+		t.Fatalf("err = %v, want one that wraps context.Canceled", err)
+	}
 }

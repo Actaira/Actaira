@@ -3,6 +3,7 @@
 package treesitter
 
 import (
+	"context"
 	"os"
 	"runtime"
 	"strconv"
@@ -29,9 +30,9 @@ func residentBytes(t *testing.T) int64 {
 	return pages * int64(os.Getpagesize())
 }
 
-// Every parser and tree is freed (docs/epicas/E1.md, step 1.2): parsing 1,000
-// files of about 40 KB and closing each tree leaves the resident memory where
-// it was. Without Close, the C memory of the trees alone is several hundred MB.
+// Every tree is freed (docs/epicas/E1.md, step 1.2): parsing 1,000 files of
+// about 60 KB and closing each tree leaves the resident memory where it was.
+// Without Tree.Close, the trees alone keep about 3.5 GB.
 func TestParsingAThousandFilesDoesNotLeak(t *testing.T) {
 	var b strings.Builder
 	for i := 0; i < 1000; i++ {
@@ -40,7 +41,7 @@ func TestParsingAThousandFilesDoesNotLeak(t *testing.T) {
 	src := []byte(b.String())
 	parseAll := func(n int) {
 		for i := 0; i < n; i++ {
-			tree, err := Parse(Python, src)
+			tree, err := Parse(context.Background(), Python, src)
 			if err != nil {
 				t.Fatalf("Parse: %v", err)
 			}
@@ -55,7 +56,34 @@ func TestParsingAThousandFilesDoesNotLeak(t *testing.T) {
 	after := residentBytes(t)
 	const limit = 64 << 20
 	if grew := after - before; grew > limit {
-		t.Fatalf("resident memory grew %d MB after 1,000 parses (limit %d MB): a parser or tree is not closed",
+		t.Fatalf("resident memory grew %d MB after 1,000 parses (limit %d MB): a tree is not closed",
+			grew>>20, limit>>20)
+	}
+}
+
+// Every parser is freed too: its memory is small next to a tree's, so this
+// takes 20,000 parses of a tiny file (review round 1 of step 1.2a: without
+// parser.Close the memory grows about 140 MB).
+func TestParsingTwentyThousandTinyFilesDoesNotLeakParsers(t *testing.T) {
+	src := []byte("x = 1\n")
+	parseAll := func(n int) {
+		for i := 0; i < n; i++ {
+			tree, err := Parse(context.Background(), Python, src)
+			if err != nil {
+				t.Fatalf("Parse: %v", err)
+			}
+			tree.Close()
+		}
+	}
+	parseAll(500)
+	runtime.GC()
+	before := residentBytes(t)
+	parseAll(20000)
+	runtime.GC()
+	after := residentBytes(t)
+	const limit = 64 << 20
+	if grew := after - before; grew > limit {
+		t.Fatalf("resident memory grew %d MB after 20,000 parses (limit %d MB): a parser is not closed",
 			grew>>20, limit>>20)
 	}
 }

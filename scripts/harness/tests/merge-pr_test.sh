@@ -23,16 +23,22 @@ case "\$*" in
   "api "*) cat "$T/merged-msg" ;;
   "pr view"*) cat "$T/pr.json" ;;
   "pr checks"*"--watch"*)
+    # A check that is not required fails: only a watch of every check sees it.
+    if [ -f "$T/optional-fails" ] && [[ "\$*" != *"--required"* ]]; then
+      exit 1
+    fi
     if [ "\$(cat "$T/no-checks" 2>/dev/null || echo 0)" -gt 0 ]; then
       echo "no checks reported on the 'demo' branch" >&2
       exit 1
     fi
     exit ${1:-0} ;;
   "pr checks"*)
+    required=""
+    if [[ "\$*" == *"--required"* ]]; then required="required "; fi
     n="\$(cat "$T/no-checks" 2>/dev/null || echo 0)"
     if [ "\$n" -gt 0 ]; then
       echo "\$((n - 1))" > "$T/no-checks"
-      echo "no checks reported on the 'demo' branch" >&2
+      echo "no \${required}checks reported on the 'demo' branch" >&2
       exit 1
     fi
     printf 'check\tpending\t0\n'
@@ -74,7 +80,7 @@ gh_log() { if [ -f "$T/gh.log" ]; then cat "$T/gh.log"; fi; }
 test_merges_a_clean_pr_after_green_checks() {
   fake_gh 0
   assert_eq "$(merge 7 "E0 step 9: demo (#7)" "$T/body.md")" "0" "fusión limpia ($(cat "$T/out"))"
-  assert_contains "$(gh_log)" "pr checks 7 --watch --fail-fast"
+  assert_contains "$(gh_log)" "pr checks 7 --required --watch --fail-fast"
   assert_contains "$(gh_log)" "pr merge 7 --squash --delete-branch --match-head-commit abc1234 --subject E0 step 9: demo (#7) --body-file $T/body.md --author-email 123+demo@users.noreply.github.com"
   assert_eq "$(cat "$T/gitleaks.log")" "dir --no-banner --redact --log-level warn . | pr-msg squash-msg " "gitleaks sobre los dos textos"
 }
@@ -172,8 +178,8 @@ test_waits_for_the_checks_of_a_new_pr() {
   fake_gh 0
   echo 2 > "$T/no-checks"
   assert_eq "$(merge 7 "E0 step 9: demo (#7)" "$T/body.md")" "0" "espera a que haya checks ($(cat "$T/out"))"
-  assert_eq "$(grep -c '^pr checks 7$' "$T/gh.log")" "3" "tres consultas: dos sin checks y una con"
-  assert_contains "$(gh_log)" "pr checks 7 --watch --fail-fast"
+  assert_eq "$(grep -c '^pr checks 7 --required$' "$T/gh.log")" "3" "tres consultas: dos sin checks y una con"
+  assert_contains "$(gh_log)" "pr checks 7 --required --watch --fail-fast"
   assert_contains "$(gh_log)" "pr merge 7"
 }
 
@@ -192,6 +198,17 @@ test_gives_up_when_no_check_appears() {
     "$HARNESS_DIR/merge-pr.sh" 7 "E0 step 9: demo (#7)" "$T/body.md" >"$T/out" 2>&1 || rc=$?
   assert_eq "$rc" "2" "un número de intentos que no es un número"
   assert_contains "$(cat "$T/out")" "tienen que ser números enteros"
+}
+
+# F-0023: only the required check gates the merge. A job of platforms.yml that
+# is not required (check-macos, check-ubuntu-26) may fail without blocking every
+# pull request (review round 1 of E1 step 1.2a).
+test_a_failing_check_that_is_not_required_does_not_block_the_merge() {
+  fake_gh 0
+  touch "$T/optional-fails"
+  assert_eq "$(merge 7 "E0 step 9: demo (#7)" "$T/body.md")" "0" "un check no obligatorio en rojo ($(cat "$T/out"))"
+  assert_contains "$(gh_log)" "pr checks 7 --required --watch --fail-fast"
+  assert_contains "$(gh_log)" "pr merge 7"
 }
 
 run_tests "$@"

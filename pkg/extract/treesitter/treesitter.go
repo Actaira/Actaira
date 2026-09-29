@@ -6,6 +6,7 @@
 package treesitter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -49,14 +50,19 @@ func (l Language) grammar() (*sitter.Language, error) {
 	return nil, fmt.Errorf("treesitter: unknown language %v", l)
 }
 
-// Tree is the syntax tree of one file.
+// Tree is the syntax tree of one file. After Close it must not be used.
 type Tree struct {
 	t *sitter.Tree
 }
 
 // Parse parses src with the grammar of lang. Broken code is not an error: the
-// tree comes back with its ERROR and MISSING nodes (HasError).
-func Parse(lang Language, src []byte) (*Tree, error) {
+// tree comes back with its ERROR and MISSING nodes (HasError). A hostile file
+// can take seconds and a GB of memory (ADR 0003), so the parse stops when ctx
+// is done, and the error wraps ctx.Err().
+func Parse(ctx context.Context, lang Language, src []byte) (*Tree, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, fmt.Errorf("treesitter: parse not started: %w", err)
+	}
 	grammar, err := lang.grammar()
 	if err != nil {
 		return nil, err
@@ -66,8 +72,19 @@ func Parse(lang Language, src []byte) (*Tree, error) {
 	if err := parser.SetLanguage(grammar); err != nil {
 		return nil, fmt.Errorf("treesitter: %v grammar: %w", lang, err)
 	}
-	t := parser.Parse(src, nil)
+	read := func(i int, _ sitter.Point) []byte {
+		if i < len(src) {
+			return src[i:]
+		}
+		return []byte{}
+	}
+	// tree-sitter calls this now and then while it parses; true cancels.
+	opts := &sitter.ParseOptions{ProgressCallback: func(sitter.ParseState) bool { return ctx.Err() != nil }}
+	t := parser.ParseWithOptions(read, nil, opts)
 	if t == nil {
+		if err := ctx.Err(); err != nil {
+			return nil, fmt.Errorf("treesitter: parse stopped: %w", err)
+		}
 		return nil, errors.New("treesitter: the parser returned no tree")
 	}
 	return &Tree{t: t}, nil

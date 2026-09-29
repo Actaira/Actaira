@@ -69,8 +69,8 @@ if [ "$sin_ci" -eq 0 ]; then
     exit 2
   fi
   tries=0
-  while ! out="$(gh pr checks "$pr" 2>&1)"; do
-    if ! grep -q "no checks reported" <<< "$out"; then
+  while ! out="$(gh pr checks "$pr" --required 2>&1)"; do
+    if ! grep -qE "no (required )?checks reported" <<< "$out"; then
       break
     fi
     tries=$((tries + 1))
@@ -80,7 +80,9 @@ if [ "$sin_ci" -eq 0 ]; then
     fi
     sleep "$wait_s"
   done
-  gh pr checks "$pr" --watch --fail-fast
+  # Only the required check gates the merge (F-0023): the jobs of
+  # platforms.yml report on other systems and must not block every PR.
+  gh pr checks "$pr" --required --watch --fail-fast
 fi
 # GitHub signs a merge with the account's primary e-mail unless it is told
 # otherwise; main is public and cannot be rewritten (F-0015).
