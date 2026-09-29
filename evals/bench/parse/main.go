@@ -47,14 +47,15 @@ var repos = []repo{
 }
 
 type result struct {
-	Repo           repo    `json:"repo"`
-	Files          int     `json:"files"`
-	EmptyFiles     int     `json:"empty_files"`
-	Bytes          int64   `json:"bytes"`
-	TotalMS        float64 `json:"total_ms"`
-	MedianMS       float64 `json:"median_ms_per_file"`
-	P95MS          float64 `json:"p95_ms_per_file"`
-	FilesWithError int     `json:"files_with_syntax_errors"`
+	Repo           repo     `json:"repo"`
+	Files          int      `json:"files"`
+	EmptyFiles     int      `json:"empty_files"`
+	Bytes          int64    `json:"bytes"`
+	TotalMS        float64  `json:"total_ms"`
+	MedianMS       float64  `json:"median_ms_per_file"`
+	P95MS          float64  `json:"p95_ms_per_file"`
+	FilesWithError int      `json:"files_with_syntax_errors"`
+	ErrorFiles     []string `json:"error_files"`
 }
 
 type report struct {
@@ -145,6 +146,7 @@ func measure(dir string, r repo, n int) (result, error) {
 	}
 	times := make([]float64, len(paths))
 	withError := 0
+	var errorFiles []string
 	start := time.Now()
 	for i, p := range paths {
 		t0 := time.Now()
@@ -154,6 +156,9 @@ func measure(dir string, r repo, n int) (result, error) {
 		}
 		if tree.HasError() {
 			withError++
+			if rel, err := filepath.Rel(dir, p); err == nil {
+				errorFiles = append(errorFiles, filepath.ToSlash(rel))
+			}
 		}
 		tree.Close()
 		times[i] = float64(time.Since(t0).Microseconds()) / 1000
@@ -169,6 +174,7 @@ func measure(dir string, r repo, n int) (result, error) {
 		MedianMS:       times[(len(times)-1)/2],
 		P95MS:          times[nearestRank(len(times), 95)],
 		FilesWithError: withError,
+		ErrorFiles:     errorFiles,
 	}, nil
 }
 
