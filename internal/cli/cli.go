@@ -76,18 +76,30 @@ func runVersion(args []string, stdout, stderr io.Writer) int {
 	return ExitOK
 }
 
-func runHelp(_ []string, stdout, _ io.Writer) int {
-	writeUsage(stdout)
+func runHelp(args []string, stdout, stderr io.Writer) int {
+	if len(args) > 0 {
+		say(stderr, "actaira: %q takes no arguments\n", "help")
+		return ExitUsage
+	}
+	if _, err := io.WriteString(stdout, usage()); err != nil {
+		say(stderr, "actaira: writing the help: %v\n", err)
+		return ExitInternal
+	}
 	return ExitOK
 }
 
+// writeUsage prints the usage as a hint next to an error message.
 func writeUsage(w io.Writer) {
+	say(w, "%s", usage())
+}
+
+func usage() string {
 	var b strings.Builder
 	b.WriteString("usage: actaira <command>\n\ncommands:\n")
 	for _, c := range commands {
 		fmt.Fprintf(&b, "  %-8s %s\n", c.name, c.summary)
 	}
-	say(w, "%s", b.String())
+	return b.String()
 }
 
 // say writes a message for the person running actaira. If that write fails

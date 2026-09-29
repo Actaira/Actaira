@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
 
@@ -108,6 +109,40 @@ func TestCommandsAreImplementedAndListedInTheUsage(t *testing.T) {
 		}
 		if !strings.Contains(usage, "\n  "+name+" ") {
 			t.Errorf("the usage does not list %q:\n%s", name, usage)
+		}
+	}
+}
+
+func TestHelpRejectsArguments(t *testing.T) {
+	for _, args := range [][]string{{"help", "extra"}, {"--help", "extra"}} {
+		code, out, errOut := run(args...)
+		if code != ExitUsage {
+			t.Fatalf("%v: exit code = %d, want %d", args, code, ExitUsage)
+		}
+		if out != "" {
+			t.Fatalf("%v: stdout = %q, want nothing", args, out)
+		}
+		if !strings.Contains(errOut, `actaira: "help" takes no arguments`) {
+			t.Fatalf("%v: stderr = %q, want the reason", args, errOut)
+		}
+	}
+}
+
+type brokenWriter struct{}
+
+func (brokenWriter) Write([]byte) (int, error) { return 0, errors.New("no space left on device") }
+
+// A command whose output cannot be written did not do what was asked: it is
+// an internal error, not a success (review round 1 of step 1.1).
+func TestFailingToWriteTheOutputIsAnInternalError(t *testing.T) {
+	for _, name := range []string{"version", "help"} {
+		var errOut bytes.Buffer
+		code := Run([]string{name}, brokenWriter{}, &errOut)
+		if code != ExitInternal {
+			t.Fatalf("%s: exit code = %d, want %d", name, code, ExitInternal)
+		}
+		if !strings.Contains(errOut.String(), "no space left on device") {
+			t.Fatalf("%s: stderr = %q, want the write error", name, errOut.String())
 		}
 	}
 }

@@ -41,12 +41,13 @@ while IFS= read -r hit; do
   fi
 done <<< "$hits"
 
-# //nolint switches golangci-lint off for a line (L-003): the directive names
-# its linters (//nolint:errcheck, never a bare //nolint or //nolint:all) and
-# cites a recorded F-NNNN on that line. golangci-lint only reads the directive
-# with no space after //, so "// nolint" is flagged as well.
+# //nolint switches golangci-lint off for a line (L-003). golangci-lint strips
+# the slashes and spaces before "nolint" and reads the linter names in any case
+# (F-0020), so every such comment is looked at: it has to be written exactly
+# //nolint:<linter>[,<linter>...] (lowercase names, never "all"), and cite a
+# recorded F-NNNN on that line.
 grc=0
-hits="$(git grep -n -I --untracked -E '//[[:space:]]*nolint' -- '*.go' ':(exclude,glob)**/testdata/**')" || grc=$?
+hits="$(git grep -n -I -i --untracked -E '//[/[:space:]]*nolint' -- '*.go' ':(exclude,glob)**/testdata/**')" || grc=$?
 if [ "$grc" -gt 1 ]; then
   echo "check-skips: git grep falló (exit $grc)" >&2
   exit 1
@@ -55,14 +56,21 @@ while IFS= read -r hit; do
   [ -n "$hit" ] || continue
   where="$(cut -d: -f1,2 <<< "$hit")"
   text="$(cut -d: -f3- <<< "$hit")"
-  if [[ "$text" =~ //[[:space:]]+nolint ]]; then
-    echo "check-skips: //nolint mal escrito (golangci-lint no lo lee con un espacio tras //): $where" >&2
-    bad=1
-  elif [[ ! "$text" =~ //nolint:[A-Za-z0-9] ]] || [[ "$text" =~ //nolint:([A-Za-z0-9_-]+,)*all([^A-Za-z0-9_-]|$) ]]; then
-    echo "check-skips: //nolint sin nombrar su linter: $where" >&2
-    bad=1
-  elif ! cites_known_fallo "$text" "$known"; then
-    echo "check-skips: //nolint sin un F-NNNN de FALLOS.md en esa línea: $where" >&2
+  problem=""
+  if directives="$(grep -oiE '//[/[:space:]]*nolint[^[:space:]]*' <<< "$text")"; then
+    while IFS= read -r d; do
+      if [[ ! "$d" =~ ^//nolint:[a-z0-9_-]+(,[a-z0-9_-]+)*$ ]]; then
+        problem="//nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN)"
+      elif [[ ",${d#//nolint:}," == *",all,"* ]]; then
+        problem="//nolint sin nombrar su linter"
+      fi
+    done <<< "$directives"
+  fi
+  if [ -z "$problem" ] && ! cites_known_fallo "$text" "$known"; then
+    problem="//nolint sin un F-NNNN de FALLOS.md en esa línea"
+  fi
+  if [ -n "$problem" ]; then
+    echo "check-skips: $problem: $where" >&2
     bad=1
   fi
 done <<< "$hits"

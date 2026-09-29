@@ -26,6 +26,8 @@ GITLEAKS := $(TOOLS_DIR)/gitleaks-$(GITLEAKS_VERSION)
 # golangci-lint, pinned by version and sha256 (from golangci-lint-<version>-checksums.txt
 # of the official release: https://github.com/golangci/golangci-lint/releases),
 # with the config in .golangci.yml. Built with go1.27.0, so it reads this module.
+# --allow-serial-runners: runs that overlap (the Stop hook and a reviewer's
+# clone) wait for the lock instead of failing.
 GOLANGCI_LINT_VERSION := 2.14.0
 GOLANGCI_LINT_SHA256_linux_amd64  := ab90aeb7b066f92a33415b638a50fe5344bbb75a0d32ad30cc248d88f81032ab
 GOLANGCI_LINT_SHA256_linux_arm64  := ee7ec5f3453d15ddf106fae5a4d6c71737712348a979d1fe9cd52ec7ea299bae
@@ -66,7 +68,7 @@ fmt-check:
 
 lint: $(GOLANGCI_LINT)
 	go vet ./...
-	$(GOLANGCI_LINT) run ./...
+	$(GOLANGCI_LINT) run --allow-serial-runners ./...
 	@for f in $(HARNESS_SCRIPTS); do bash -n "$$f"; done
 
 test:

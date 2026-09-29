@@ -55,7 +55,7 @@ Una lección que no se ha convertido en algo que se comprueba solo sigue siendo 
 ## L-003 Toda excepción que apaga una comprobación cita una entrada de FALLOS.md
 - nace de: F-0006
 - regla: un mecanismo que apaga una comprobación (ficheros de excepción de gitleaks, comentarios allow, `t.Skip`, `//nolint`, configuraciones que quitan reglas) solo vale si está en git y cita un `F-NNNN` que exista en FALLOS.md
-- dónde se comprueba: lint:scripts/harness/secrets-scan.sh (excepciones de gitleaks) y lint:scripts/harness/check-skips.sh (`t.Skip` y restricciones de compilación en los tests). Pendiente de guardia: `//nolint` (E1, con golangci-lint), y las formas de `.gitleaks.toml` que quitan reglas aunque extiendan las de serie (`disabledRules`, `[[allowlists]]`, `extend.path`) y los comentarios allow que solo están en la historia (backlog). El correo de contacto que permite `check-personal.sh` no cita un F-NNNN sino la decisión de Marcos del 2026-09-29, y está en git (`config/contact.env`) con su contenido fijado por `personal_test.sh::test_contact_config_is_the_reviewed_one`
+- dónde se comprueba: lint:scripts/harness/secrets-scan.sh (excepciones de gitleaks) y lint:scripts/harness/check-skips.sh (`t.Skip`, restricciones de compilación en los tests y, desde el paso 1.1 de la E1, `//nolint` en todas sus formas, F-0020); golangci-lint con nolintlint y sin excluir los ficheros generados, con `.golangci.yml` fijado por `makefile_test.sh::test_golangci_config_is_the_reviewed_one`. Pendiente de guardia: las formas de `.gitleaks.toml` que quitan reglas aunque extiendan las de serie (`disabledRules`, `[[allowlists]]`, `extend.path`) y los comentarios allow que solo están en la historia (backlog). El correo de contacto que permite `check-personal.sh` no cita un F-NNNN sino la decisión de Marcos del 2026-09-29, y está en git (`config/contact.env`) con su contenido fijado por `personal_test.sh::test_contact_config_is_the_reviewed_one`
 
 ## L-004 Un hook de shell lee palabras de órdenes simples, y ante lo que no puede evaluar, bloquea
 - nace de: F-0007, F-0010, F-0013
@@ -69,7 +69,7 @@ Una lección que no se ha convertido en algo que se comprueba solo sigue siendo 
 
 ## L-006 Lo que significa `check` en verde se fija con tests exactos
 - nace de: F-0014
-- regla: la frontera del servidor (ADR 0000) solo exige que `check` salga en verde, y lo que ejecuta `check` lo define el propio PR. Los ficheros que lo definen (`ci.yml` y los prerrequisitos de `check` y `gate` en el Makefile) se comparan con su contenido exacto, y ningún otro workflow puede publicar un check con el mismo nombre. Un cambio legítimo, como el job de macOS de la E1, actualiza el test en el mismo PR, a la vista en el diff
+- regla: la frontera del servidor (ADR 0000) solo exige que `check` salga en verde, y lo que ejecuta `check` lo define el propio PR. Los ficheros que lo definen (`ci.yml`, los prerrequisitos de `check` y `gate` en el Makefile y, desde el paso 1.1 de la E1, `.golangci.yml`) se comparan con su contenido exacto, y ningún otro workflow puede publicar un check con el mismo nombre. Un cambio legítimo, como el job de macOS de la E1, actualiza el test en el mismo PR, a la vista en el diff
 - dónde se comprueba: test:scripts/harness/tests/ci_test.sh::test_workflow_is_exactly_the_reviewed_one, test:scripts/harness/tests/ci_test.sh::test_no_other_workflow_publishes_a_check_job y test:scripts/harness/tests/makefile_test.sh::test_check_runs_every_harness_check, en `make check`
 
 ## L-007 Toda orden que CLAUDE.md o una skill manda ejecutar pasa los hooks
@@ -96,3 +96,8 @@ Una lección que no se ha convertido en algo que se comprueba solo sigue siendo 
 - nace de: el paso 0 de la E1, que dio tres rondas y 60 hallazgos sobre una especificación sin código y paró con dos altos abiertos; decisión de Marcos del 2026-09-29. Acota L-000c
 - regla: un paso cuyo diff no toca código, scripts, tests ni configuración que se ejecute tiene como mucho una ronda adversarial. Los críticos se corrigen en el paso; los altos, medios y bajos van a `docs/BACKLOG.md` o al paso de código que los implementa, escritos en su épica. Las tres rondas quedan para los pasos con código y los cierres
 - dónde se comprueba: `CLAUDE.md` (anti-bucle) y skill `pasada-adversarial`, punto 3 (pendiente de guardia automática)
+
+## L-012 Una guardia que imita la sintaxis de una herramienta se prueba contra la herramienta
+- nace de: F-0020
+- regla: si una comprobación decide qué acepta otra herramienta (qué comentario apaga un linter, qué excepción lee gitleaks, qué etiqueta de compilación ve Go), su test ejecuta esa herramienta sobre cada variante y exige que la comprobación rechace todo lo que la herramienta aplica. No vale solo la sintaxis documentada
+- dónde se comprueba: test:scripts/harness/tests/check-skips_test.sh::test_every_nolint_form_that_golangci_lint_applies_is_flagged. Pendiente de guardia: los comentarios allow de gitleaks (backlog)

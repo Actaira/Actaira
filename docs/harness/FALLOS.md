@@ -228,3 +228,17 @@ Cada fallo encontrado (test en rojo que no era esperado, bug, hallazgo crítico 
 - guardia: test:scripts/harness/tests/merge-pr_test.sh::test_waits_for_the_checks_of_a_new_pr
 - guardia: test:scripts/harness/tests/merge-pr_test.sh::test_gives_up_when_no_check_appears
 - lección: la espera sobre un servicio externo distingue "todavía no hay nada" de "ha fallado", y tiene un límite.
+
+## F-0020 La guardia de //nolint dejaba pasar formas que golangci-lint aplica
+- fecha: 2026-09-29
+- épica y paso: E1 / 1.1, ronda adversarial 1
+- síntoma: tres comentarios apagan linters, golangci-lint 2.14.0 sale con 0 issues y `check-skips.sh` sale con 0:
+  - `// /nolint:all`, sin F-NNNN y sin linter;
+  - `//nolint:ALL // F-0007`;
+  - `//nolint:errcheck, all // F-0007`.
+  El primero tampoco lo ve nolintlint.
+- causa raíz: la guardia se escribió desde la sintaxis documentada (`//nolint:<linter>`), no desde lo que golangci-lint acepta de verdad: quita las barras y los espacios antes de "nolint" y lee los nombres de los linters sin distinguir mayúsculas. Ningún test comparaba la guardia con la herramienta que guarda.
+- corrección: `check-skips.sh` mira todo comentario que, quitando barras y espacios y sin distinguir mayúsculas, empiece por "nolint". Exige la forma exacta `//nolint:<linter>[,<linter>...]`, con nombres en minúsculas y nunca `all`, y un F-NNNN en esa línea. Rama `e1/paso-1-estructura`.
+- guardia: test:scripts/harness/tests/check-skips_test.sh::test_nolint_forms_that_golangci_lint_also_reads_fail
+- guardia: test:scripts/harness/tests/check-skips_test.sh::test_every_nolint_form_that_golangci_lint_applies_is_flagged
+- lección: L-012

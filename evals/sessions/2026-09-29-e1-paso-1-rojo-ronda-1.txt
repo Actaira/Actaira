@@ -1,0 +1,23 @@
+== ronda 1 del paso 1.1: tests nuevos en rojo antes de corregir (2026-09-29T13:56:36Z)
+--- FAIL: TestHelpRejectsArguments (0.00s)
+--- FAIL: TestFailingToWriteTheOutputIsAnInternalError (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/cli	0.001s
+--- FAIL: TestCommandsShownFindsEveryFormOfCode (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/repotest	0.110s
+ok  	github.com/actaira/actaira/internal/version	(cached)
+FAIL
+    golangci-lint aplica "// /nolint:all" y check-skips.sh tiene que rechazarlo (): esperado [1], obtenido [0]
+--- FAIL: test_every_nolint_form_that_golangci_lint_applies_is_flagged
+    formas de //nolint que golangci-lint también lee: esperado [1], obtenido [0]
+--- FAIL: test_nolint_forms_that_golangci_lint_also_reads_fail
+--- FAIL: TestHelpRejectsArguments (0.00s)
+--- FAIL: TestFailingToWriteTheOutputIsAnInternalError (0.00s)
+--- FAIL: TestCommandsShownFindsEveryFormOfCode (0.00s)
+make: *** [Makefile:74: test] Error 1): esperado [0], obtenido [2]
+--- FAIL: test_goflags_from_environment_cannot_filter_tests
+    .golangci.yml es el revisado: esperado [# golangci-lint v2 (https://golangci-lint.run/docs/configuration/file/),
+--- FAIL: test_golangci_config_is_the_reviewed_one
+    lint con una cabecera de código generado: esperado [2], obtenido [0]
+--- FAIL: test_lint_runs_golangci_lint_with_the_repo_config

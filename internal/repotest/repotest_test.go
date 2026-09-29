@@ -7,6 +7,7 @@ import (
 	"go/token"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -22,9 +23,28 @@ const module = "github.com/actaira/actaira"
 // root is the repository root: go test runs a package's tests in its directory.
 var root = filepath.Join("..", "..")
 
-// pkg/ is public API that actaira-cloud imports; Go forbids importing
-// internal/ from another module, so no package under pkg/ may import it
-// (docs/epicas/E1.md, step 1.1).
+// pkg/ is public API with semantic versioning that actaira-cloud imports. No
+// package under pkg/, directly or through another package of this module,
+// depends on internal/: a change there would change the public API without a
+// version bump, and an internal type in it could not be named by the caller
+// (docs/epicas/E1.md, step 1.1). Go itself would allow it, since its rule on
+// internal/ only looks at the direct importer.
+func TestPkgDoesNotDependOnInternal(t *testing.T) {
+	cmd := exec.Command("go", "list", "-deps", "-f", `{{.ImportPath}}`, "./pkg/...")
+	cmd.Dir = root
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("go list -deps ./pkg/...: %v", err)
+	}
+	for _, p := range strings.Fields(string(out)) {
+		if p == module+"/internal" || strings.HasPrefix(p, module+"/internal/") {
+			t.Errorf("pkg/ depends on %s: pkg/ cannot depend on internal/", p)
+		}
+	}
+}
+
+// Every package that step 1.1 lays out under pkg/ exists, so the test above
+// does not pass on an empty pkg/, and none of them imports internal/ directly.
 func TestPkgDoesNotImportInternal(t *testing.T) {
 	packages := map[string]bool{}
 	err := filepath.WalkDir(filepath.Join(root, "pkg"), func(path string, d fs.DirEntry, err error) error {
@@ -82,9 +102,34 @@ func TestLicenseIsTheOfficialApache2(t *testing.T) {
 }
 
 var (
-	codeInMarkdown = regexp.MustCompile("(?s)```.*?```|`[^`\n]+`")
-	commandInCode  = regexp.MustCompile(`(?:^|[\s/])actaira[ \t]+([a-z][a-z0-9-]*)`)
+	// Code in Markdown: fenced blocks (``` or ~~~), inline code, and the HTML
+	// code and pre elements.
+	codeInMarkdown = regexp.MustCompile("(?s)```.*?```|~~~.*?~~~|`[^`\n]+`|<code>.*?</code>|<pre>.*?</pre>")
+	// actaira, any options, then the command.
+	commandInCode = regexp.MustCompile(`(?:^|[\s/>\x60])actaira(?:[ \t]+-{1,2}[a-z][a-z0-9-]*(?:=\S*)?)*[ \t]+([a-z][a-z0-9-]*)`)
 )
+
+// commandsShown returns the actaira commands that a Markdown text shows in code.
+func commandsShown(markdown string) []string {
+	var names []string
+	for _, code := range codeInMarkdown.FindAllString(markdown, -1) {
+		for _, m := range commandInCode.FindAllStringSubmatch(code, -1) {
+			names = append(names, m[1])
+		}
+	}
+	return names
+}
+
+func TestCommandsShownFindsEveryFormOfCode(t *testing.T) {
+	markdown := "Run `actaira version`.\n\n```sh\n./actaira discover .\n```\n\n~~~\nactaira lock --check\n~~~\n\n" +
+		"<code>actaira policy apply</code> and <pre>actaira --json diff main</pre>, `actaira -v blast x`.\n" +
+		"The actaira binary is not code, and neither is github.com/actaira/actaira.\n"
+	got := commandsShown(markdown)
+	want := []string{"version", "discover", "lock", "policy", "diff", "blast"}
+	if !slices.Equal(got, want) {
+		t.Fatalf("commandsShown = %v, want %v", got, want)
+	}
+}
 
 // The READMEs only say what already works (docs/epicas/E1.md, step 1.1): every
 // "actaira <command>" they show in code is a command the CLI implements.
@@ -95,16 +140,13 @@ func TestReadmesOnlyNameImplementedCommands(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		found := 0
-		for _, code := range codeInMarkdown.FindAllString(string(data), -1) {
-			for _, m := range commandInCode.FindAllStringSubmatch(code, -1) {
-				found++
-				if !slices.Contains(implemented, m[1]) {
-					t.Errorf("%s shows \"actaira %s\", which the CLI does not implement (it has %v)", name, m[1], implemented)
-				}
+		shown := commandsShown(string(data))
+		for _, c := range shown {
+			if !slices.Contains(implemented, c) {
+				t.Errorf("%s shows \"actaira %s\", which the CLI does not implement (it has %v)", name, c, implemented)
 			}
 		}
-		if found == 0 {
+		if len(shown) == 0 {
 			t.Errorf("%s shows no actaira command: nothing to check", name)
 		}
 	}

@@ -15,7 +15,7 @@ go build -o actaira ./cmd/actaira
 ./actaira version
 ```
 
-`./actaira help` lists the commands. The exit codes are 0 when the command worked and 2 when the arguments are wrong.
+`./actaira help` lists the commands. The exit codes are 0 when the command worked, 2 when the arguments are wrong and 3 when something failed inside actaira, such as writing its output.
 
 ## Security
 

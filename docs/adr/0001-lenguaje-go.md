@@ -19,7 +19,7 @@ Las tres primeras se distribuyen a terceros. El runner y el proxy evalúan polí
 ## Decisión
 
 1. **Go en las cinco piezas**, con un solo módulo abierto, `github.com/actaira/actaira`, y el repo `actaira-cloud` para la nube.
-2. **API pública en `pkg/`** (modelo, extractores, lockfile, diff, base de conocimiento), porque `actaira-cloud` la importa y Go prohíbe importar `internal/` desde otro módulo. Lo que solo usa la CLI va en `internal/`. `internal/repotest` comprueba que ningún paquete de `pkg/` importa `internal/`.
+2. **API pública en `pkg/`** (modelo, extractores, lockfile, diff, base de conocimiento), porque `actaira-cloud` la importa y Go prohíbe importar `internal/` desde otro módulo. Lo que solo usa la CLI va en `internal/`. Ningún paquete de `pkg/` depende de `internal/`, ni directa ni indirectamente: `pkg/` es API con versionado semántico, y un cambio en `internal/` la cambiaría sin subir la versión. Go no lo impide, porque su regla de `internal/` solo mira al importador directo, así que lo comprueba `internal/repotest` con `go list -deps`.
 3. **La versión de Go la fija `go.mod`** (`go 1.27.1`). Una herramienta que analiza el código, como golangci-lint, tiene que estar compilada con una versión de Go que la acepte (`Makefile`).
 
 ## Opciones
