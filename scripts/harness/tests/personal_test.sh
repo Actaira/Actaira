@@ -126,6 +126,57 @@ test_personal_email_fails_outside_testdata_and_identities() {
   assert_eq "$(personal "$T/repo")" "0" "noreply, fixtures de testdata y correo de un colaborador ($(cat "$T/out"))"
 }
 
+# The project contact address is not personal (Marcos, 2026-09-29): it may go
+# on the website and in user docs, and code reads it from ACTAIRA_CONTACT_EMAIL.
+# The check allows the one set in config/contact.env, outside code files.
+contact_config() { # <repo> <address>
+  mkdir -p "$1/config"
+  printf '# contacto del proyecto\nACTAIRA_CONTACT_EMAIL=%s\n' "$2" > "$1/config/contact.env"
+}
+
+test_project_contact_email_passes_outside_code() {
+  init_repo "$T/repo"
+  local contact="proyecto.ficticio@""gmail.com"
+  contact_config "$T/repo" "$contact"
+  mkdir -p "$T/repo/web/.well-known" "$T/repo/docs"
+  printf 'Contact: mailto:%s\n' "$contact" > "$T/repo/web/.well-known/security.txt"
+  printf 'Escribe a %s.\n' "$(tr 'a-z' 'A-Z' <<< "$contact")" > "$T/repo/docs/contacto.md"
+  assert_eq "$(personal "$T/repo")" "0" "correo de contacto en la web y en la documentación ($(cat "$T/out"))"
+  printf 'Contact: %s\n' "$contact" > "$T/pr-msg"
+  local rc=0
+  (cd "$T/repo" && env -u GITHUB_ACTIONS "$HARNESS_DIR/check-personal.sh" --terms "$T/terms.txt" --files "$T/pr-msg") >"$T/out" 2>&1 || rc=$?
+  assert_eq "$rc" "0" "correo de contacto en el texto de un PR ($(cat "$T/out"))"
+}
+
+test_other_personal_email_fails_next_to_the_contact_email() {
+  init_repo "$T/repo"
+  local contact="proyecto.ficticio@""gmail.com" other="alguien.ejemplo@""gmail.com"
+  contact_config "$T/repo" "$contact"
+  printf 'Contacto: %s, o %s.\nx%s\n' "$contact" "$other" "$contact" > "$T/repo/docs.md"
+  assert_eq "$(personal "$T/repo")" "1" "otro gmail junto al de contacto"
+  assert_contains "$(cat "$T/out")" "correo de un proveedor personal en docs.md:1"
+  assert_contains "$(cat "$T/out")" "correo de un proveedor personal en docs.md:2"
+}
+
+test_contact_email_fixed_in_code_fails() {
+  init_repo "$T/repo"
+  local contact="proyecto.ficticio@""gmail.com"
+  contact_config "$T/repo" "$contact"
+  mkdir -p "$T/repo/cmd" "$T/repo/web"
+  printf 'package main\n\nconst contact = "%s"\n' "$contact" > "$T/repo/cmd/main.go"
+  printf 'export const contact = "%s";\n' "$contact" > "$T/repo/web/contact.ts"
+  assert_eq "$(personal "$T/repo")" "1" "correo de contacto fijo en el código"
+  assert_contains "$(cat "$T/out")" "correo de contacto fijo en el código (va por ACTAIRA_CONTACT_EMAIL) en cmd/main.go:3"
+  assert_contains "$(cat "$T/out")" "correo de contacto fijo en el código (va por ACTAIRA_CONTACT_EMAIL) en web/contact.ts:1"
+}
+
+test_contact_email_without_its_config_fails() {
+  init_repo "$T/repo"
+  printf 'Contacto: %s\n' "proyecto.ficticio@""gmail.com" > "$T/repo/docs.md"
+  assert_eq "$(personal "$T/repo")" "1" "sin config/contact.env no hay correo permitido"
+  assert_contains "$(cat "$T/out")" "correo de un proveedor personal en docs.md:1"
+}
+
 # merge-pr.sh scans the squash message and the PR text with --files, outside
 # any repo: those texts enter main or GitHub without passing through the CI.
 test_files_mode_scans_only_the_given_files() {

@@ -49,7 +49,7 @@ Referencias:
    - marca los secretos como `<<SECRETO: nombre y de dónde sale>>`;
    - si paras con `make check` en rojo porque falta algo de Marcos, escribe antes el motivo en `.harness/pausa-marcos` (el hook de parada lo respeta y lo borra al usarlo). Una pausa no es un fallo.
 3. **Nunca envíes nada en su nombre**: correos, issues o PRs en repos ajenos, mensajes.
-4. **Nada personal en el repo**: ni datos de Marcos (correo, situación laboral, planes personales, gestoría) ni nombres de sus cuentas personales. Los repos son públicos. Lo que haga falta va en `~/actaira-ws/privado/`, fuera de git. Lo comprueba `scripts/harness/check-personal.sh` en `make check`.
+4. **Nada personal en el repo**: ni datos de Marcos (correo, situación laboral, planes personales, gestoría) ni nombres de sus cuentas personales. Los repos son públicos. Lo que haga falta va en `~/actaira-ws/privado/`, fuera de git. Lo comprueba `scripts/harness/check-personal.sh` en `make check`. El correo de contacto del proyecto (`ACTAIRA_CONTACT_EMAIL` en `config/contact.env`) no es personal: va en la web (security.txt, aviso legal y contacto) y en la documentación de usuario, y en el código siempre por esa variable, nunca fijo. Cualquier otro correo personal sigue prohibido.
 5. **Nunca escribas secretos** en el repo, en logs ni en commits. Los tests usan centinelas que no parecen claves.
 6. **Si ves algo raro, pregunta.**
 

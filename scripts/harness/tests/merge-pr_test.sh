@@ -7,6 +7,8 @@ CLAUDE_FOOTER="Generated with [Claude"" Code](https://claude.com/claude-code)"
 SENTINEL="ACTAIRA_TEST_SENTINEL_123456"
 
 # fake_gh [checks exit code]: a gh that logs its arguments, answers pr view
+# (while $T/no-checks holds N > 0, the next N polls of the checks answer as
+# for a PR that GitHub has not given checks yet),
 # with $T/pr.json, the merge commit with fedcba9 and its message with
 # $T/merged-msg (what GitHub wrote into main).
 fake_gh() {
@@ -20,7 +22,16 @@ case "\$*" in
   *commit.author.email*) cat "$T/merged-email" ;;
   "api "*) cat "$T/merged-msg" ;;
   "pr view"*) cat "$T/pr.json" ;;
-  "pr checks"*) exit ${1:-0} ;;
+  "pr checks"*"--watch"*) exit ${1:-0} ;;
+  "pr checks"*)
+    n="\$(cat "$T/no-checks" 2>/dev/null || echo 0)"
+    if [ "\$n" -gt 0 ]; then
+      echo "\$((n - 1))" > "$T/no-checks"
+      echo "no checks reported on the 'demo' branch" >&2
+      exit 1
+    fi
+    printf 'check\tpending\t0\n'
+    exit 8 ;;
 esac
 exit 0
 EOF
@@ -48,7 +59,8 @@ EOF
 
 merge() { # [args...]; prints the exit code; output in $T/out
   local rc=0
-  GITLEAKS="$T/bin/gitleaks" HOME="$T/home" PATH="$T/bin:$PATH" "$HARNESS_DIR/merge-pr.sh" "$@" >"$T/out" 2>&1 || rc=$?
+  GITLEAKS="$T/bin/gitleaks" HOME="$T/home" PATH="$T/bin:$PATH" MERGE_PR_CHECK_WAIT=0 \
+    "$HARNESS_DIR/merge-pr.sh" "$@" >"$T/out" 2>&1 || rc=$?
   echo "$rc"
 }
 
@@ -146,6 +158,29 @@ test_refuses_without_the_pinned_gitleaks() {
   GITLEAKS="$T/missing/gitleaks" PATH="$T/bin:$PATH" "$HARNESS_DIR/merge-pr.sh" 7 "E0 step 9: demo (#7)" "$T/body.md" >"$T/out" 2>&1 || rc=$?
   assert_eq "$rc" "1" "sin gitleaks"
   assert_contains "$(cat "$T/out")" "falta el gitleaks fijado"
+  assert_not_contains "$(gh_log)" "pr merge" "no se fusiona"
+}
+
+# A PR that was just opened has no checks for a few seconds, and
+# gh pr checks --watch gives up at once (F-0019).
+test_waits_for_the_checks_of_a_new_pr() {
+  fake_gh 0
+  echo 2 > "$T/no-checks"
+  assert_eq "$(merge 7 "E0 step 9: demo (#7)" "$T/body.md")" "0" "espera a que haya checks ($(cat "$T/out"))"
+  assert_eq "$(grep -c '^pr checks 7$' "$T/gh.log")" "3" "tres consultas: dos sin checks y una con"
+  assert_contains "$(gh_log)" "pr checks 7 --watch --fail-fast"
+  assert_contains "$(gh_log)" "pr merge 7"
+}
+
+test_gives_up_when_no_check_appears() {
+  fake_gh 0
+  echo 99 > "$T/no-checks"
+  local rc=0
+  GITLEAKS="$T/bin/gitleaks" HOME="$T/home" PATH="$T/bin:$PATH" MERGE_PR_CHECK_WAIT=0 MERGE_PR_CHECK_TRIES=3 \
+    "$HARNESS_DIR/merge-pr.sh" 7 "E0 step 9: demo (#7)" "$T/body.md" >"$T/out" 2>&1 || rc=$?
+  assert_eq "$rc" "1" "sin checks no se fusiona"
+  assert_contains "$(cat "$T/out")" "merge-pr: el PR 7 sigue sin checks tras 3 intentos; no se fusiona"
+  assert_not_contains "$(gh_log)" "--watch" "no llega a esperar a checks que no existen"
   assert_not_contains "$(gh_log)" "pr merge" "no se fusiona"
 }
 
