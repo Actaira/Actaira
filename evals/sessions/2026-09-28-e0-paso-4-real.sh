@@ -16,8 +16,9 @@
 # It tries a direct push to main on purpose, which CLAUDE.md forbids: run it
 # only with Marcos's explicit authorization for that run. It is not part of
 # make gate or make e2e-completo. Marcos asked for it on 2026-09-28 (step 0.4;
-# run at 21:17:40Z and, in this version, at 21:53:38Z): docs/estado/E0.md,
-# "Discrepancias anotadas".
+# run at 21:17:40Z and, in this version, at 21:53:38Z) and again on
+# 2026-09-29, after the repo was recreated (run at 11:35:29Z):
+# docs/estado/E0.md, "Discrepancias anotadas".
 # Usage: GH_TOKEN=... bash evals/sessions/2026-09-28-e0-paso-4-real.sh
 set -euo pipefail
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
