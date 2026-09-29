@@ -45,6 +45,9 @@ MUTATIONS = [
     ("treesitter: HasError siempre falso", TS,
      "\treturn t.t.RootNode().HasError()\n", "\treturn false\n",
      TS_T, "TestBrokenSyntaxIsATreeWithErrors"),
+    ("ci: platforms.yml con permisos de escritura", ".github/workflows/platforms.yml",
+     "permissions:\n  contents: read\n\njobs:", "permissions:\n  contents: write\n\njobs:",
+     CI_T, "test_every_workflow_but_release_is_read_only"),
 ]
 
 

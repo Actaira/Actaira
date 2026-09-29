@@ -1,0 +1,39 @@
+{
+  "date": "2026-09-29T15:20:17Z",
+  "commit": "f25defe827c24a28edaefaf3c9503c377952e9a8",
+  "command": "go run ./evals/bench/parse -n 1000",
+  "go_version": "go1.27.1",
+  "os": "linux",
+  "arch": "amd64",
+  "cpus": 14,
+  "bench_binary_bytes": 8399536,
+  "note": "one goroutine, files read before timing, every tree closed; bench_binary_bytes is this program, with tree-sitter and the Python, TypeScript and TSX grammars linked in",
+  "results": [
+    {
+      "repo": {
+        "name": "langchain",
+        "url": "https://github.com/langchain-ai/langchain",
+        "commit": "aaf25d0abd183a9b5978772c470a0ef11578ce3a"
+      },
+      "files": 1000,
+      "bytes": 5993053,
+      "total_ms": 536.518,
+      "median_ms_per_file": 0.081,
+      "p95_ms_per_file": 2.227,
+      "files_with_syntax_errors": 0
+    },
+    {
+      "repo": {
+        "name": "langchainjs",
+        "url": "https://github.com/langchain-ai/langchainjs",
+        "commit": "17b6bba8343bdd3f3dfc5c59578e0b72337ec740"
+      },
+      "files": 1000,
+      "bytes": 3626844,
+      "total_ms": 303.489,
+      "median_ms_per_file": 0.143,
+      "p95_ms_per_file": 1.092,
+      "files_with_syntax_errors": 0
+    }
+  ]
+}

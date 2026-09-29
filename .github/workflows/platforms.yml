@@ -1,0 +1,48 @@
+# Platforms that are not the required check. The required check is the job
+# `check` of ci.yml, on Linux (ADR 0000); these jobs only report:
+#   - check-macos: cgo, go vet and the Go tests on macOS 26 arm64 (ADR 0003). The
+#     harness itself (GNU make, bash 4, GNU sed) is not run here: backlog.
+#   - check-ubuntu-26: make check on the next Ubuntu image, before
+#     ubuntu-latest moves to it (backlog, from 2026-10-19).
+# Read-only, actions pinned by commit SHA with their release in a comment
+# (scripts/harness/tests/ci_test.sh).
+# Runners: https://docs.github.com/en/actions/reference/runners/github-hosted-runners
+name: platforms
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check-macos:
+    runs-on: macos-26
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: go vet ./...
+      - run: go test -count=1 ./...
+
+  check-ubuntu-26:
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history, as in ci.yml: the secret scan and the attribution check read every commit.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: make check
