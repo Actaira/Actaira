@@ -1,0 +1,248 @@
+# E1 paso 1.1: pruebas por mutación
+fecha: 2026-09-29T13:39:26Z
+comando: python3 evals/sessions/2026-09-29-e1-paso-1-mutate.py
+copia de 009302a5115be43647959f3e0187dc90c9885ed7 en un directorio temporal; el repo no se toca
+
+### cli: version sin el nombre
+fichero: internal/cli/cli.go; test: go:./internal/cli::TestVersionPrintsTheBuildVersion
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestVersionPrintsTheBuildVersion
+    cli_test.go:34: stdout = "dev\n", want "actaira dev\n"
+--- FAIL: TestVersionPrintsTheBuildVersion (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/cli	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
+resultado: OK
+
+### cli: version acepta argumentos
+fichero: internal/cli/cli.go; test: go:./internal/cli::TestVersionRejectsArguments
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestVersionRejectsArguments
+    cli_test.go:44: exit code = 0, want 2
+--- FAIL: TestVersionRejectsArguments (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/cli	0.001s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
+resultado: OK
+
+### cli: sin comando sale con 0
+fichero: internal/cli/cli.go; test: go:./internal/cli::TestNoCommandPrintsUsageAndIsAUsageError
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestNoCommandPrintsUsageAndIsAUsageError
+    cli_test.go:57: exit code = 0, want 2
+--- FAIL: TestNoCommandPrintsUsageAndIsAUsageError (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/cli	0.001s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
+resultado: OK
+
+### cli: comando desconocido sale con 0
+fichero: internal/cli/cli.go; test: go:./internal/cli::TestUnknownCommandIsAUsageError
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestUnknownCommandIsAUsageError
+    cli_test.go:70: exit code = 0, want 2
+--- FAIL: TestUnknownCommandIsAUsageError (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/cli	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
+resultado: OK
+
+### cli: --help no es ayuda
+fichero: internal/cli/cli.go; test: go:./internal/cli::TestHelpPrintsUsageAndSucceeds
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestHelpPrintsUsageAndSucceeds
+    cli_test.go:86: --help: exit code = 2, want 0
+--- FAIL: TestHelpPrintsUsageAndSucceeds (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/cli	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.017s
+resultado: OK
+
+### cli: el uso no lista los comandos
+fichero: internal/cli/cli.go; test: go:./internal/cli::TestCommandsAreImplementedAndListedInTheUsage
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestCommandsAreImplementedAndListedInTheUsage
+    cli_test.go:110: the usage does not list "version":
+        usage: actaira <command>
+        commands:
+    cli_test.go:110: the usage does not list "help":
+        usage: actaira <command>
+        commands:
+--- FAIL: TestCommandsAreImplementedAndListedInTheUsage (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/cli	0.001s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
+resultado: OK
+
+### cli: otro código de error interno
+fichero: internal/cli/cli.go; test: go:./internal/cli::TestExitCodesAreTheDocumentedOnes
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestExitCodesAreTheDocumentedOnes
+    cli_test.go:23: exit codes = [0 1 2 4], want [0 1 2 3]
+--- FAIL: TestExitCodesAreTheDocumentedOnes (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/cli	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
+resultado: OK
+
+### repotest: pkg importa internal
+fichero: pkg/model/doc.go; test: go:./internal/repotest::TestPkgDoesNotImportInternal
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestPkgDoesNotImportInternal
+    repotest_test.go:55: pkg/model/doc.go imports github.com/actaira/actaira/internal/version: pkg/ cannot depend on internal/
+--- FAIL: TestPkgDoesNotImportInternal (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/repotest	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.002s
+resultado: OK
+
+### repotest: el test de pkg pasa en vacío
+fichero: internal/repotest/repotest_test.go; test: go:./internal/repotest::TestPkgDoesNotImportInternal
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestPkgDoesNotImportInternal
+    repotest_test.go:65: no Go files in pkg/model
+    repotest_test.go:65: no Go files in pkg/extract
+    repotest_test.go:65: no Go files in pkg/lock
+--- FAIL: TestPkgDoesNotImportInternal (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/repotest	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.002s
+resultado: OK
+
+### repotest: licencia cambiada
+fichero: LICENSE; test: go:./internal/repotest::TestLicenseIsTheOfficialApache2
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestLicenseIsTheOfficialApache2
+    repotest_test.go:80: sha256(LICENSE) = 9688472855af273b25d771725adc53b66bd54497bc27bc05697cc6cc4db6f4ee, want cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30 (the official Apache-2.0 text)
+--- FAIL: TestLicenseIsTheOfficialApache2 (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/repotest	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.002s
+resultado: OK
+
+### repotest: el README en inglés enseña un comando que no existe
+fichero: README.md; test: go:./internal/repotest::TestReadmesOnlyNameImplementedCommands
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestReadmesOnlyNameImplementedCommands
+    repotest_test.go:103: README.md shows "actaira discover", which the CLI does not implement (it has [version help])
+--- FAIL: TestReadmesOnlyNameImplementedCommands (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/repotest	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.001s
+resultado: OK
+
+### repotest: el README en castellano enseña un comando que no existe
+fichero: README.es.md; test: go:./internal/repotest::TestReadmesOnlyNameImplementedCommands
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestReadmesOnlyNameImplementedCommands
+    repotest_test.go:103: README.es.md shows "actaira lock", which the CLI does not implement (it has [version help])
+--- FAIL: TestReadmesOnlyNameImplementedCommands (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/repotest	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.002s
+resultado: OK
+
+### repotest: SECURITY.md con otro correo que el de contacto
+fichero: config/contact.env; test: go:./internal/repotest::TestSecurityPolicyGivesTheProjectContact
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestSecurityPolicyGivesTheProjectContact
+    repotest_test.go:134: SECURITY.md does not give the project contact address of config/contact.env
+--- FAIL: TestSecurityPolicyGivesTheProjectContact (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/repotest	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.001s
+resultado: OK
+
+### nolint: sin F-NNNN pasa
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_nolint_without_a_fallo_fails
+con la mutacion (debe ser rojo): exit 1
+    //nolint sin F-NNNN: esperado [1], obtenido [0]
+--- FAIL: test_nolint_without_a_fallo_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_nolint_without_a_fallo_fails
+resultado: OK
+
+### nolint: vale cualquier F-NNNN
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_nolint_citing_an_unknown_fallo_fails
+con la mutacion (debe ser rojo): exit 1
+    //nolint que cita un fallo inexistente: esperado [1], obtenido [0]
+--- FAIL: test_nolint_citing_an_unknown_fallo_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_nolint_citing_an_unknown_fallo_fails
+resultado: OK
+
+### nolint: sin linter pasa
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_nolint_without_a_linter_fails
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [check-skips: //nolint sin nombrar su linter: pkg/demo/a.go:6]; salida: [check-skips: //nolint mal escrito (golangci-lint no lo lee con un espacio tras //): pkg/demo/c.go:6]
+--- FAIL: test_nolint_without_a_linter_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_nolint_without_a_linter_fails
+resultado: OK
+
+### nolint: el espacio tras // no se ve
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_nolint_without_a_linter_fails
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [check-skips: //nolint mal escrito (golangci-lint no lo lee con un espacio tras //): pkg/demo/c.go:6]; salida: [check-skips: //nolint sin nombrar su linter: pkg/demo/a.go:6
+check-skips: //nolint sin nombrar su linter: pkg/demo/b.go:6
+check-skips: //nolint sin nombrar su linter: pkg/demo/c.go:6]
+--- FAIL: test_nolint_without_a_linter_fails
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_nolint_without_a_linter_fails
+resultado: OK
+
+### nolint: también en testdata
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_nolint_in_testdata_is_ignored
+con la mutacion (debe ser rojo): exit 1
+    testdata son fixtures (check-skips: //nolint sin nombrar su linter: pkg/demo/testdata/fixture/g.go:6): esperado [0], obtenido [1]
+--- FAIL: test_nolint_in_testdata_is_ignored
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_nolint_in_testdata_is_ignored
+resultado: OK
+
+### lint: sin golangci-lint
+fichero: Makefile; test: scripts/harness/tests/makefile_test.sh::test_lint_runs_golangci_lint_with_the_repo_config
+con la mutacion (debe ser rojo): exit 1
+    lint con un error sin comprobar: esperado [2], obtenido [0]
+--- FAIL: test_lint_runs_golangci_lint_with_the_repo_config
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_lint_runs_golangci_lint_with_the_repo_config
+resultado: OK
+
+### lint: sin nolintlint
+fichero: .golangci.yml; test: scripts/harness/tests/makefile_test.sh::test_lint_runs_golangci_lint_with_the_repo_config
+con la mutacion (debe ser rojo): exit 1
+    lint con un //nolint sin linter: esperado [2], obtenido [0]
+--- FAIL: test_lint_runs_golangci_lint_with_the_repo_config
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_lint_runs_golangci_lint_with_the_repo_config
+resultado: OK
+
+repo en uso sin cambios
+TODAS OK
