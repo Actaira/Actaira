@@ -85,7 +85,8 @@ def contact_address():
     problem = "config/contact.env tiene que fijar ACTAIRA_CONTACT_EMAIL una sola vez, sin comillas, export ni comentarios"
     if os.path.islink(path) or not os.path.isfile(path):
         return "", problem
-    lines = [l.strip() for l in open(path, encoding="utf-8") if "ACTAIRA_CONTACT_EMAIL" in l]
+    lines = [l.strip() for l in open(path, encoding="utf-8")
+             if "ACTAIRA_CONTACT_EMAIL" in l and not l.lstrip().startswith("#")]
     if len(lines) == 1:
         key, _, value = lines[0].partition("=")
         if key == "ACTAIRA_CONTACT_EMAIL" and re.fullmatch(r"[^@\s\"'#]+@[^@\s\"'#]+", value):

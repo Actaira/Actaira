@@ -183,6 +183,8 @@ test_contact_config_must_set_the_address_once_in_a_real_file() {
   local contact="proyecto.ficticio@""gmail.com" other="alguien.ejemplo@""gmail.com"
   printf 'Contacto: %s\n' "$contact" > "$T/repo/docs.md"
   mkdir -p "$T/repo/config"
+  printf '# ACTAIRA_CONTACT_EMAIL: un comentario no cuenta\nACTAIRA_CONTACT_EMAIL=%s\n' "$contact" > "$T/repo/config/contact.env"
+  assert_eq "$(personal "$T/repo")" "0" "una línea y un comentario ($(cat "$T/out"))"
   printf 'ACTAIRA_CONTACT_EMAIL=%s\nACTAIRA_CONTACT_EMAIL=%s\n' "$other" "$contact" > "$T/repo/config/contact.env"
   assert_eq "$(personal "$T/repo")" "1" "dos líneas"
   assert_contains "$(cat "$T/out")" "config/contact.env tiene que fijar ACTAIRA_CONTACT_EMAIL una sola vez"
