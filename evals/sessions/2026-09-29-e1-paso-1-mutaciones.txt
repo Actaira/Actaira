@@ -1,7 +1,7 @@
-# E1 paso 1.1: pruebas por mutación (tras la ronda 1 de la pasada adversarial)
-fecha: 2026-09-29T14:02:18Z
+# E1 paso 1.1: pruebas por mutación (tras la ronda 2 de la pasada adversarial)
+fecha: 2026-09-29T14:24:52Z
 comando: python3 evals/sessions/2026-09-29-e1-paso-1-mutate.py
-copia de a2ed51e7fc61a7fe98f6618ec7793a80d96060c6 en un directorio temporal; el repo no se toca
+copia de 454644065b0fe74ba60562dde9e6d8227a176e8a en un directorio temporal; el repo no se toca
 
 ### cli: version sin el nombre
 fichero: internal/cli/cli.go; test: go:./internal/cli::TestVersionPrintsTheBuildVersion
@@ -13,7 +13,7 @@ FAIL
 FAIL	github.com/actaira/actaira/internal/cli	0.001s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
 resultado: OK
 
 ### cli: version acepta argumentos
@@ -23,10 +23,10 @@ con la mutacion (debe ser rojo): exit 1
     cli_test.go:45: exit code = 0, want 2
 --- FAIL: TestVersionRejectsArguments (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/cli	0.002s
+FAIL	github.com/actaira/actaira/internal/cli	0.001s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
 resultado: OK
 
 ### cli: sin comando sale con 0
@@ -39,7 +39,7 @@ FAIL
 FAIL	github.com/actaira/actaira/internal/cli	0.001s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
 resultado: OK
 
 ### cli: comando desconocido sale con 0
@@ -49,10 +49,10 @@ con la mutacion (debe ser rojo): exit 1
     cli_test.go:71: exit code = 0, want 2
 --- FAIL: TestUnknownCommandIsAUsageError (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/cli	0.002s
+FAIL	github.com/actaira/actaira/internal/cli	0.001s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
 resultado: OK
 
 ### cli: --help no es ayuda
@@ -62,7 +62,7 @@ con la mutacion (debe ser rojo): exit 1
     cli_test.go:87: --help: exit code = 2, want 0
 --- FAIL: TestHelpPrintsUsageAndSucceeds (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/cli	0.002s
+FAIL	github.com/actaira/actaira/internal/cli	0.001s
 FAIL
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
@@ -83,7 +83,7 @@ FAIL
 FAIL	github.com/actaira/actaira/internal/cli	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
 resultado: OK
 
 ### cli: otro código de error interno
@@ -93,10 +93,10 @@ con la mutacion (debe ser rojo): exit 1
     cli_test.go:24: exit codes = [0 1 2 4], want [0 1 2 3]
 --- FAIL: TestExitCodesAreTheDocumentedOnes (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/cli	0.001s
+FAIL	github.com/actaira/actaira/internal/cli	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
 resultado: OK
 
 ### repotest: pkg importa internal
@@ -109,7 +109,7 @@ FAIL
 FAIL	github.com/actaira/actaira/internal/repotest	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.001s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.002s
 resultado: OK
 
 ### repotest: el test de pkg pasa en vacío
@@ -137,7 +137,7 @@ FAIL
 FAIL	github.com/actaira/actaira/internal/repotest	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.001s
 resultado: OK
 
 ### repotest: el README en inglés enseña un comando que no existe
@@ -147,10 +147,10 @@ con la mutacion (debe ser rojo): exit 1
     repotest_test.go:146: README.md shows "actaira discover", which the CLI does not implement (it has [version help])
 --- FAIL: TestReadmesOnlyNameImplementedCommands (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/repotest	0.002s
+FAIL	github.com/actaira/actaira/internal/repotest	0.001s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.001s
 resultado: OK
 
 ### repotest: el README en castellano enseña un comando que no existe
@@ -160,7 +160,7 @@ con la mutacion (debe ser rojo): exit 1
     repotest_test.go:146: README.es.md shows "actaira lock", which the CLI does not implement (it has [version help])
 --- FAIL: TestReadmesOnlyNameImplementedCommands (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/repotest	0.008s
+FAIL	github.com/actaira/actaira/internal/repotest	0.001s
 FAIL
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.002s
@@ -200,8 +200,8 @@ resultado: OK
 ### nolint: sin linter pasa
 fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_nolint_without_a_linter_fails
 con la mutacion (debe ser rojo): exit 1
-    salida: no contiene [check-skips: //nolint sin nombrar su linter: pkg/demo/b.go:6]; salida: [check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/a.go:6
-check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/c.go:6]
+    salida: no contiene [check-skips: //nolint sin nombrar su linter: pkg/demo/b.go:6]; salida: [check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/a.go:6
+check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/c.go:6]
 --- FAIL: test_nolint_without_a_linter_fails
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: --- PASS: test_nolint_without_a_linter_fails
@@ -210,7 +210,7 @@ resultado: OK
 ### nolint: la forma mal escrita pasa
 fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_nolint_without_a_linter_fails
 con la mutacion (debe ser rojo): exit 1
-    salida: no contiene [check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/a.go:6]; salida: [check-skips: //nolint sin nombrar su linter: pkg/demo/b.go:6]
+    salida: no contiene [check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/a.go:6]; salida: [check-skips: //nolint sin nombrar su linter: pkg/demo/b.go:6]
 --- FAIL: test_nolint_without_a_linter_fails
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: --- PASS: test_nolint_without_a_linter_fails
@@ -219,7 +219,7 @@ resultado: OK
 ### nolint: también en testdata
 fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_nolint_in_testdata_is_ignored
 con la mutacion (debe ser rojo): exit 1
-    testdata son fixtures (check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/testdata/fixture/g.go:6): esperado [0], obtenido [1]
+    testdata son fixtures (check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/testdata/fixture/g.go:6): esperado [0], obtenido [1]
 --- FAIL: test_nolint_in_testdata_is_ignored
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: --- PASS: test_nolint_in_testdata_is_ignored
@@ -246,32 +246,32 @@ resultado: OK
 ### nolint: la forma con barras y espacios no se ve
 fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_nolint_forms_that_golangci_lint_also_reads_fail
 con la mutacion (debe ser rojo): exit 1
-    salida: no contiene [pkg/demo/a.go:6]; salida: [check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/b.go:6
-check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/c.go:6
-check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/d.go:6
-check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/e.go:6
+    salida: no contiene [pkg/demo/a.go:6]; salida: [check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/b.go:6
+check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/c.go:6
+check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/d.go:6
+check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/e.go:6
 check-skips: //nolint sin nombrar su linter: pkg/demo/f.go:6]
 --- FAIL: test_nolint_forms_that_golangci_lint_also_reads_fail
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: --- PASS: test_nolint_forms_that_golangci_lint_also_reads_fail
 resultado: OK
 
-### nolint: la guardia ya no cubre lo que aplica golangci-lint
+### nolint: la directiva se corta en el primer espacio (ronda 2)
 fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_every_nolint_form_that_golangci_lint_applies_is_flagged
 con la mutacion (debe ser rojo): exit 1
-    golangci-lint aplica "// nolint:errcheck // reason" y check-skips.sh tiene que rechazarlo (): esperado [1], obtenido [0]
+    golangci-lint aplica "//nolint:errcheck ,all // F-0007: reason" y check-skips.sh tiene que rechazarlo: esperado [1], obtenido [0]
 --- FAIL: test_every_nolint_form_that_golangci_lint_applies_is_flagged
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: --- PASS: test_every_nolint_form_that_golangci_lint_applies_is_flagged
 resultado: OK
 
-### nolint: las mayúsculas no se ven
+### nolint: las mayúsculas no se ven en la búsqueda
 fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_nolint_forms_that_golangci_lint_also_reads_fail
 con la mutacion (debe ser rojo): exit 1
-    salida: no contiene [pkg/demo/e.go:6]; salida: [check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/a.go:6
-check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/b.go:6
-check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/c.go:6
-check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/d.go:6
+    salida: no contiene [pkg/demo/e.go:6]; salida: [check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/a.go:6
+check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/b.go:6
+check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/c.go:6
+check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/d.go:6
 check-skips: //nolint sin nombrar su linter: pkg/demo/f.go:6]
 --- FAIL: test_nolint_forms_that_golangci_lint_also_reads_fail
 restaurado byte a byte: True
@@ -287,17 +287,13 @@ restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: --- PASS: test_nolint_forms_that_golangci_lint_also_reads_fail
 resultado: OK
 
-### nolint: all solo si va solo
-fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_nolint_forms_that_golangci_lint_also_reads_fail
+### nolint: solo all exacto, no allx (ronda 2)
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_every_nolint_form_that_golangci_lint_applies_is_flagged
 con la mutacion (debe ser rojo): exit 1
-    salida: no contiene [check-skips: //nolint sin nombrar su linter: pkg/demo/f.go:6]; salida: [check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/a.go:6
-check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/b.go:6
-check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/c.go:6
-check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/d.go:6
-check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/e.go:6]
---- FAIL: test_nolint_forms_that_golangci_lint_also_reads_fail
+    golangci-lint aplica "//nolint:allx // F-0007: reason" y check-skips.sh tiene que rechazarlo: esperado [1], obtenido [0]
+--- FAIL: test_every_nolint_form_that_golangci_lint_applies_is_flagged
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: --- PASS: test_nolint_forms_that_golangci_lint_also_reads_fail
+con la correccion (debe ser verde): exit 0: --- PASS: test_every_nolint_form_that_golangci_lint_applies_is_flagged
 resultado: OK
 
 ### nolint: una cita buena no basta
@@ -362,8 +358,8 @@ resultado: OK
 ### lint: ejecuciones solapadas fallan
 fichero: Makefile; test: scripts/harness/tests/makefile_test.sh::test_lint_runs_golangci_lint_with_the_repo_config
 con la mutacion (debe ser rojo): exit 1
-    salida: no contiene [run --allow-serial-runners ./...]; salida: [go vet ./...
-.tools/golangci-lint-2.14.0 run ./...
+    salida: no contiene [run --config .golangci.yml --allow-serial-runners ./...]; salida: [go vet ./...
+.tools/golangci-lint-2.14.0 run --config .golangci.yml ./...
 for f in scripts/harness/*.sh scripts/harness/tests/*.sh scripts/harness/pre-push scripts/harness/commit-msg; do bash -n "$f"; done]
 --- FAIL: test_lint_runs_golangci_lint_with_the_repo_config
 restaurado byte a byte: True
@@ -377,7 +373,7 @@ con la mutacion (debe ser rojo): exit 1
     cli_test.go:120: [help extra]: exit code = 0, want 2
 --- FAIL: TestHelpRejectsArguments (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/cli	0.002s
+FAIL	github.com/actaira/actaira/internal/cli	0.001s
 FAIL
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
@@ -390,10 +386,10 @@ con la mutacion (debe ser rojo): exit 1
     cli_test.go:142: help: exit code = 0, want 3
 --- FAIL: TestFailingToWriteTheOutputIsAnInternalError (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/cli	0.001s
+FAIL	github.com/actaira/actaira/internal/cli	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
 resultado: OK
 
 ### repotest: pkg depende de internal
@@ -401,12 +397,12 @@ fichero: pkg/model/doc.go; test: go:./internal/repotest::TestPkgDoesNotDependOnI
 con la mutacion (debe ser rojo): exit 1
 === RUN   TestPkgDoesNotDependOnInternal
     repotest_test.go:41: pkg/ depends on github.com/actaira/actaira/internal/version: pkg/ cannot depend on internal/
---- FAIL: TestPkgDoesNotDependOnInternal (0.13s)
+--- FAIL: TestPkgDoesNotDependOnInternal (0.10s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/repotest	0.132s
+FAIL	github.com/actaira/actaira/internal/repotest	0.107s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.132s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.110s
 resultado: OK
 
 ### repotest: los bloques ~~~ no se miran
@@ -416,7 +412,7 @@ con la mutacion (debe ser rojo): exit 1
     repotest_test.go:130: commandsShown = [version discover policy diff blast], want [version discover lock policy diff blast]
 --- FAIL: TestCommandsShownFindsEveryFormOfCode (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/repotest	0.001s
+FAIL	github.com/actaira/actaira/internal/repotest	0.002s
 FAIL
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.002s
@@ -432,7 +428,71 @@ FAIL
 FAIL	github.com/actaira/actaira/internal/repotest	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.001s
+resultado: OK
+
+### nolint: la búsqueda sin distinguir mayúsculas en la directiva
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_nolint_forms_that_golangci_lint_also_reads_fail
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [pkg/demo/e.go:6]; salida: [check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/a.go:6
+check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/b.go:6
+check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/c.go:6
+check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/d.go:6
+check-skips: //nolint sin nombrar su linter: pkg/demo/f.go:6]
+--- FAIL: test_nolint_forms_that_golangci_lint_also_reads_fail
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_nolint_forms_that_golangci_lint_also_reads_fail
+resultado: OK
+
+### nolint: la prosa sobre nolintlint se toma por directiva
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_prose_about_nolint_passes
+con la mutacion (debe ser rojo): exit 1
+    un comentario que habla de nolintlint (check-skips: //nolint sin un F-NNNN de FALLOS.md en esa línea: pkg/demo/prose.go:3): esperado [0], obtenido [1]
+--- FAIL: test_prose_about_nolint_passes
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_prose_about_nolint_passes
+resultado: OK
+
+### nolint: .gitattributes esconde un .go (nolint)
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_binary_attributes_do_not_hide_a_go_file
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [pkg/demo/g.go:6]; salida: [check-skips: test saltado sin un F-NNNN de FALLOS.md en esa línea: pkg/demo/demo_test.go:6]
+--- FAIL: test_binary_attributes_do_not_hide_a_go_file
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_binary_attributes_do_not_hide_a_go_file
+resultado: OK
+
+### skips: .gitattributes esconde un .go (t.Skip)
+fichero: scripts/harness/check-skips.sh; test: scripts/harness/tests/check-skips_test.sh::test_binary_attributes_do_not_hide_a_go_file
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [pkg/demo/demo_test.go:6]; salida: [check-skips: //nolint sin un F-NNNN de FALLOS.md en esa línea: pkg/demo/g.go:6]
+--- FAIL: test_binary_attributes_do_not_hide_a_go_file
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_binary_attributes_do_not_hide_a_go_file
+resultado: OK
+
+### lint: otro fichero de configuración manda
+fichero: Makefile; test: scripts/harness/tests/makefile_test.sh::test_lint_runs_golangci_lint_with_the_repo_config
+con la mutacion (debe ser rojo): exit 1
+    salida: no contiene [run --config .golangci.yml --allow-serial-runners ./...]; salida: [go vet ./...
+.tools/golangci-lint-2.14.0 run --allow-serial-runners ./...
+for f in scripts/harness/*.sh scripts/harness/tests/*.sh scripts/harness/pre-push scripts/harness/commit-msg; do bash -n "$f"; done]
+--- FAIL: test_lint_runs_golangci_lint_with_the_repo_config
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_lint_runs_golangci_lint_with_the_repo_config
+resultado: OK
+
+### repotest: go.mod con ignore
+fichero: go.mod; test: go:./internal/repotest::TestEveryPackageOfTheModuleIsInDotDotDot
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestEveryPackageOfTheModuleIsInDotDotDot
+    repotest_test.go:192: go.mod has an ignore directive: the code it names escapes the checks
+--- FAIL: TestEveryPackageOfTheModuleIsInDotDotDot (0.35s)
+FAIL
+FAIL	github.com/actaira/actaira/internal/repotest	0.349s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.346s
 resultado: OK
 
 repo en uso sin cambios
