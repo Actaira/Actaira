@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	sitter "github.com/tree-sitter/go-tree-sitter"
 	python "github.com/tree-sitter/tree-sitter-python/bindings/go"
@@ -57,8 +58,11 @@ type Tree struct {
 
 // Parse parses src with the grammar of lang. Broken code is not an error: the
 // tree comes back with its ERROR and MISSING nodes (HasError). A hostile file
-// can take seconds and a GB of memory (ADR 0003), so the parse stops when ctx
-// is done, and the error wraps ctx.Err().
+// can take seconds and a GB of memory (ADR 0003), so the parse stops at the
+// deadline of ctx, and the error then wraps context.DeadlineExceeded. A
+// context canceled without a deadline is only checked before parsing starts:
+// go-tree-sitter v0.25.0 cannot stop a parse any other way without leaking
+// (F-0024).
 func Parse(ctx context.Context, lang Language, src []byte) (*Tree, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, fmt.Errorf("treesitter: parse not started: %w", err)
@@ -72,18 +76,27 @@ func Parse(ctx context.Context, lang Language, src []byte) (*Tree, error) {
 	if err := parser.SetLanguage(grammar); err != nil {
 		return nil, fmt.Errorf("treesitter: %v grammar: %w", lang, err)
 	}
+	deadline, hasDeadline := ctx.Deadline()
+	if hasDeadline {
+		left := time.Until(deadline).Microseconds()
+		if left <= 0 {
+			return nil, fmt.Errorf("treesitter: parse not started: %w", context.DeadlineExceeded)
+		}
+		// ParseOptions and its progress callback would stop the parse too, but
+		// go-tree-sitter v0.25.0 never frees the options it is given, and with
+		// them the caller's context (F-0024).
+		parser.SetTimeoutMicros(uint64(left)) //nolint:staticcheck // F-0024: the one way to stop a parse without leaking
+	}
 	read := func(i int, _ sitter.Point) []byte {
 		if i < len(src) {
 			return src[i:]
 		}
 		return []byte{}
 	}
-	// tree-sitter calls this now and then while it parses; true cancels.
-	opts := &sitter.ParseOptions{ProgressCallback: func(sitter.ParseState) bool { return ctx.Err() != nil }}
-	t := parser.ParseWithOptions(read, nil, opts)
+	t := parser.ParseWithOptions(read, nil, nil)
 	if t == nil {
-		if err := ctx.Err(); err != nil {
-			return nil, fmt.Errorf("treesitter: parse stopped: %w", err)
+		if hasDeadline {
+			return nil, fmt.Errorf("treesitter: parse stopped at the deadline: %w", context.DeadlineExceeded)
 		}
 		return nil, errors.New("treesitter: the parser returned no tree")
 	}

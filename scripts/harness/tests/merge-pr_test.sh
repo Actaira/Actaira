@@ -32,6 +32,14 @@ case "\$*" in
       exit 1
     fi
     exit ${1:-0} ;;
+  "pr checks 7")
+    # Every check, required or not, without waiting.
+    if [ -f "$T/optional-fails" ]; then
+      printf 'check\tpass\ncheck-macos\tfail\n'
+      exit 1
+    fi
+    printf 'check\tpass\n'
+    exit 0 ;;
   "pr checks"*)
     required=""
     if [[ "\$*" == *"--required"* ]]; then required="required "; fi
@@ -209,6 +217,8 @@ test_a_failing_check_that_is_not_required_does_not_block_the_merge() {
   assert_eq "$(merge 7 "E0 step 9: demo (#7)" "$T/body.md")" "0" "un check no obligatorio en rojo ($(cat "$T/out"))"
   assert_contains "$(gh_log)" "pr checks 7 --required --watch --fail-fast"
   assert_contains "$(gh_log)" "pr merge 7"
+  assert_contains "$(cat "$T/out")" "merge-pr: aviso: hay checks no obligatorios que no están en verde"
+  assert_contains "$(cat "$T/out")" "check-macos"
 }
 
 run_tests "$@"

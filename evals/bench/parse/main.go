@@ -75,11 +75,12 @@ type report struct {
 }
 
 func main() {
-	home, err := os.UserHomeDir()
+	// The same place as evals/bench/fetch.sh: $XDG_CACHE_HOME or ~/.cache.
+	userCache, err := os.UserCacheDir()
 	if err != nil {
 		fail(err)
 	}
-	cache := flag.String("cache", filepath.Join(home, ".cache", "actaira-bench"), "where evals/bench/fetch.sh put the repositories")
+	cache := flag.String("cache", filepath.Join(userCache, "actaira-bench"), "where evals/bench/fetch.sh put the repositories")
 	n := flag.Int("n", 1000, "files per repository")
 	flag.Parse()
 	if *n < 1 {

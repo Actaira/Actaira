@@ -83,6 +83,12 @@ if [ "$sin_ci" -eq 0 ]; then
   # Only the required check gates the merge (F-0023): the jobs of
   # platforms.yml report on other systems and must not block every PR.
   gh pr checks "$pr" --required --watch --fail-fast
+  # The jobs that are not required only report, but one that is not green is
+  # shown, so it is not missed (review round 2 of E1 step 1.2a).
+  if ! all_checks="$(gh pr checks "$pr" 2>&1)"; then
+    echo "merge-pr: aviso: hay checks no obligatorios que no están en verde (no bloquean la fusión):" >&2
+    printf '%s\n' "$all_checks" >&2
+  fi
 fi
 # GitHub signs a merge with the account's primary e-mail unless it is told
 # otherwise; main is public and cannot be rewritten (F-0015).

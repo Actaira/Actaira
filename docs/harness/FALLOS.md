@@ -283,13 +283,43 @@ Cada fallo encontrado (test en rojo que no era esperado, bug, hallazgo crítico 
 ## F-0023 merge-pr.sh esperaba a todos los checks, también a los que no son obligatorios
 - fecha: 2026-09-29
 - épica y paso: E1 / 1.2a, ronda adversarial 1
-- síntoma: `merge-pr.sh` fusionaba tras `gh pr checks <pr> --watch --fail-fast`, que espera a todos los checks del PR y sale con error al primero que falla. Con los jobs de `platforms.yml` (`check-macos`, `check-ubuntu-26`), que son informativos, un fallo en macOS habría bloqueado todos los PR, y la regla de la épica de seguir solo con Linux habría sido imposible de aplicar. Además, esos jobs no tenían tiempo máximo: un runner en cola dejaba la espera colgada hasta 6 horas.
+- síntoma: `merge-pr.sh` fusionaba tras `gh pr checks <pr> --watch --fail-fast`, que espera a todos los checks del PR y sale con error al primero que falla. Con los jobs de `platforms.yml` (`check-macos`, `check-ubuntu-26`), que son informativos, un fallo en macOS habría bloqueado todos los PR, y la regla de la épica de seguir solo con Linux habría sido imposible de aplicar. Además, esos jobs no tenían tiempo máximo: uno colgado dejaba la espera parada hasta 6 horas.
 - causa raíz: `merge-pr.sh` se escribió cuando `ci.yml` tenía un único job, que era el obligatorio. Esperar a todos o solo al obligatorio daba igual, y nada lo distinguía.
 - corrección:
   - `merge-pr.sh` espera solo a los checks obligatorios (`gh pr checks --required --watch --fail-fast`, https://cli.github.com/manual/gh_pr_checks);
   - la espera de F-0019 también mira solo los obligatorios;
-  - los jobs de `platforms.yml` tienen `timeout-minutes: 30`.
+  - los jobs de `platforms.yml` tienen `timeout-minutes: 30`, que limita el tiempo de ejecución, no el de cola. De un runner en cola protege `--required`.
+  - Un check no obligatorio que no está en verde se enseña como aviso antes de fusionar (ronda 2).
   - Rama `e1/paso-2a-parser`.
 - guardia: test:scripts/harness/tests/merge-pr_test.sh::test_a_failing_check_that_is_not_required_does_not_block_the_merge
 - guardia: test:scripts/harness/tests/merge-pr_test.sh::test_waits_for_the_checks_of_a_new_pr
 - lección: un check que no es obligatorio informa, no bloquea. Si algo tiene que bloquear, se hace obligatorio en la protección de `main`.
+
+## F-0024 Cada parseo con plazo dejaba vivos para siempre el contexto y el callback
+- fecha: 2026-09-29
+- épica y paso: E1 / 1.2a, ronda adversarial 2
+- síntoma: tras 10.000 parseos con `context.WithTimeout`, el heap de Go conservaba 30.069 objetos más. El perfil de memoria los atribuye a `go-pointer.Save` y a `treesitter.Parse`, con el `timerCtx` del llamante dentro. En un proceso largo, como la nube o el runner, crecería sin límite.
+- causa raíz: la corrección de la ronda 1 pasó un `ParseOptions` con callback de progreso a `ParseWithOptions`. go-tree-sitter v0.25.0 lo guarda con `pointer.Save(options)` y nunca llama a `Unref` (`parser.go`, junto a `ts_parser_parse_with_options`). La API se usó siguiendo su documentación, sin medir qué retenía. Los tests de fugas miraban la memoria residente con un umbral de MB, y no el heap de Go.
+- corrección:
+  - el plazo del contexto se pasa con `SetTimeoutMicros`, y `ParseWithOptions` se llama sin opciones;
+  - `SetTimeoutMicros` está marcada como obsoleta en la 0.25 y desaparece en la 0.26, así que la línea lleva `//nolint:staticcheck // F-0024`;
+  - una cancelación sin plazo solo se mira antes de empezar;
+  - subir go-tree-sitter exige revisar esto (ADR 0003).
+  - Rama `e1/paso-2a-parser`.
+- guardia: test:pkg/extract/treesitter/treesitter_test.go::TestParsingWithADeadlineKeepsNothingOnTheGoHeap
+- lección: un test de fugas de una biblioteca con cgo mira las dos memorias. La de C, por la memoria residente; la de Go, por los objetos vivos del heap.
+
+## F-0025 El ADR 0003 afirmaba sin medir lo que el plazo hace con la memoria
+- fecha: 2026-09-29
+- épica y paso: E1 / 1.2a, ronda adversarial 2
+- síntoma: el ADR decía dos cosas.
+  - "El plazo corta el tiempo, pero no la memoria". El revisor midió un pico de 55 MB con plazo, frente a 1,2 GB sin él.
+  - "Parsear de uno en uno deja la memoria máxima en la de un fichero". Con 40 parseos cancelados seguidos, el pico llegó a 465 MB, por las arenas de glibc de cada hilo.
+- causa raíz: dos deducciones escritas como hechos en un ADR, que es donde se decide, sin la medición que CLAUDE.md exige ("Todo se mide", "Nunca inferir lo no observado").
+- corrección:
+  - `evals/bench/hostile` mide también el caso con plazo y una serie de ficheros con plazo, con y sin `MALLOC_ARENA_MAX=1`;
+  - el ADR y el estado citan esas cifras;
+  - una regla nueva exige que toda cifra de un ADR o del estado cite su medición.
+  - Rama `e1/paso-2a-parser`.
+- guardia: regla:.claude/rules/adr.md
+- lección: en un ADR, lo no medido se escribe como hipótesis, con lo que haría falta para medirlo.

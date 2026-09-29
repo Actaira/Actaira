@@ -20,7 +20,9 @@ permissions:
 jobs:
   check-macos:
     runs-on: macos-26
-    # A runner stuck in the queue must not hang the pull request.
+    # A job that hangs once running stops after 30 minutes. A runner stuck in
+    # the queue does not hang merge-pr.sh either: it only waits for the
+    # required check (F-0023).
     timeout-minutes: 30
     permissions:
       contents: read

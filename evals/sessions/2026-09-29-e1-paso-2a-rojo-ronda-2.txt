@@ -1,0 +1,6 @@
+--- PASS: TestParsingManyTinyFilesDoesNotLeakParsers (0.62s)
+    treesitter_test.go:143: the Go heap kept 30069 more objects after 10,000 parses: each parse leaves something alive
+--- FAIL: TestParsingWithADeadlineKeepsNothingOnTheGoHeap (0.07s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/extract/treesitter	0.690s
+FAIL

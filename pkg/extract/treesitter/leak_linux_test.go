@@ -62,9 +62,10 @@ func TestParsingAThousandFilesDoesNotLeak(t *testing.T) {
 }
 
 // Every parser is freed too: its memory is small next to a tree's, so this
-// takes 20,000 parses of a tiny file (review round 1 of step 1.2a: without
-// parser.Close the memory grows about 140 MB).
-func TestParsingTwentyThousandTinyFilesDoesNotLeakParsers(t *testing.T) {
+// takes 100,000 parses of a tiny file. Without parser.Close, 20,000 parses
+// grew 84 MB (evals/sessions/2026-09-29-e1-paso-2a-mutaciones.txt), about
+// 4 KB each: 100,000 give a margin of six times the limit.
+func TestParsingManyTinyFilesDoesNotLeakParsers(t *testing.T) {
 	src := []byte("x = 1\n")
 	parseAll := func(n int) {
 		for i := 0; i < n; i++ {
@@ -78,12 +79,12 @@ func TestParsingTwentyThousandTinyFilesDoesNotLeakParsers(t *testing.T) {
 	parseAll(500)
 	runtime.GC()
 	before := residentBytes(t)
-	parseAll(20000)
+	parseAll(100000)
 	runtime.GC()
 	after := residentBytes(t)
 	const limit = 64 << 20
 	if grew := after - before; grew > limit {
-		t.Fatalf("resident memory grew %d MB after 20,000 parses (limit %d MB): a parser is not closed",
+		t.Fatalf("resident memory grew %d MB after 100,000 parses (limit %d MB): a parser is not closed",
 			grew>>20, limit>>20)
 	}
 }
