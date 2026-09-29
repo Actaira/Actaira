@@ -25,7 +25,7 @@ test_goflags_in_go_env_file_fails() {
 # with `make -f`, so the test never touches the repo.
 # golangci_lint_path: the pinned golangci-lint of the Makefile, relative to the repo.
 golangci_lint_path() {
-  make -s --no-print-directory -C "$REPO_DIR" -f "$REPO_DIR/Makefile" --eval 'print-golangci-lint: ; @echo $(GOLANGCI_LINT)' print-golangci-lint
+  make -s --no-print-directory -C "$REPO_DIR" -f "$REPO_DIR/Makefile" print-GOLANGCI_LINT
 }
 
 go_module() {
@@ -71,7 +71,15 @@ test_lint_runs_golangci_lint_with_the_repo_config() {
   # Overlapping runs (the Stop hook and a reviewer's clone) wait for the lock
   # instead of failing (review round 1 of E1 step 1.1).
   out="$(make -s -n -C "$REPO_DIR" -f "$REPO_DIR/Makefile" lint 2>&1)"
-  assert_contains "$out" "run --allow-serial-runners ./..."
+  assert_contains "$out" "run --config .golangci.yml --allow-serial-runners ./..."
+  # Only the pinned .golangci.yml counts: a .golangci.yaml, .toml or .json
+  # next to it would take precedence (review round 2 of E1 step 1.1).
+  printf 'version: "2"\nlinters:\n  default: none\n  enable:\n    - govet\n' > "$T/m/.golangci.yaml"
+  printf 'package demo\n\nfunc f() error { return nil }\n\nfunc G() { f() }\n' > "$T/m/pkg/demo/unchecked.go"
+  rc=0
+  out="$(cd "$T/m" && make -s -f "$REPO_DIR/Makefile" lint GOLANGCI_LINT="$gl" HARNESS_SCRIPTS= 2>&1)" || rc=$?
+  assert_eq "$rc" "2" "lint con un .golangci.yaml que apaga errcheck"
+  assert_contains "$out" "(errcheck)"
 }
 
 # What lint checks is defined by .golangci.yml, so its content is pinned like

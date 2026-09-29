@@ -20,7 +20,7 @@ Las tres primeras se distribuyen a terceros. El runner y el proxy evalúan polí
 
 1. **Go en las cinco piezas**, con un solo módulo abierto, `github.com/actaira/actaira`, y el repo `actaira-cloud` para la nube.
 2. **API pública en `pkg/`** (modelo, extractores, lockfile, diff, base de conocimiento), porque `actaira-cloud` la importa y Go prohíbe importar `internal/` desde otro módulo. Lo que solo usa la CLI va en `internal/`. Ningún paquete de `pkg/` depende de `internal/`, ni directa ni indirectamente: `pkg/` es API con versionado semántico, y un cambio en `internal/` la cambiaría sin subir la versión. Go no lo impide, porque su regla de `internal/` solo mira al importador directo, así que lo comprueba `internal/repotest` con `go list -deps`.
-3. **La versión de Go la fija `go.mod`** (`go 1.27.1`). Una herramienta que analiza el código, como golangci-lint, tiene que estar compilada con una versión de Go que la acepte (`Makefile`).
+3. **La versión de Go la fija `go.mod`** (`go 1.27.1`). Una herramienta que analiza el código, como golangci-lint, tiene que estar compilada con la misma versión de lenguaje (go1.X) o una posterior: golangci-lint 2.14.0 está compilado con go1.27.0 y acepta `go 1.27.1`.
 
 ## Opciones
 
@@ -39,7 +39,7 @@ Por el runner y el proxy de las fases 3 y 4, por un solo lenguaje en todas las p
 
 - **cgo por tree-sitter:** si lo exige, el binario se compila en runners nativos de la matriz de GitHub Actions y, para que sea estático, dentro de Alpine (paso 1.2, ADR 0003).
 - **Dos toolchains en la CI de la fase 4:** la validación de políticas usa la CLI oficial de Cedar en Rust (plan, ADR 4).
-- **Las herramientas de análisis van detrás de Go:** subir la versión de `go.mod` exige que golangci-lint esté compilado con esa versión o una posterior.
+- **Las herramientas de análisis van detrás de Go:** subir la versión de lenguaje de `go.mod` (de go1.27 a go1.28) exige un golangci-lint compilado con esa versión o una posterior.
 
 ## Latencia
 
@@ -48,7 +48,7 @@ La primera medición, en el paso 1.1, es de `actaira version`: 200 ejecuciones e
 ## Errores
 
 - **Si cgo no compila en macOS:** la E1 y la E2 salen solo para Linux, porque la Action corre en Linux, y macOS pasa al backlog con el error documentado (ADR 0003).
-- **Si una herramienta está compilada con un Go anterior al de `go.mod`:** `make check` falla en `lint`, y hay que subir la herramienta en el mismo PR que sube Go.
+- **Si una herramienta está compilada con una versión de lenguaje anterior a la de `go.mod`:** golangci-lint se niega a analizar, `make check` falla en `lint`, y hay que subir la herramienta en el mismo PR que sube Go.
 
 ## Reversión
 

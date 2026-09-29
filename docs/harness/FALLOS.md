@@ -231,14 +231,19 @@ Cada fallo encontrado (test en rojo que no era esperado, bug, hallazgo crítico 
 
 ## F-0020 La guardia de //nolint dejaba pasar formas que golangci-lint aplica
 - fecha: 2026-09-29
-- épica y paso: E1 / 1.1, ronda adversarial 1
+- épica y paso: E1 / 1.1, rondas adversariales 1 y 2
 - síntoma: tres comentarios apagan linters, golangci-lint 2.14.0 sale con 0 issues y `check-skips.sh` sale con 0:
   - `// /nolint:all`, sin F-NNNN y sin linter;
   - `//nolint:ALL // F-0007`;
   - `//nolint:errcheck, all // F-0007`.
-  El primero tampoco lo ve nolintlint.
+  El primero tampoco lo ve nolintlint. En la ronda 2, tras la primera corrección, `//nolint:errcheck ,all // F-0020` volvía a apagar todos los linters. La guardia cortaba la directiva en el primer espacio, y golangci-lint lee la lista hasta el siguiente `//`. El test diferencial no lo veía porque sus formas no citaban un F-NNNN, y la falta de cita tapaba la forma.
 - causa raíz: la guardia se escribió desde la sintaxis documentada (`//nolint:<linter>`), no desde lo que golangci-lint acepta de verdad: quita las barras y los espacios antes de "nolint" y lee los nombres de los linters sin distinguir mayúsculas. Ningún test comparaba la guardia con la herramienta que guarda.
-- corrección: `check-skips.sh` mira todo comentario que, quitando barras y espacios y sin distinguir mayúsculas, empiece por "nolint". Exige la forma exacta `//nolint:<linter>[,<linter>...]`, con nombres en minúsculas y nunca `all`, y un F-NNNN en esa línea. Rama `e1/paso-1-estructura`.
+- corrección: `check-skips.sh` lee cada directiva como golangci-lint.
+  - Mira todo comentario que, quitando barras y espacios y sin distinguir mayúsculas, empiece por "nolint" seguido de `:`, un espacio o el fin de la línea.
+  - Lo lee desde "nolint" hasta el siguiente `//`.
+  - Exige exactamente `//nolint:<linter>[,<linter>...]`, con nombres en minúsculas y ninguno que empiece por `all`, y un F-NNNN en esa línea.
+  - El test diferencial cita un F-NNNN en cada forma y usa una función con dos avisos (errcheck e ineffassign), así que prueba la forma contra la herramienta, sin que la cita la tape.
+  - Rama `e1/paso-1-estructura`.
 - guardia: test:scripts/harness/tests/check-skips_test.sh::test_nolint_forms_that_golangci_lint_also_reads_fail
 - guardia: test:scripts/harness/tests/check-skips_test.sh::test_every_nolint_form_that_golangci_lint_applies_is_flagged
 - lección: L-012

@@ -1,0 +1,7 @@
+== ronda 2 del paso 1.1: tests nuevos en rojo antes de corregir (2026-09-29T14:20:22Z)
+    *.go binary en .gitattributes: esperado [1], obtenido [0]
+--- FAIL: test_binary_attributes_do_not_hide_a_go_file
+--- FAIL: test_every_nolint_form_that_golangci_lint_applies_is_flagged
+    un comentario que habla de nolintlint (check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/prose.go:3): esperado [0], obtenido [1]
+--- FAIL: test_prose_about_nolint_passes
+--- FAIL: test_lint_runs_golangci_lint_with_the_repo_config

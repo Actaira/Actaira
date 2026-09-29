@@ -70,7 +70,7 @@ Una lección que no se ha convertido en algo que se comprueba solo sigue siendo 
 ## L-006 Lo que significa `check` en verde se fija con tests exactos
 - nace de: F-0014
 - regla: la frontera del servidor (ADR 0000) solo exige que `check` salga en verde, y lo que ejecuta `check` lo define el propio PR. Los ficheros que lo definen (`ci.yml`, los prerrequisitos de `check` y `gate` en el Makefile y, desde el paso 1.1 de la E1, `.golangci.yml`) se comparan con su contenido exacto, y ningún otro workflow puede publicar un check con el mismo nombre. Un cambio legítimo, como el job de macOS de la E1, actualiza el test en el mismo PR, a la vista en el diff
-- dónde se comprueba: test:scripts/harness/tests/ci_test.sh::test_workflow_is_exactly_the_reviewed_one, test:scripts/harness/tests/ci_test.sh::test_no_other_workflow_publishes_a_check_job y test:scripts/harness/tests/makefile_test.sh::test_check_runs_every_harness_check, en `make check`
+- dónde se comprueba: test:scripts/harness/tests/ci_test.sh::test_workflow_is_exactly_the_reviewed_one, test:scripts/harness/tests/ci_test.sh::test_no_other_workflow_publishes_a_check_job, test:scripts/harness/tests/makefile_test.sh::test_check_runs_every_harness_check, test:scripts/harness/tests/makefile_test.sh::test_golangci_config_is_the_reviewed_one y test:scripts/harness/tests/makefile_test.sh::test_lint_runs_golangci_lint_with_the_repo_config (solo cuenta `.golangci.yml`), en `make check`
 
 ## L-007 Toda orden que CLAUDE.md o una skill manda ejecutar pasa los hooks
 - nace de: F-0011 y el cierre de la E0 (`CLAUDE.md` mandaba cerrar un paso con una fusión que el guard bloquea)
@@ -99,5 +99,5 @@ Una lección que no se ha convertido en algo que se comprueba solo sigue siendo 
 
 ## L-012 Una guardia que imita la sintaxis de una herramienta se prueba contra la herramienta
 - nace de: F-0020
-- regla: si una comprobación decide qué acepta otra herramienta (qué comentario apaga un linter, qué excepción lee gitleaks, qué etiqueta de compilación ve Go), su test ejecuta esa herramienta sobre cada variante y exige que la comprobación rechace todo lo que la herramienta aplica. No vale solo la sintaxis documentada
+- regla: si una comprobación decide qué acepta otra herramienta (qué comentario apaga un linter, qué excepción lee gitleaks, qué etiqueta de compilación ve Go), su test ejecuta esa herramienta sobre cada variante y exige que la comprobación rechace todo lo que la herramienta aplica. No vale solo la sintaxis documentada. Cada parte de la comprobación se prueba por separado: si una variante ya falla por otro motivo (la falta de cita), no prueba la parte que mira la forma
 - dónde se comprueba: test:scripts/harness/tests/check-skips_test.sh::test_every_nolint_form_that_golangci_lint_applies_is_flagged. Pendiente de guardia: los comentarios allow de gitleaks (backlog)

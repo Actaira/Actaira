@@ -29,3 +29,6 @@
   - hallazgo bajo 6: la espera de `merge-pr.sh` depende del texto "no checks reported" de gh, que no está documentado (https://cli.github.com/manual/gh_pr_checks solo documenta el código 8). Si cambia, falla cerrado. Mejor esperar a que `statusCheckRollup` de `gh pr view --json` no esté vacío;
   - hallazgo bajo 8 (anterior a este PR): el patrón de correos no normaliza `%40`, `&#64;`, la arroba de ancho completo ni los caracteres invisibles, y no cubre aol, zoho, tutanota ni hey.
 - **El test de los README y los bloques de código sangrados, y las opciones de cada comando** (E1, paso 1.1, ronda 1, hallazgo bajo 9): `commandsShown` ya mira los bloques ``` y ~~~, el código en línea y `<code>`/`<pre>`, y salta las opciones antes del comando. Faltan los bloques sangrados con cuatro espacios y, en el paso 1.5, comprobar las opciones de cada comando contra las que la CLI acepta.
+- **Lo que la ronda 2 del paso 1.1 de la E1 dejó para después:**
+  - hallazgo bajo 7, para el paso 1.5: un pánico de Go sale con 2, que la CLI reserva a los argumentos mal. `Run` tiene que recuperar el pánico y devolver 3, con un test;
+  - hallazgo bajo 4, en otro sitio: `secrets-scan.sh` también busca con `git grep -I`, así que un `.gitattributes` que marque un fichero de texto como binario lo esconde de esa búsqueda. En `check-skips.sh` ya se corrigió.

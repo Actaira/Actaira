@@ -22,7 +22,7 @@ bad=0
 
 # git grep: exit 1 means no match; anything above 1 is an error, never "clean".
 grc=0
-hits="$(git grep -n -I --untracked -E '\.Skip(Now|f)?([^[:alnum:]_]|$)' -- '*.go' ':(exclude,glob)**/testdata/**')" || grc=$?
+hits="$(git grep -n --text --untracked -E '\.Skip(Now|f)?([^[:alnum:]_]|$)' -- '*.go' ':(exclude,glob)**/testdata/**')" || grc=$?
 if [ "$grc" -gt 1 ]; then
   echo "check-skips: git grep falló (exit $grc)" >&2
   exit 1
@@ -42,12 +42,16 @@ while IFS= read -r hit; do
 done <<< "$hits"
 
 # //nolint switches golangci-lint off for a line (L-003). golangci-lint strips
-# the slashes and spaces before "nolint" and reads the linter names in any case
-# (F-0020), so every such comment is looked at: it has to be written exactly
-# //nolint:<linter>[,<linter>...] (lowercase names, never "all"), and cite a
-# recorded F-NNNN on that line.
+# the slashes and spaces before "nolint", reads the linter list up to the next
+# "//" and the linter names in any case (F-0020). So every comment that, once
+# slashes and spaces are stripped, starts with "nolint" followed by ":", a
+# space or the end of the line is read the same way: from "nolint" to the next
+# "//", it has to be exactly nolint:<linter>[,<linter>...] (lowercase names,
+# none starting with "all") and the line cites a recorded F-NNNN. Both greps
+# read Go files as text (--text, never -I): a .gitattributes that marks them
+# as binary must not hide them.
 grc=0
-hits="$(git grep -n -I -i --untracked -E '//[/[:space:]]*nolint' -- '*.go' ':(exclude,glob)**/testdata/**')" || grc=$?
+hits="$(git grep -n --text -i --untracked -E '//[/[:space:]]*nolint([:[:space:]]|$)' -- '*.go' ':(exclude,glob)**/testdata/**')" || grc=$?
 if [ "$grc" -gt 1 ]; then
   echo "check-skips: git grep falló (exit $grc)" >&2
   exit 1
@@ -57,15 +61,25 @@ while IFS= read -r hit; do
   where="$(cut -d: -f1,2 <<< "$hit")"
   text="$(cut -d: -f3- <<< "$hit")"
   problem=""
-  if directives="$(grep -oiE '//[/[:space:]]*nolint[^[:space:]]*' <<< "$text")"; then
-    while IFS= read -r d; do
-      if [[ ! "$d" =~ ^//nolint:[a-z0-9_-]+(,[a-z0-9_-]+)*$ ]]; then
-        problem="//nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN)"
-      elif [[ ",${d#//nolint:}," == *",all,"* ]]; then
-        problem="//nolint sin nombrar su linter"
-      fi
-    done <<< "$directives"
-  fi
+  rest="$text"
+  while :; do
+    shopt -s nocasematch
+    found=0
+    if [[ "$rest" =~ //[/[:space:]]*nolint([:[:space:]]|$) ]]; then
+      found=1
+      m="${BASH_REMATCH[0]}"
+    fi
+    shopt -u nocasematch
+    [ "$found" -eq 1 ] || break
+    after="${rest#*"$m"}"
+    directive="$m${after%%//*}"
+    if [[ ! "$directive" =~ ^//nolint:[a-z0-9_-]+(,[a-z0-9_-]+)*[[:space:]]*$ ]]; then
+      problem="//nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN)"
+    elif [[ ",${directive#//nolint:}" =~ ,all ]]; then
+      problem="//nolint sin nombrar su linter"
+    fi
+    rest="$after"
+  done
   if [ -z "$problem" ] && ! cites_known_fallo "$text" "$known"; then
     problem="//nolint sin un F-NNNN de FALLOS.md en esa línea"
   fi

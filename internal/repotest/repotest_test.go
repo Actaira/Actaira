@@ -176,3 +176,38 @@ func TestSecurityPolicyGivesTheProjectContact(t *testing.T) {
 		t.Fatal("SECURITY.md does not give the project contact address of config/contact.env")
 	}
 }
+
+// Everything the module builds is in ./..., so go test, go vet, golangci-lint
+// and check-skips.sh see it: no ignore directive in go.mod, and no package of
+// the module that ./... leaves out (a directory starting with _ or named
+// testdata, imported from elsewhere; review round 2 of step 1.1).
+func TestEveryPackageOfTheModuleIsInDotDotDot(t *testing.T) {
+	mod := exec.Command("go", "mod", "edit", "-json")
+	mod.Dir = root
+	out, err := mod.Output()
+	if err != nil {
+		t.Fatalf("go mod edit -json: %v", err)
+	}
+	if strings.Contains(string(out), `"Ignore"`) {
+		t.Errorf("go.mod has an ignore directive: the code it names escapes the checks")
+	}
+	list := func(args ...string) map[string]bool {
+		cmd := exec.Command("go", append([]string{"list", "-f", "{{.ImportPath}}"}, args...)...)
+		cmd.Dir = root
+		out, err := cmd.Output()
+		if err != nil {
+			t.Fatalf("go list %v: %v", args, err)
+		}
+		set := map[string]bool{}
+		for _, p := range strings.Fields(string(out)) {
+			set[p] = true
+		}
+		return set
+	}
+	all := list("./...")
+	for p := range list("-deps", "./...") {
+		if (p == module || strings.HasPrefix(p, module+"/")) && !all[p] {
+			t.Errorf("%s is built but ./... leaves it out", p)
+		}
+	}
+}

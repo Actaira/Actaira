@@ -192,9 +192,9 @@ test_nolint_without_a_linter_fails() {
   nolint_file "$T/repo/pkg/demo/b.go" '//nolint:all // F-0007: the caller logs it'
   nolint_file "$T/repo/pkg/demo/c.go" '// nolint:errcheck // F-0007: the caller logs it'
   assert_eq "$(skips)" "1" "//nolint sin linter concreto"
-  assert_contains "$(cat "$T/out")" "check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/a.go:6"
+  assert_contains "$(cat "$T/out")" "check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/a.go:6"
   assert_contains "$(cat "$T/out")" "check-skips: //nolint sin nombrar su linter: pkg/demo/b.go:6"
-  assert_contains "$(cat "$T/out")" "check-skips: //nolint mal escrito (golangci-lint lo aplica igual; se escribe //nolint:<linter> // F-NNNN): pkg/demo/c.go:6"
+  assert_contains "$(cat "$T/out")" "check-skips: //nolint con una forma no admitida (se escribe //nolint:<linter> // F-NNNN): pkg/demo/c.go:6"
 }
 
 test_nolint_in_testdata_is_ignored() {
@@ -204,8 +204,8 @@ test_nolint_in_testdata_is_ignored() {
 }
 
 # Review round 1 of E1 step 1.1 (F-0020): golangci-lint strips the slashes and
-# spaces before "nolint" and reads the linter names in any case, so each of
-# these forms switches linters off and must be flagged.
+# spaces before "nolint" and reads the linter names in any case. Each of these
+# forms is refused: the ones golangci-lint applies and their look-alikes.
 test_nolint_forms_that_golangci_lint_also_reads_fail() {
   repo_with_fallo
   nolint_file "$T/repo/pkg/demo/a.go" '// /nolint:all // F-0007: reason'
@@ -222,34 +222,60 @@ test_nolint_forms_that_golangci_lint_also_reads_fail() {
   assert_contains "$(cat "$T/out")" "check-skips: //nolint sin nombrar su linter: pkg/demo/f.go:6"
 }
 
-# The guard is checked against the tool it guards (F-0020): every directive
-# form that makes golangci-lint drop an errcheck finding must fail
-# check-skips.sh when it cites no F-NNNN.
+# The guard is checked against the tool it guards (F-0020, L-012). Every form
+# cites a recorded F-NNNN, so only the form itself can make check-skips.sh
+# refuse it. The function trips two linters: a form that makes golangci-lint
+# drop anything but errcheck, or that is not the canonical //nolint:errcheck,
+# must be refused, and with a message about the form, not about the citation.
 test_every_nolint_form_that_golangci_lint_applies_is_flagged() {
   local gl
-  gl="$(make -s --no-print-directory -C "$REPO_DIR" -f "$REPO_DIR/Makefile" --eval 'print-golangci-lint: ; @echo $(GOLANGCI_LINT)' print-golangci-lint)"
-  gl="$REPO_DIR/$gl"
+  gl="$REPO_DIR/$(make -s --no-print-directory -C "$REPO_DIR" -f "$REPO_DIR/Makefile" print-GOLANGCI_LINT)"
   [ -x "$gl" ] || fail "no existe $gl (make tools)"
   repo_with_fallo
-  printf 'version: "2"\nlinters:\n  default: none\n  enable:\n    - errcheck\n  exclusions:\n    generated: disable\n' > "$T/repo/.golangci.yml"
-  local applied=0 form out rc
-  local forms=('//nolint:errcheck // reason' '// nolint:errcheck // reason' '// /nolint:all' '//nolint:ALL // reason'
-    '//nolint:govet, all // reason' '///nolint:errcheck // reason' '//NOLINT:errcheck // reason' '//nolint // reason'
-    '/* nolint:all */' '//lint:ignore errcheck reason')
+  printf 'version: "2"\nlinters:\n  default: none\n  enable:\n    - errcheck\n    - ineffassign\n  exclusions:\n    generated: disable\n' > "$T/repo/.golangci.yml"
+  local form out rc applied=0
+  local forms=('//nolint:errcheck // F-0007: reason' '//nolint:errcheck ,all // F-0007: reason'
+    $'//nolint:errcheck,\tall // F-0007: reason' '//nolint:errcheck, all // F-0007: reason' '//nolint:errcheck, ALL // F-0007: reason'
+    '//nolint:allx // F-0007: reason' '//nolint:ALL // F-0007: reason' '// /nolint:all // F-0007: reason'
+    '///nolint:all // F-0007: reason' '// nolint:all // F-0007: reason' '//nolint // F-0007: reason'
+    '/* nolint:all */ // F-0007: reason' '//lint:ignore errcheck F-0007: reason')
   for form in "${forms[@]}"; do
-    rm -f "$T/repo/pkg/demo/"*.go
-    printf 'package demo\n' > "$T/repo/pkg/demo/demo.go"
-    nolint_file "$T/repo/pkg/demo/g.go" "$form"
+    printf 'package demo\n\nfunc f() error { return nil }\n\nfunc G() int {\n\tf() %s\n\tn := 1\n\tn = 2\n\treturn n\n}\n' "$form" > "$T/repo/pkg/demo/g.go"
     rc=0
     out="$(cd "$T/repo" && "$gl" run --allow-serial-runners ./... 2>&1)" || rc=$?
-    if [[ "$out" == *"(errcheck)"* ]]; then
+    [[ "$out" == *"(errcheck)"* || "$out" == *"(ineffassign)"* || "$rc" -eq 0 ]] || fail "golangci-lint falló con \"$form\": $out"
+    if [ "$form" = '//nolint:errcheck // F-0007: reason' ]; then
+      [[ "$out" != *"(errcheck)"* && "$out" == *"(ineffassign)"* ]] || fail "la forma canónica tiene que apagar solo errcheck: $out"
+      assert_eq "$(skips)" "0" "la forma canónica con su F-NNNN ($(cat "$T/out"))"
       continue
     fi
-    [ "$rc" -eq 0 ] || fail "golangci-lint falló con \"$form\" sin informe de errcheck: $out"
+    if [[ "$out" == *"(errcheck)"* && "$out" == *"(ineffassign)"* ]]; then
+      continue
+    fi
     applied=$((applied + 1))
-    assert_eq "$(skips)" "1" "golangci-lint aplica \"$form\" y check-skips.sh tiene que rechazarlo ($(cat "$T/out"))"
+    assert_eq "$(skips)" "1" "golangci-lint aplica \"$form\" y check-skips.sh tiene que rechazarlo"
+    assert_not_contains "$(cat "$T/out")" "sin un F-NNNN" "\"$form\": el motivo es la forma, no la cita"
   done
-  [ "$applied" -ge 5 ] || fail "golangci-lint solo aplicó $applied formas: la prueba ya no compara nada"
+  [ "$applied" -ge 8 ] || fail "golangci-lint solo aplicó $applied formas: la prueba ya no compara nada"
+}
+
+# Comments and strings that only talk about nolint are not directives
+# (review round 2 of E1 step 1.1).
+test_prose_about_nolint_passes() {
+  repo_with_fallo
+  printf 'package demo\n\n// nolintlint is enabled in .golangci.yml.\nconst c = 1\n' > "$T/repo/pkg/demo/prose.go"
+  assert_eq "$(skips)" "0" "un comentario que habla de nolintlint ($(cat "$T/out"))"
+}
+
+# A .gitattributes that marks Go files as binary must not hide them.
+test_binary_attributes_do_not_hide_a_go_file() {
+  repo_with_fallo
+  nolint_file "$T/repo/pkg/demo/g.go" '//nolint:errcheck // the caller logs it'
+  go_test_file "$T/repo/pkg/demo/demo_test.go" 't.Skip("slow")'
+  printf '*.go binary\n' > "$T/repo/.gitattributes"
+  assert_eq "$(skips)" "1" "*.go binary en .gitattributes"
+  assert_contains "$(cat "$T/out")" "pkg/demo/g.go:6"
+  assert_contains "$(cat "$T/out")" "pkg/demo/demo_test.go:6"
 }
 
 run_tests "$@"
