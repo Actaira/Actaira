@@ -81,3 +81,18 @@ Una lección que no se ha convertido en algo que se comprueba solo sigue siendo 
 - nace de: F-0015
 - regla: nada personal en el repo (`CLAUDE.md`, regla 4). `make check` busca correos de proveedores personales y los términos de una lista privada que vive en `~/actaira-ws/privado/`, fuera de git: publicar incluso el hash de un término corto deja comprobar adivinanzas. La CI no tiene la lista y solo busca correos; los términos se comprueban en local (`make check`, el hook de parada, `make gate`) y en `merge-pr.sh`. Un hallazgo nunca enseña el texto, porque los logs de la CI son públicos, y `main` no se vuelve a escanear, porque ahí un hallazgo sería para siempre (F-0009)
 - dónde se comprueba: lint:scripts/harness/check-personal.sh, test:scripts/harness/tests/personal_test.sh y test:scripts/harness/tests/merge-pr_test.sh::test_refuses_a_squash_message_with_personal_data
+
+## L-009 Un contador solo da número si se ha visto todo lo que podría cambiarlo
+- nace de: F-0017
+- regla: es la doctrina "nunca inferir lo no observado" de `CLAUDE.md`, aplicada a los contadores. Antes de dar un número o un estado se lista lo que podría cambiarlo: fuentes, partes saltadas, entradas `unresolved`, llamadas que nada ve. Si algo de eso no está observado, se dice qué falta en vez del número
+- dónde se comprueba: regla:.claude/rules/cobertura.md (pendiente de guardia automática: los tests con nombre de `docs/cobertura.md`, que escribe cada épica)
+
+## L-010 Un fichero generado que la CI comprueba se prueba contra el árbol de la CI
+- nace de: F-0018
+- regla: un fichero que se genera, se commitea y la CI vuelve a comprobar (`actaira.lock`, salidas doradas) solo depende de lo que git versiona. Sus tests comparan el lockfile de un clon limpio con el de un árbol con submódulos inicializados, ficheros sin seguimiento o excluidos solo en local, no solo varias ejecuciones sobre el mismo árbol
+- dónde se comprueba: regla:.claude/rules/go.md (pendiente de guardia automática: los tests obligatorios del paso 1.4 de la E1)
+
+## L-011 Un paso de solo documentación tiene una ronda adversarial
+- nace de: el paso 0 de la E1, que dio tres rondas y 60 hallazgos sobre una especificación sin código y paró con dos altos abiertos; decisión de Marcos del 2026-09-29. Acota L-000c
+- regla: un paso cuyo diff no toca código, scripts, tests ni configuración que se ejecute tiene como mucho una ronda adversarial. Los críticos se corrigen en el paso; los altos, medios y bajos van a `docs/BACKLOG.md` o al paso de código que los implementa, escritos en su épica. Las tres rondas quedan para los pasos con código y los cierres
+- dónde se comprueba: `CLAUDE.md` (anti-bucle) y skill `pasada-adversarial`, punto 3 (pendiente de guardia automática)

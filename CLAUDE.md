@@ -35,7 +35,7 @@ Referencias:
 5. **El hook de parada no te deja terminar con `make check` en rojo.** Al tercer bloqueo seguido, para y reporta.
 6. **Anti-bucle:**
    - como mucho **tres intentos** distintos para arreglar lo mismo;
-   - como mucho **tres rondas adversariales** por paso o por cierre;
+   - como mucho **tres rondas adversariales** por paso con código o por cierre, y **una** en un paso de solo documentación: sus críticos se corrigen y lo demás va al backlog o al paso de código que lo implementa (L-011);
    - después, se para con el diagnóstico escrito;
    - nunca se crean cadenas de documentos de decisión.
 

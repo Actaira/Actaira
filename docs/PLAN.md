@@ -49,7 +49,7 @@ La observabilidad dice qué hizo el agente ayer. Nadie dice, de forma sencilla, 
 | **Evidencia que caduca por dependencia**, firmada por el cliente y anclada fuera | Los demás prueban que un registro no se alteró; ninguno, que la conclusión sigue siendo cierta |
 | **Modo builder**, con informe y página por cada cliente | Pensado para quien opera agentes para otras empresas, que puede enseñarlo y revenderlo |
 | **IA que nunca rebaja un riesgo** | La IA propone y explica, pero solo puede subir la gravedad y nunca decide |
-| **Cobertura honesta** | Dice siempre qué no ve (lo `unseen`), en vez de prometer control total |
+| **Cobertura honesta** | Dice siempre qué no ve (lo `unseen`), en vez de prometer control total: N de M fuentes observadas, nunca un porcentaje (`docs/cobertura.md`) |
 
 **En una frase:** Actaira te dice qué puede hacer cada agente, te deja decidir qué se le permite y te da la prueba. Empieza gratis en el PR y crece hasta una plataforma self-serve.
 
@@ -88,7 +88,7 @@ La observabilidad dice qué hizo el agente ayer. Nadie dice, de forma sencilla, 
 | 1. Inventario real de agentes | Gemelo digital por agente y versión: modelo, hash del prompt, tools, servidores MCP, subagentes, memoria, secretos referenciados, identidades, despliegues | C1 (repo), C3 y C4 (runtime), C9 (flota) | Solo lo que está en repos conectados o pasa por el runner, el SDK u OTel; lo demás sale como "no inventariado" |
 | 2. Lo que el agente **puede** hacer | Grafo de capacidades: agente, tool, credencial, sistema, acción; declaradas, condicionales y efectivas | C2 (declaradas), C3 (efectivas) | Lo efectivo solo existe para fuentes que exponen permisos reales; un scope OAuth grueso no es una capacidad efectiva |
 | 3. Fan-out causal | Primer salto: tool call y su efecto directo confirmado, con correlación con los registros de auditoría de los SaaS; varios saltos en la fase 6 | C5 | Los SaaS no propagan trazas; se publica qué porcentaje de efectos se confirma de verdad |
-| 4. Políticas que bloquean antes | Punto de decisión Cedar en el runner, con **intermediación de credenciales**: el secreto vive en el runner y el agente nunca lo ve | C4 | Lo no intermediado sale como hueco de cobertura, medido como credenciales intermediadas sobre el total |
+| 4. Políticas que bloquean antes | Punto de decisión Cedar en el runner, con **intermediación de credenciales**: el secreto vive en el runner y el agente nunca lo ve | C4 | Lo no intermediado sale como hueco de cobertura, medido como N de M credenciales intermediadas, con la lista de las que no lo están |
 | 5. Blast radius | Consulta sobre el grafo: credencial, agentes, sistemas, clientes, despliegues; "si quito este MCP, qué se rompe" | C2, C3, C9 | Tan completo como el grafo; la respuesta dice qué fuentes faltan |
 | 6. Cambios de capacidad sin tocar código | Vigilantes de permisos reales, políticas IAM y esquemas de tools MCP (hash por tool, calculado en la sesión real del agente) | C1, C3, C4 | Sondeo cada 15 minutos o menos por fuente, y webhooks donde existen |
 | 7. Evidencia y procedencia | Libro firmado por el runner con clave del cliente, cabezas de árbol en un log de transparencia externo y sello RFC 3161; verificación offline con `actaira verify` | C6 | Prueba integridad y dependencias, no que la política sea buena |
@@ -263,7 +263,7 @@ SDK Python / TS  ──socket──►    ├ proxy MCP (stdio / HTTP)          
 ```
 
 - **Inquilino.** No va en el payload: Actaira lo deriva de la conexión mTLS del runner (ADR 10).
-- **`coverage`** puede ser `mediated`, `observed` (visto por OTel sin punto de decisión), `declared` (solo en el repo) o `unseen`.
+- **`coverage`** puede ser `mediated`, `observed` (visto por OTel sin punto de decisión), `declared` (solo en el repo) o `unseen`. La vista de cobertura por agente (`docs/cobertura.md`) usa este campo tal cual, sin otro enumerado y sin copiarlo a las capacidades: con él calcula qué capacidades están mediadas. El estado de cada fuente (`observed`, `not_configured`, `error` o `stale`) es otro campo, y ahí `observed` significa que la fuente se leyó bien, no que se viera en ejecución. `unseen` (no mirado) nunca se mezcla con `unresolved` (mirado y no entendido).
 
 **Nodos del grafo:** Agent, AgentVersion, Deployment, Model, Prompt, Tool, MCPServer, Subagent, MemoryStore, Identity, Secret, System, Action, Customer, Policy, Evidence.
 
@@ -465,7 +465,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
   - **Eval del clasificador:** contra las etiquetas de otra persona, con precisión y recall por clase y una cota inferior de Wilson del recall de `irreversible` de al menos 0,80 (lo peligroso importa más que lo inofensivo). Batería de inyección en descripciones, con 300 casos o más: 0 rebajas de gravedad, que la monotonía impide por construcción y el test comprueba.
 - **Pantalla aha** en la CLI y en el comentario: "3 capacidades potenciales que este cambio introduce", con su porqué y su ruta en el grafo.
 - **Tres palabras que nunca se mezclan en la interfaz:**
-  - **Detectada:** la tool existe en el código o en el MCP.
+  - **Detectada:** la tool existe en el código o en el listado del MCP que ve el agente. Las de la instantánea pública del registro salen aparte, como tales (`docs/cobertura.md`).
   - **Potencial:** la tool más la base de conocimiento dicen que podría hacer X.
   - **Efectiva:** una API de identidad confirma que la credencial del agente lo permite. Solo Actaira Cloud, desde la fase 3.
 
@@ -516,7 +516,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 
 - **Vigilantes de cambio**, con sondeo cada 15 minutos o menos y webhooks donde existan. El hash de las tools MCP se calcula en el proxy sobre la sesión real del agente (dato mediado). El sondeo desde el runner se marca `observed` con la identidad usada, y si el servidor da listas distintas por identidad, se avisa.
 - **Alerta** "ha adquirido `customer.delete`", con la ruta en el grafo, la fuente, la hora y el blast radius, y una explicación de la IA (pieza 2) cuando la hay.
-- **Mínimo privilegio** (pieza 3): la diferencia entre lo efectivo y lo observado durante un periodo configurable se calcula sin IA; la IA redacta el cambio de permisos por sistema (política IAM, permission set de Salesforce, clave restringida de Stripe), que se valida y se enseña como diff de capacidades.
+- **Mínimo privilegio** (pieza 3): la diferencia entre lo efectivo y lo observado durante un periodo configurable se calcula sin IA. Hasta que haya llamadas vistas en ejecución, se calcula con la capacidad potencial de las tools del agente, y solo da número si se ha visto todo lo que podría usar la credencial; si no, esos permisos salen como uso desconocido (`docs/cobertura.md`); la IA redacta el cambio de permisos por sistema (política IAM, permission set de Salesforce, clave restringida de Stripe), que se valida y se enseña como diff de capacidades.
 
 **Listo cuando:**
 
@@ -541,7 +541,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 **Entregables:**
 
 - **Punto de decisión Cedar** en el runner, con obligaciones por anotación y precedencia escrita (ADR 5): permitir, denegar, limitar, redactar, pedir aprobación y aislar.
-- **Intermediación de credenciales** (ADR 9): el agente llama con un token de sesión del runner y el runner inyecta la credencial real. La cobertura se publica como credenciales intermediadas sobre el total del agente.
+- **Intermediación de credenciales** (ADR 9): el agente llama con un token de sesión del runner y el runner inyecta la credencial real. La cobertura se publica como N de M credenciales del agente intermediadas, con la lista de las que no lo están, nunca como porcentaje.
 - **Vías de mediación:**
   - `guard` en los SDK de Python y TS, con adaptadores para OpenAI Agents SDK y LangGraph, y hook para Claude Agent SDK.
   - Proxy MCP por stdio y, en v1, HTTP con cabecera estática.
@@ -586,7 +586,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
   - los centinelas de C3 cubren también esta ruta.
 - **Convenciones GenAI de OpenTelemetry** (aún no estables), con versión fijada, adaptadores y propagación W3C `traceparent` desde el SDK.
 - **Correlación con los registros de auditoría de los SaaS** (CloudTrail, audit trail de Salesforce y de Zendesk) por claves de idempotencia, identificadores de objeto y tiempo, porque los SaaS no propagan trazas.
-- **Vista causal y mapa de cobertura** por agente: tramos `mediated`, `observed` o `unseen`.
+- **Vista causal y mapa de cobertura** por agente: cada tramo con su valor de `coverage` (`mediated`, `observed`, `declared` o `unseen`), en la vista de `docs/cobertura.md`.
 
 **Listo cuando:**
 
@@ -678,7 +678,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
   - Vanta por su API de documentos y Drata por sus conexiones personalizadas;
   - OSCAL `assessment-results` después.
 - **Paquete de auditoría por periodo:**
-  - la **población de caminos mediados**, con el porcentaje de cobertura del periodo;
+  - la **población de caminos mediados**, con la cobertura del periodo como N de M capacidades mediadas, N de M credenciales intermediadas y N de M fuentes observadas, con la lista de lo no mediado y lo no visto, nunca como porcentaje;
   - una **conciliación con fuentes independientes** (CloudTrail, registros de auditoría de los SaaS), para que el auditor pueda probar integridad y exactitud.
 - **Retención:** mínimo de 6 meses en los planes de pago, con aviso en la exportación si la retención contratada es menor.
 - **Aviso fijo:** aporta evidencia a controles; no certifica ni dice "cumples".
@@ -717,7 +717,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 
 - En un entorno con dos almacenes conectados, el 100 % de las escrituras mediadas llevan procedencia.
 - Un borrado por sujeto se comprueba con una consulta posterior en los dos.
-- Lo no mediado sale como `unseen`.
+- Lo no mediado sale con su valor de `coverage` (`observed`, `declared` o `unseen`), nunca como mediado.
 
 **Pasada adversarial de C8:**
 
@@ -819,7 +819,7 @@ Son objetivos hasta que un eval los produce; se guardan con fecha y commit.
 | Decisión | p99 de 5 ms como máximo; 0 discrepancias entre cedar-go y la CLI de Cedar |
 | Evasión | 0 acciones prohibidas en 300 casos o más, incluidas la llamada directa, el runner caído y el socket suplantado |
 | Kill switch | p95 de 10 s como máximo; corte local con la nube caída |
-| Cobertura | Credenciales intermediadas sobre el total; mediado, observado y no visto |
+| Cobertura | N de M fuentes observadas, N de M capacidades mediadas y N de M credenciales intermediadas, con lo no visto listado; nunca un porcentaje global (`docs/cobertura.md`) |
 | Causal | Porcentaje de efectos confirmados en el stack de un design partner |
 | Evidencia | 100 % de manipulaciones detectadas, incluida la vista dividida; invalidación al 100 % sobre etiquetado ajeno |
 | Alertas | p95 de 5 minutos como máximo |
