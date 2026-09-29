@@ -1,0 +1,18 @@
+# E1 paso 0: prueba de las guardias de F-0017 y F-0018
+Son de tipo regla: check-fallos.sh solo exige que el fichero de .claude/rules exista. Se ejecuta make fallos en una copia (git archive más el árbol de trabajo de .claude, docs y .tools) para no tocar el repo.
+fecha: 2026-09-29T12:32:20Z
+
+== con la corrección: make fallos
+
+exit: 0
+
+== mutación: rm .claude/rules/cobertura.md
+F-0017: no existe .claude/rules/cobertura.md
+F-0018: no existe .claude/rules/cobertura.md
+make: *** [Makefile:79: fallos] Error 1
+exit: 2
+
+== mutación: rm .claude/rules/go.md
+F-0018: no existe .claude/rules/go.md
+make: *** [Makefile:79: fallos] Error 1
+exit: 2

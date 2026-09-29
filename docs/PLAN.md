@@ -465,7 +465,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
   - **Eval del clasificador:** contra las etiquetas de otra persona, con precisión y recall por clase y una cota inferior de Wilson del recall de `irreversible` de al menos 0,80 (lo peligroso importa más que lo inofensivo). Batería de inyección en descripciones, con 300 casos o más: 0 rebajas de gravedad, que la monotonía impide por construcción y el test comprueba.
 - **Pantalla aha** en la CLI y en el comentario: "3 capacidades potenciales que este cambio introduce", con su porqué y su ruta en el grafo.
 - **Tres palabras que nunca se mezclan en la interfaz:**
-  - **Detectada:** la tool existe en el código o en el MCP.
+  - **Detectada:** la tool existe en el código o en el listado del MCP que ve el agente. Las de la instantánea pública del registro salen aparte, como tales (`docs/cobertura.md`).
   - **Potencial:** la tool más la base de conocimiento dicen que podría hacer X.
   - **Efectiva:** una API de identidad confirma que la credencial del agente lo permite. Solo Actaira Cloud, desde la fase 3.
 
@@ -516,7 +516,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 
 - **Vigilantes de cambio**, con sondeo cada 15 minutos o menos y webhooks donde existan. El hash de las tools MCP se calcula en el proxy sobre la sesión real del agente (dato mediado). El sondeo desde el runner se marca `observed` con la identidad usada, y si el servidor da listas distintas por identidad, se avisa.
 - **Alerta** "ha adquirido `customer.delete`", con la ruta en el grafo, la fuente, la hora y el blast radius, y una explicación de la IA (pieza 2) cuando la hay.
-- **Mínimo privilegio** (pieza 3): la diferencia entre lo efectivo y lo observado durante un periodo configurable se calcula sin IA. Hasta que haya llamadas vistas en ejecución, se calcula con la capacidad potencial de las tools del agente, y si alguna es de efecto desconocido o hay ubicaciones `unresolved`, esos permisos salen como uso desconocido (`docs/cobertura.md`); la IA redacta el cambio de permisos por sistema (política IAM, permission set de Salesforce, clave restringida de Stripe), que se valida y se enseña como diff de capacidades.
+- **Mínimo privilegio** (pieza 3): la diferencia entre lo efectivo y lo observado durante un periodo configurable se calcula sin IA. Hasta que haya llamadas vistas en ejecución, se calcula con la capacidad potencial de las tools del agente, y solo da número si se ha visto todo lo que podría usar la credencial; si no, esos permisos salen como uso desconocido (`docs/cobertura.md`); la IA redacta el cambio de permisos por sistema (política IAM, permission set de Salesforce, clave restringida de Stripe), que se valida y se enseña como diff de capacidades.
 
 **Listo cuando:**
 
