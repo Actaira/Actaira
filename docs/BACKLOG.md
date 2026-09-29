@@ -22,3 +22,9 @@
   - hallazgo medio 5, en el paso 1.3: el calificativo "más lo que haya detrás" debe cubrir también las partes versionadas sin leer, con su test `TestCoverageCountSaysWhatCouldHideMore`;
   - hallazgo medio 8, en la E6: contar como gobernadas solo las reglas que determinaron cada decisión según la respuesta de Cedar, comprobándolo con `verificador-apis`;
   - hallazgo bajo 15, en la E6: `detected` para las tools que ve el proxy MCP, sin extractor ni fichero, y la unidad "tools" de la vista frente a "capacidades" del plan y de la E7.
+- **Lo que la ronda 1 del PR del harness del paso 0 de la E1 dejó en el backlog** (correo de contacto y F-0019):
+  - hallazgo medio 1 (resto): `check-personal.sh` lee `config/contact.env` del árbol de trabajo. El test de contenido exacto lo fija en `make check` y en la CI, pero `merge-pr.sh --files` con el fichero cambiado en local y sin commit lo aceptaría. Leerlo de `HEAD` (o de `origin/main` en `--files`);
+  - hallazgo bajo 2 (resto): la regla "fijo en el código" solo mira el árbol, no el índice ni los commits de la rama. Hay que decidir si `.astro`, `.vue` y `.svelte` son web o código;
+  - hallazgo bajo 3: si el contacto pasa a un dominio propio, la regla "fijo en el código" deja de comprobarse, porque depende del patrón de proveedores personales. Buscar la dirección permitida literalmente en el código;
+  - hallazgo bajo 6: la espera de `merge-pr.sh` depende del texto "no checks reported" de gh, que no está documentado (https://cli.github.com/manual/gh_pr_checks solo documenta el código 8). Si cambia, falla cerrado. Mejor esperar a que `statusCheckRollup` de `gh pr view --json` no esté vacío;
+  - hallazgo bajo 8 (anterior a este PR): el patrón de correos no normaliza `%40`, `&#64;`, la arroba de ancho completo ni los caracteres invisibles, y no cubre aol, zoho, tutanota ni hey.

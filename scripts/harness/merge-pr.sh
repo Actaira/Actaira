@@ -59,6 +59,27 @@ if ! "$here/check-personal.sh" --files "$work/squash-msg" "$work/pr-msg"; then
 fi
 
 if [ "$sin_ci" -eq 0 ]; then
+  # A PR that was just opened has no checks for a few seconds, and
+  # gh pr checks --watch gives up at once with "no checks reported"
+  # (F-0019): wait until GitHub lists at least one.
+  max_tries="${MERGE_PR_CHECK_TRIES:-30}"
+  wait_s="${MERGE_PR_CHECK_WAIT:-5}"
+  if [[ ! "$max_tries" =~ ^[1-9][0-9]*$ ]] || [[ ! "$wait_s" =~ ^[0-9]+$ ]]; then
+    echo "merge-pr: MERGE_PR_CHECK_TRIES y MERGE_PR_CHECK_WAIT tienen que ser números enteros" >&2
+    exit 2
+  fi
+  tries=0
+  while ! out="$(gh pr checks "$pr" 2>&1)"; do
+    if ! grep -q "no checks reported" <<< "$out"; then
+      break
+    fi
+    tries=$((tries + 1))
+    if [ "$tries" -ge "$max_tries" ]; then
+      echo "merge-pr: el PR $pr sigue sin checks tras $tries intentos; no se fusiona" >&2
+      exit 1
+    fi
+    sleep "$wait_s"
+  done
   gh pr checks "$pr" --watch --fail-fast
 fi
 # GitHub signs a merge with the account's primary e-mail unless it is told

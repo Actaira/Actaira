@@ -55,7 +55,7 @@ Una lección que no se ha convertido en algo que se comprueba solo sigue siendo 
 ## L-003 Toda excepción que apaga una comprobación cita una entrada de FALLOS.md
 - nace de: F-0006
 - regla: un mecanismo que apaga una comprobación (ficheros de excepción de gitleaks, comentarios allow, `t.Skip`, `//nolint`, configuraciones que quitan reglas) solo vale si está en git y cita un `F-NNNN` que exista en FALLOS.md
-- dónde se comprueba: lint:scripts/harness/secrets-scan.sh (excepciones de gitleaks) y lint:scripts/harness/check-skips.sh (`t.Skip` y restricciones de compilación en los tests). Pendiente de guardia: `//nolint` (E1, con golangci-lint), y las formas de `.gitleaks.toml` que quitan reglas aunque extiendan las de serie (`disabledRules`, `[[allowlists]]`, `extend.path`) y los comentarios allow que solo están en la historia (backlog)
+- dónde se comprueba: lint:scripts/harness/secrets-scan.sh (excepciones de gitleaks) y lint:scripts/harness/check-skips.sh (`t.Skip` y restricciones de compilación en los tests). Pendiente de guardia: `//nolint` (E1, con golangci-lint), y las formas de `.gitleaks.toml` que quitan reglas aunque extiendan las de serie (`disabledRules`, `[[allowlists]]`, `extend.path`) y los comentarios allow que solo están en la historia (backlog). El correo de contacto que permite `check-personal.sh` no cita un F-NNNN sino la decisión de Marcos del 2026-09-29, y está en git (`config/contact.env`) con su contenido fijado por `personal_test.sh::test_contact_config_is_the_reviewed_one`
 
 ## L-004 Un hook de shell lee palabras de órdenes simples, y ante lo que no puede evaluar, bloquea
 - nace de: F-0007, F-0010, F-0013
@@ -79,8 +79,8 @@ Una lección que no se ha convertido en algo que se comprueba solo sigue siendo 
 
 ## L-008 Los datos personales se buscan como los secretos, sin publicar la lista ni su hash
 - nace de: F-0015
-- regla: nada personal en el repo (`CLAUDE.md`, regla 4). `make check` busca correos de proveedores personales y los términos de una lista privada que vive en `~/actaira-ws/privado/`, fuera de git: publicar incluso el hash de un término corto deja comprobar adivinanzas. La CI no tiene la lista y solo busca correos; los términos se comprueban en local (`make check`, el hook de parada, `make gate`) y en `merge-pr.sh`. Un hallazgo nunca enseña el texto, porque los logs de la CI son públicos, y `main` no se vuelve a escanear, porque ahí un hallazgo sería para siempre (F-0009)
-- dónde se comprueba: lint:scripts/harness/check-personal.sh, test:scripts/harness/tests/personal_test.sh y test:scripts/harness/tests/merge-pr_test.sh::test_refuses_a_squash_message_with_personal_data
+- regla: nada personal en el repo (`CLAUDE.md`, regla 4). `make check` busca correos de proveedores personales y los términos de una lista privada que vive en `~/actaira-ws/privado/`, fuera de git: publicar incluso el hash de un término corto deja comprobar adivinanzas. La CI no tiene la lista y solo busca correos; los términos se comprueban en local (`make check`, el hook de parada, `make gate`) y en `merge-pr.sh`. Un hallazgo nunca enseña el texto, porque los logs de la CI son públicos, y `main` no se vuelve a escanear, porque ahí un hallazgo sería para siempre (F-0009). El correo de contacto del proyecto, el de `config/contact.env`, se permite fuera de los ficheros de código (decisión de Marcos del 2026-09-29)
+- dónde se comprueba: lint:scripts/harness/check-personal.sh, test:scripts/harness/tests/personal_test.sh (el correo de contacto, en `test_project_contact_email_passes_outside_code`, `test_other_personal_email_fails_next_to_the_contact_email`, `test_contact_email_fixed_in_code_fails` y `test_contact_email_without_its_config_fails`) y test:scripts/harness/tests/merge-pr_test.sh::test_refuses_a_squash_message_with_personal_data
 
 ## L-009 Un contador solo da número si se ha visto todo lo que podría cambiarlo
 - nace de: F-0017

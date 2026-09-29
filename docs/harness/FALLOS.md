@@ -218,3 +218,13 @@ Cada fallo encontrado (test en rojo que no era esperado, bug, hallazgo crítico 
 - guardia: regla:.claude/rules/go.md
 - guardia: regla:.claude/rules/cobertura.md
 - lección: L-010
+
+## F-0019 merge-pr.sh no esperaba a que un PR recién abierto tuviera checks
+- fecha: 2026-09-29
+- épica y paso: E1 / 0 (fusión del PR #2)
+- síntoma: `gh pr create` y `scripts/harness/merge-pr.sh 2 ...` en la misma orden salieron con `no checks reported on the 'e1/paso-0-cobertura' branch` y exit 1, sin fusionar. Unos segundos después, el check `check` ya estaba pendiente.
+- causa raíz: `gh pr checks --watch` no espera a que aparezcan los checks: si GitHub aún no ha creado ninguno, sale con error. La skill `epica` manda crear el PR y fusionarlo seguido, y en el PR #1 funcionó solo porque pasaron unos segundos entre las dos órdenes.
+- corrección: `merge-pr.sh` consulta los checks del PR hasta que GitHub lista alguno (30 intentos, cada 5 s) antes de `--watch`. Si no aparece ninguno, no fusiona. Rama `e1/paso-0-harness`.
+- guardia: test:scripts/harness/tests/merge-pr_test.sh::test_waits_for_the_checks_of_a_new_pr
+- guardia: test:scripts/harness/tests/merge-pr_test.sh::test_gives_up_when_no_check_appears
+- lección: la espera sobre un servicio externo distingue "todavía no hay nada" de "ha fallado", y tiene un límite.
