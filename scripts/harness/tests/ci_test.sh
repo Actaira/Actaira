@@ -116,6 +116,22 @@ test_permissions_are_read_only() {
   if grep -qE '(:|-)[[:space:]]*write' "$CI"; then fail "hay permisos de escritura"; fi
 }
 
+# Every workflow but release.yml (which signs, E1 step 1.2b) reads only: a
+# job that is not the required check still runs the code of the pull request.
+test_every_workflow_but_release_is_read_only() {
+  local f bad=""
+  while IFS= read -r f; do
+    [ "$(basename "$f")" = "release.yml" ] && continue
+    if ! grep -qxE 'permissions:' "$f" || ! grep -qxE '  contents: read' "$f"; then
+      bad+="$(basename "$f") sin permissions: contents: read; "
+    fi
+    if grep -qE '(:|-)[[:space:]]*write' "$f"; then
+      bad+="$(basename "$f") con permisos de escritura; "
+    fi
+  done < <(workflows)
+  assert_eq "$bad" "" "workflows de solo lectura"
+}
+
 # The secret scan and the attribution check read every commit of the branch.
 test_checkout_fetches_full_history_without_credentials() {
   [ -f "$CI" ] || fail "no existe $CI"
