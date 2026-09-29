@@ -1,0 +1,395 @@
+# Recreación del repo y cierre de la E0 (2026-09-29): main nuevo, protección, push directo rechazado, gate en limpio
+Decisión A de Marcos (docs/estado/E0.md, "Decisiones de Marcos"): Marcos borró Actaira/Actaira, lo creó de nuevo vacío y público y subió el commit huérfano "Initial import" como main. Después, Claude volvió a poner la protección del paso 0.4, la comprobó con gh api y con un push directo rechazado, y pasó make gate desde un clon limpio.
+
+## Primer push de main (lo hizo Marcos, a mano, con --no-verify porque pre-push rechaza main)
+- Primer intento: rechazado con "! [rejected] importacion -> main (fetch first)". El repo se había creado con la casilla "Add a README file": un commit "Initial commit" (a8c6664) con solo README.md, de autor noreply. Marcos lo borró y lo creó vacío; nada llegó a main.
+- Segundo intento, en el repo vacío. Después:
+comando: git ls-remote origin
+b5364bad14ac1f4c7903f98a9383d7b0e6c89a7f	HEAD
+b5364bad14ac1f4c7903f98a9383d7b0e6c89a7f	refs/heads/main
+comando: gh api repos/Actaira/Actaira --jq '{created_at, pushed_at, visibility, default_branch, id}'
+{"created_at":"2026-09-29T11:10:24Z","default_branch":"main","id":1395005711,"pushed_at":"2026-09-29T11:10:39Z","visibility":"public"}
+
+## CI en main tras el primer push
+https://github.com/Actaira/Actaira/actions/runs/36560126829 (push, b5364ba): check success, 11:10:48Z a 11:11:51Z (63 s), 205 PASS y 0 FAIL, check: OK.
+La CI no tiene la lista privada de términos y lo dice: "check-personal: la CI no tiene la lista privada de términos; solo busca correos (los términos se comprueban en local)".
+La protección se puso después de este primer check, así que no hizo falta ver si GitHub acepta un check con app_id que aún no se ha publicado.
+
+## Protección de main (frontera, ADR 0000)
+fecha: 2026-09-29T11:35:13Z
+comando: gh api -X PUT repos/Actaira/Actaira/branches/main/protection --input docs/estado/branch-protection.json
+{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection","required_status_checks":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_status_checks","strict":true,"contexts":["check"],"contexts_url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_status_checks/contexts","checks":[{"context":"check","app_id":15368}]},"required_pull_request_reviews":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_pull_request_reviews","dismiss_stale_reviews":false,"require_code_owner_reviews":false,"require_last_push_approval":false,"required_approving_review_count":0},"required_signatures":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_signatures","enabled":false},"enforce_admins":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/enforce_admins","enabled":true},"required_linear_history":{"enabled":false},"allow_force_pushes":{"enabled":false},"allow_deletions":{"enabled":false},"block_creations":{"enabled":false},"required_conversation_resolution":{"enabled":false},"lock_branch":{"enabled":false},"allow_fork_syncing":{"enabled":false}}
+fecha: 2026-09-29T11:35:14Z
+comando: gh api repos/Actaira/Actaira/branches/main/protection
+{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection","required_status_checks":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_status_checks","strict":true,"contexts":["check"],"contexts_url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_status_checks/contexts","checks":[{"context":"check","app_id":15368}]},"required_pull_request_reviews":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_pull_request_reviews","dismiss_stale_reviews":false,"require_code_owner_reviews":false,"require_last_push_approval":false,"required_approving_review_count":0},"required_signatures":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/required_signatures","enabled":false},"enforce_admins":{"url":"https://api.github.com/repos/Actaira/Actaira/branches/main/protection/enforce_admins","enabled":true},"required_linear_history":{"enabled":false},"allow_force_pushes":{"enabled":false},"allow_deletions":{"enabled":false},"block_creations":{"enabled":false},"required_conversation_resolution":{"enabled":false},"lock_branch":{"enabled":false},"allow_fork_syncing":{"enabled":false}}
+fecha: 2026-09-29T11:35:14Z
+comando: scripts/harness/check-protection.sh
+protección de main en Actaira/Actaira: OK {"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":true,"pull_request_bypass":0,"pull_request_reviews":{"approvals":0,"dismiss_stale_reviews":false,"require_code_owner_reviews":false},"required_checks":[{"app_id":15368,"context":"check"}],"restrictions":null,"strict":true}
+exit: 0
+
+## Push directo a main rechazado por el servidor (Marcos lo autorizó para esta comprobación tras recrear el repo)
+fecha: 2026-09-29T11:35:29Z
+comando: GH_TOKEN=<token de Actaira> bash evals/sessions/2026-09-28-e0-paso-4-real.sh
+== 1. repo e identidad
+repo de origin: Actaira/Actaira
+cuenta de gh: Actaira
+administradora del repo: true
+== 2. protección de main en GitHub
+protección de main en Actaira/Actaira: OK {"allow_deletions":false,"allow_force_pushes":false,"enforce_admins":true,"pull_request_bypass":0,"pull_request_reviews":{"approvals":0,"dismiss_stale_reviews":false,"require_code_owner_reviews":false},"required_checks":[{"app_id":15368,"context":"check"}],"restrictions":null,"strict":true}
+main en GitHub antes: b5364bad14ac1f4c7903f98a9383d7b0e6c89a7f
+== 3. push directo a main desde un clon temporal, sin hooks locales
+git -c core.hooksPath=/dev/null -c credential.https://github.com.helper= -c 'credential.https://github.com.helper=!gh auth git-credential' push origin HEAD:refs/heads/main
+remote: error: GH006: Protected branch update failed for refs/heads/main.        
+remote: 
+remote: - Changes must be made through a pull request.        
+remote: 
+remote: - Required status check "check" is expected.        
+To https://github.com/Actaira/Actaira.git
+ ! [remote rejected] HEAD -> main (protected branch hook declined)
+error: failed to push some refs to 'https://github.com/Actaira/Actaira.git'
+exit: 1
+main en GitHub después: b5364bad14ac1f4c7903f98a9383d7b0e6c89a7f
+== 4. resultado
+OK: el servidor rechazó el push directo a main por la protección, y main no se movió
+exit: 0
+
+## Ajustes de fusión del repo nuevo (en los que se apoya la decisión 4 del ADR 0000; iguales a los del repo anterior)
+comando: gh api repos/Actaira/Actaira --jq '{squash_merge_commit_title, squash_merge_commit_message, allow_squash_merge, allow_merge_commit, allow_rebase_merge, delete_branch_on_merge}'
+fecha: 2026-09-29T11:37:16Z
+{"allow_merge_commit":true,"allow_rebase_merge":true,"allow_squash_merge":true,"delete_branch_on_merge":false,"squash_merge_commit_message":"COMMIT_MESSAGES","squash_merge_commit_title":"COMMIT_OR_PR_TITLE"}
+
+## Puntos 1 y 2 de cierre-epica: make gate y make e2e-completo desde un clon limpio de b5364ba (salida completa)
+fecha: 2026-09-29T11:35:48Z
+comando: bash evals/sessions/2026-09-29-e0-cierre-gate.sh
+clon limpio de https://github.com/Actaira/Actaira.git (main) en un directorio temporal: b5364bad14ac1f4c7903f98a9383d7b0e6c89a7f
+sin nada local: .tools no existe, hooks instalados: 0
+entorno: Linux 6.6.87.2-microsoft-standard-WSL2, go version go1.27.1 linux/amd64, git version 2.43.0, jq-1.7, Python 3.12.3
+comando: make gate
+scripts/harness/check-weakeners.sh
+scripts/harness/check-pipes.sh
+scripts/harness/fetch-tool.sh \
+  "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz" \
+  "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb" gitleaks ".tools/gitleaks-8.30.1"
+scripts/harness/check-fallos.sh
+scripts/harness/check-skips.sh
+scripts/harness/check-attribution.sh
+scripts/harness/check-personal.sh
+go vet ./...
+go test -count=1 -shuffle=on ./...
+ok  	github.com/actaira/actaira/internal/version	0.002s
+determinism: sin prueba de determinismo todavía (llega en E1 con actaira.lock)
+bash scripts/harness/tests/run.sh
+== attribution_test.sh
+--- PASS: test_anthropic_noreply_address_fails
+--- PASS: test_attribution_already_in_main_does_not_block_branches
+--- PASS: test_attribution_in_an_old_commit_of_the_branch_fails
+--- PASS: test_claude_as_commit_author_fails
+--- PASS: test_claude_coauthor_trailer_fails
+--- PASS: test_clean_history_passes
+--- PASS: test_commit_msg_hook_rejects_attribution
+--- PASS: test_commit_msg_hook_works_without_the_harness_scripts
+--- PASS: test_default_claude_code_trailer_fails
+--- PASS: test_generated_with_claude_footer_fails
+--- PASS: test_hook_and_script_use_the_same_pattern
+--- PASS: test_message_file_mode
+--- PASS: test_message_mode_checks_comment_lines
+--- PASS: test_message_mode_ignores_letter_case
+--- PASS: test_product_text_mentioning_claude_passes
+--- PASS: test_shallow_clone_fails
+== check-fallos_test.sh
+--- PASS: test_duplicate_id_fails
+--- PASS: test_entry_without_guard_fails
+--- PASS: test_failing_go_test_fails
+--- PASS: test_failing_guard_shows_its_output
+--- PASS: test_format_example_in_code_block_does_not_count
+--- PASS: test_lint_hook_and_rule_guards
+--- PASS: test_missing_go_test_fails
+--- PASS: test_passing_go_test_passes
+--- PASS: test_shell_test_guards_are_executed
+--- PASS: test_skipped_go_test_fails
+== check-pipes_test.sh
+--- PASS: test_clean_scripts_pass
+--- PASS: test_makefile_and_hooks_without_extension_are_checked
+--- PASS: test_or_list_and_here_strings_pass
+--- PASS: test_pipe_into_grep_quiet_fails
+--- PASS: test_pipe_into_head_fails
+== check-protection_test.sh
+--- PASS: test_admins_not_bound_fails
+--- PASS: test_branch_not_up_to_date_fails
+--- PASS: test_check_from_any_app_fails
+--- PASS: test_force_pushes_or_deletions_allowed_fail
+--- PASS: test_matching_protection_passes
+--- PASS: test_missing_required_check_fails
+--- PASS: test_pull_request_bypass_fails
+--- PASS: test_pull_request_not_required_fails
+--- PASS: test_repo_comes_from_the_origin_remote
+--- PASS: test_unprotected_branch_fails
+== check-skips_test.sh
+--- PASS: test_build_is_judged_on_the_platform_of_the_required_check
+--- PASS: test_constraints_true_in_make_check_pass
+--- PASS: test_fallo_in_the_path_does_not_justify_a_skip
+--- PASS: test_justified_ignored_test_file_passes
+--- PASS: test_justified_skip_passes
+--- PASS: test_repo_without_skips_passes
+--- PASS: test_skip_citing_unknown_fallo_fails
+--- PASS: test_skip_in_a_test_helper_fails
+--- PASS: test_skip_method_in_production_code_passes
+--- PASS: test_skip_used_as_a_value_is_checked
+--- PASS: test_skipnow_and_skipf_are_checked
+--- PASS: test_test_files_the_default_build_never_compiles_fail
+--- PASS: test_testdata_fixtures_are_ignored
+--- PASS: test_unjustified_skip_fails
+== check-weakeners_test.sh
+--- PASS: test_clean_project_passes
+--- PASS: test_continue_on_error_with_expression_fails
+--- PASS: test_continue_on_error_workflow_fails
+--- PASS: test_dash_prefixed_recipe_fails
+--- PASS: test_define_block_for_shell_settings_fails
+--- PASS: test_errexit_turned_off_in_shellflags_fails
+--- PASS: test_go_test_filters_fail
+--- PASS: test_ignore_special_target_fails
+--- PASS: test_include_directive_fails
+--- PASS: test_indented_ignore_fails
+--- PASS: test_long_option_abbreviations_fail
+--- PASS: test_make_ignore_errors_in_workflow_fails
+--- PASS: test_make_keep_going_fails
+--- PASS: test_make_variable_override_fails
+--- PASS: test_makefile_with_other_shell_fails
+--- PASS: test_makefile_without_bash_shell_fails
+--- PASS: test_makefiles_that_take_precedence_fail
+--- PASS: test_makeflags_in_project_script_fails
+--- PASS: test_makeflags_in_workflow_env_fails
+--- PASS: test_makeflags_with_several_options_fails
+--- PASS: test_or_true_in_makefile_fails
+--- PASS: test_or_true_in_project_script_fails
+--- PASS: test_posix_assignment_of_shellflags_fails
+--- PASS: test_second_shellflags_assignment_fails
+--- PASS: test_set_plus_o_fails
+--- PASS: test_shellflags_without_errexit_fails
+--- PASS: test_shellflags_without_pipefail_fails
+--- PASS: test_target_specific_shell_fails
+--- PASS: test_true_by_path_fails
+== ci_test.sh
+--- PASS: test_actions_are_pinned_by_commit_sha
+--- PASS: test_branch_protection_requires_pr_check_and_binds_admins
+--- PASS: test_checkout_fetches_full_history_without_credentials
+--- PASS: test_no_other_workflow_publishes_a_check_job
+--- PASS: test_permissions_are_read_only
+--- PASS: test_workflow_has_a_single_check_job_running_make_check
+--- PASS: test_workflow_is_exactly_the_reviewed_one
+--- PASS: test_workflow_runs_on_every_pull_request_and_push_to_main
+== fetch-tool_test.sh
+--- PASS: test_download_has_retries_and_time_limits
+--- PASS: test_installs_when_checksum_matches
+--- PASS: test_refuses_when_checksum_differs
+--- PASS: test_refuses_without_pinned_checksum
+== guard-git_test.sh
+--- PASS: test_allows_commands_that_only_mention_push
+--- PASS: test_allows_non_push_commands_on_main
+--- PASS: test_allows_only_the_closing_tag_from_main
+--- PASS: test_allows_step_branch_push_and_non_push_commands
+--- PASS: test_blocks_a_push_run_by_monitor
+--- PASS: test_blocks_a_push_without_python3
+--- PASS: test_blocks_abbreviations_refspec_patterns_and_inline_config
+--- PASS: test_blocks_any_push_from_main
+--- PASS: test_blocks_configured_push_alias
+--- PASS: test_blocks_direct_pull_request_merges
+--- PASS: test_blocks_everything_without_jq
+--- PASS: test_blocks_force_and_no_verify_and_main
+--- PASS: test_blocks_git_behind_variables_functions_or_aliases
+--- PASS: test_blocks_line_continuations
+--- PASS: test_blocks_other_push_paths_and_config_from_the_environment
+--- PASS: test_blocks_push_from_another_repo_on_main
+--- PASS: test_blocks_push_to_main_without_home
+--- PASS: test_blocks_quoted_or_chained_main
+--- PASS: test_blocks_quoted_values_in_global_options
+--- PASS: test_blocks_shell_expansions_in_a_push
+--- PASS: test_closing_tag_with_redirections
+--- PASS: test_follows_cd_and_git_c_to_the_repo_that_pushes
+--- PASS: test_heredocs
+--- PASS: test_orders_in_claude_md_and_skills_pass_the_guard
+--- PASS: test_uses_the_cwd_of_the_session
+== install_test.sh
+--- PASS: test_failed_reinstall_keeps_fallos_entries
+--- PASS: test_installs_settings_scripts_and_pre_push
+--- PASS: test_pre_push_rejects_main
+--- PASS: test_reinstall_keeps_fallos_with_entries
+--- PASS: test_stale_package_is_refused_before_touching_the_repo
+--- PASS: test_subdirectory_of_a_repo_is_refused
+== lib_test.sh
+--- PASS: test_failing_assertion_fails_the_test
+--- PASS: test_helper_is_not_a_test
+--- PASS: test_missing_test_fails
+--- PASS: test_no_test_takes_its_target_from_the_environment
+--- PASS: test_runner_fails_file_that_never_runs_tests
+--- PASS: test_runner_fails_on_any_red_test
+--- PASS: test_runner_passes_green_suite
+== makefile_test.sh
+--- PASS: test_check_runs_every_harness_check
+--- PASS: test_fmt_check_fails_on_unformatted_go
+--- PASS: test_fmt_check_skips_testdata_fixtures
+--- PASS: test_goflags_from_environment_cannot_filter_tests
+--- PASS: test_goflags_in_go_env_file_fails
+--- PASS: test_install_hooks_installs_both_hooks
+--- PASS: test_test_target_fails_on_red_go_test
+== merge-pr_test.sh
+--- PASS: test_checks_the_author_of_the_commit_that_entered_main
+--- PASS: test_checks_the_commit_that_entered_main
+--- PASS: test_does_not_merge_when_checks_fail
+--- PASS: test_merges_a_clean_pr_after_green_checks
+--- PASS: test_refuses_a_pr_description_with_a_secret
+--- PASS: test_refuses_a_pr_description_with_attribution
+--- PASS: test_refuses_a_squash_message_with_a_secret
+--- PASS: test_refuses_a_squash_message_with_attribution
+--- PASS: test_refuses_a_squash_message_with_personal_data
+--- PASS: test_refuses_without_the_pinned_gitleaks
+--- PASS: test_sin_ci_skips_the_checks_only
+== personal_test.sh
+--- PASS: test_clean_repo_passes
+--- PASS: test_commit_message_and_identity_fail
+--- PASS: test_default_private_list_is_used
+--- PASS: test_files_mode_scans_only_the_given_files
+--- PASS: test_missing_list_fails_locally_and_is_announced_in_ci
+--- PASS: test_only_the_commits_of_the_branch_are_scanned
+--- PASS: test_personal_email_fails_outside_testdata_and_identities
+--- PASS: test_term_in_a_path_other_encodings_or_with_invisible_characters_fails
+--- PASS: test_term_in_a_tracked_file_fails_without_printing_it
+--- PASS: test_term_inside_other_words_passes
+--- PASS: test_term_only_in_the_index_or_in_an_earlier_commit_fails
+--- PASS: test_term_split_by_punctuation_or_lines_fails
+--- PASS: test_untracked_file_fails_and_ignored_file_passes
+== post-edit_test.sh
+--- PASS: test_gofmt_found_when_path_lacks_go
+--- PASS: test_non_go_files_are_left_alone
+--- PASS: test_syntax_error_is_reported_as_additional_context
+== secrets-scan_test.sh
+--- PASS: test_allow_comment_with_unknown_fallo_fails
+--- PASS: test_allow_comment_without_fallo_fails
+--- PASS: test_clean_repo_passes
+--- PASS: test_committed_sentinel_fails
+--- PASS: test_deleted_tracked_file_does_not_break_scan
+--- PASS: test_environment_cannot_replace_the_config
+--- PASS: test_fallo_in_the_path_does_not_justify_an_allow_comment
+--- PASS: test_gitleaksignore_entry_with_unknown_fallo_fails
+--- PASS: test_gitleaksignore_entry_without_fallo_fails
+--- PASS: test_ignored_files_are_not_scanned
+--- PASS: test_justified_allow_comment_hides_the_finding
+--- PASS: test_justified_gitleaksignore_entry_hides_the_finding
+--- PASS: test_modified_tracked_sentinel_fails
+--- PASS: test_nested_repo_is_not_scanned
+--- PASS: test_repo_config_applies_to_commit_messages
+--- PASS: test_repo_config_is_used_without_config_flag
+--- PASS: test_repo_config_without_default_rules_fails
+--- PASS: test_repo_without_commits_passes
+--- PASS: test_sentinel_in_a_commit_message_fails
+--- PASS: test_sentinel_only_on_another_branch_passes
+--- PASS: test_staged_sentinel_removed_from_worktree_fails
+--- PASS: test_untracked_gitleaksignore_fails
+--- PASS: test_untracked_repo_config_fails
+--- PASS: test_untracked_sentinel_fails_with_repo_relative_path
+== settings_test.sh
+--- PASS: test_every_hook_script_sources_env_first
+--- PASS: test_settings_denies_dangerous_commands
+--- PASS: test_settings_disable_claude_attribution
+--- PASS: test_settings_is_valid_json_with_the_three_hooks
+--- PASS: test_settings_keep_foreign_pr_code_and_credentials_out
+== stop-gate_test.sh
+--- PASS: test_clean_tree_without_unpushed_commits_exits_zero
+--- PASS: test_green_is_cached_and_resets_counter
+--- PASS: test_hook_leaves_the_real_index_untouched
+--- PASS: test_make_check_finds_go_when_path_lacks_go
+--- PASS: test_pause_file_allows_stop_and_shows_reason
+--- PASS: test_red_check_blocks_three_times_then_allows
+--- PASS: test_untracked_file_change_invalidates_cache
+--- PASS: test_without_check_target_exits_zero
+scripts/harness/secrets-scan.sh ".tools/gitleaks-8.30.1"
+check: OK
+evals-paso: sin evals todavía
+e2e-rapido: sin e2e todavía
+gate: OK
+comando: make e2e-completo
+e2e-completo: sin e2e todavía
+exit: 0
+fin: 2026-09-29T11:36:20Z
+
+## Referencias locales tras la recreación
+- La rama local del cierre anterior (e0/paso-6-cierre, ed9ef86) tenía 4 commits posteriores a la primera copia (actaira-antiguo.bundle). Antes de borrar nada: git bundle create ~/actaira-ws/privado/actaira-antiguo-2.bundle --all, git bundle verify OK, y list-heads muestra ed9ef86 refs/heads/e0/paso-6-cierre. Fuera de git, chmod 600.
+- git fetch --prune origin: borradas origin/e0/paso-3-tests-harness, origin/e0/paso-4-ci-proteccion y origin/e0/paso-6-cierre, que eran del repo anterior.
+- main local llevada a origin/main (b5364ba) con git branch -f; borradas las ramas locales e0/paso-6-cierre (ed9ef86, en el segundo bundle) e importacion (b5364ba, igual que main). La rama e0/paso-6-cierre de este PR parte de b5364ba.
+
+## Punto 5 de cierre-epica, repetido tras apuntar la recreación en docs/estado/E0.md: documentación contra realidad
+fecha: 2026-09-29T11:39:19Z
+comando: bash evals/sessions/2026-09-29-e0-cierre-docs.sh
+== 1. tests citados en la documentación: 61
+OK   stop-gate_test.sh::test_make_check_finds_go_when_path_lacks_go
+OK   makefile_test.sh::test_fmt_check_fails_on_unformatted_go
+OK   makefile_test.sh::test_fmt_check_skips_testdata_fixtures
+OK   makefile_test.sh::test_test_target_fails_on_red_go_test
+OK   makefile_test.sh::test_goflags_from_environment_cannot_filter_tests
+OK   makefile_test.sh::test_goflags_in_go_env_file_fails
+OK   secrets-scan_test.sh::test_untracked_sentinel_fails_with_repo_relative_path
+OK   secrets-scan_test.sh::test_environment_cannot_replace_the_config
+OK   guard-git_test.sh::test_blocks_push_to_main_without_home
+OK   stop-gate_test.sh::test_untracked_file_change_invalidates_cache
+OK   stop-gate_test.sh::test_hook_leaves_the_real_index_untouched
+OK   install_test.sh::test_stale_package_is_refused_before_touching_the_repo
+OK   install_test.sh::test_installs_settings_scripts_and_pre_push
+OK   stop-gate_test.sh::test_pause_file_allows_stop_and_shows_reason
+OK   stop-gate_test.sh::test_red_check_blocks_three_times_then_allows
+OK   guard-git_test.sh::test_blocks_a_push_without_python3
+OK   ci_test.sh::test_workflow_has_a_single_check_job_running_make_check
+OK   ci_test.sh::test_workflow_runs_on_every_pull_request_and_push_to_main
+OK   ci_test.sh::test_workflow_is_exactly_the_reviewed_one
+OK   ci_test.sh::test_no_other_workflow_publishes_a_check_job
+OK   ci_test.sh::test_actions_are_pinned_by_commit_sha
+OK   ci_test.sh::test_permissions_are_read_only
+OK   ci_test.sh::test_checkout_fetches_full_history_without_credentials
+OK   makefile_test.sh::test_check_runs_every_harness_check
+OK   check-weakeners_test.sh::test_continue_on_error_with_expression_fails
+OK   lib_test.sh::test_no_test_takes_its_target_from_the_environment
+OK   ci_test.sh::test_branch_protection_requires_pr_check_and_binds_admins
+OK   post-edit_test.sh::test_gofmt_found_when_path_lacks_go
+OK   settings_test.sh::test_every_hook_script_sources_env_first
+OK   secrets-scan_test.sh::test_nested_repo_is_not_scanned
+OK   check-fallos_test.sh::test_failing_guard_shows_its_output
+OK   secrets-scan_test.sh::test_repo_config_without_default_rules_fails
+OK   secrets-scan_test.sh::test_gitleaksignore_entry_without_fallo_fails
+OK   secrets-scan_test.sh::test_allow_comment_without_fallo_fails
+OK   guard-git_test.sh::test_blocks_quoted_or_chained_main
+OK   attribution_test.sh::test_attribution_already_in_main_does_not_block_branches
+OK   attribution_test.sh::test_product_text_mentioning_claude_passes
+OK   merge-pr_test.sh::test_refuses_a_squash_message_with_attribution
+OK   guard-git_test.sh::test_blocks_line_continuations
+OK   guard-git_test.sh::test_allows_only_the_closing_tag_from_main
+OK   guard-git_test.sh::test_orders_in_claude_md_and_skills_pass_the_guard
+OK   check-pipes_test.sh::test_pipe_into_head_fails
+OK   guard-git_test.sh::test_blocks_quoted_values_in_global_options
+OK   personal_test.sh::test_term_in_a_tracked_file_fails_without_printing_it
+OK   personal_test.sh::test_commit_message_and_identity_fail
+OK   personal_test.sh::test_term_only_in_the_index_or_in_an_earlier_commit_fails
+OK   personal_test.sh::test_only_the_commits_of_the_branch_are_scanned
+OK   personal_test.sh::test_default_private_list_is_used
+OK   merge-pr_test.sh::test_checks_the_author_of_the_commit_that_entered_main
+OK   merge-pr_test.sh::test_refuses_a_squash_message_with_personal_data
+OK   settings_test.sh::test_settings_keep_foreign_pr_code_and_credentials_out
+OK   check-skips_test.sh::test_build_is_judged_on_the_platform_of_the_required_check
+OK   secrets-scan_test.sh::test_sentinel_only_on_another_branch_passes
+OK   makefile_test.sh::test_install_hooks_installs_both_hooks
+OK   secrets-scan_test.sh::test_sentinel_in_a_commit_message_fails
+OK   secrets-scan_test.sh::test_repo_config_applies_to_commit_messages
+OK   merge-pr_test.sh::test_refuses_a_squash_message_with_a_secret
+OK   merge-pr_test.sh::test_refuses_a_pr_description_with_a_secret
+OK   merge-pr_test.sh::test_refuses_without_the_pinned_gitleaks
+OK   check-fallos_test.sh::test_shell_test_guards_are_executed
+OK   guard-git_test.sh::test_blocks_everything_without_jq
+== 2. recuentos de tests citados
+OK   attribution_test.sh: 16
+OK   check-pipes_test.sh: 5
+OK   check-protection_test.sh: 10
+OK   check-skips_test.sh: 14
+OK   check-weakeners_test.sh: 29
+OK   fetch-tool_test.sh: 4
+OK   guard-git_test.sh: 25
+OK   merge-pr_test.sh: 11
+OK   stop-gate_test.sh: 8
+TODO OK
