@@ -10,6 +10,7 @@
 #     true, another GOOS or GOARCH) cites such an F-NNNN in a comment before
 #     its package clause. The build is judged for linux/amd64 on every system,
 #     so a test for Linux only is not flagged by a job on macOS.
+#   - every //nolint names its linters and cites such an F-NNNN on its line.
 # testdata/ holds fixtures of analysed repos, not code of this module.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib-fallos.sh"
@@ -36,6 +37,32 @@ while IFS= read -r hit; do
   esac
   if ! cites_known_fallo "$(cut -d: -f3- <<< "$hit")" "$known"; then
     echo "check-skips: test saltado sin un F-NNNN de FALLOS.md en esa línea: $(cut -d: -f1,2 <<< "$hit")" >&2
+    bad=1
+  fi
+done <<< "$hits"
+
+# //nolint switches golangci-lint off for a line (L-003): the directive names
+# its linters (//nolint:errcheck, never a bare //nolint or //nolint:all) and
+# cites a recorded F-NNNN on that line. golangci-lint only reads the directive
+# with no space after //, so "// nolint" is flagged as well.
+grc=0
+hits="$(git grep -n -I --untracked -E '//[[:space:]]*nolint' -- '*.go' ':(exclude,glob)**/testdata/**')" || grc=$?
+if [ "$grc" -gt 1 ]; then
+  echo "check-skips: git grep falló (exit $grc)" >&2
+  exit 1
+fi
+while IFS= read -r hit; do
+  [ -n "$hit" ] || continue
+  where="$(cut -d: -f1,2 <<< "$hit")"
+  text="$(cut -d: -f3- <<< "$hit")"
+  if [[ "$text" =~ //[[:space:]]+nolint ]]; then
+    echo "check-skips: //nolint mal escrito (golangci-lint no lo lee con un espacio tras //): $where" >&2
+    bad=1
+  elif [[ ! "$text" =~ //nolint:[A-Za-z0-9] ]] || [[ "$text" =~ //nolint:([A-Za-z0-9_-]+,)*all([^A-Za-z0-9_-]|$) ]]; then
+    echo "check-skips: //nolint sin nombrar su linter: $where" >&2
+    bad=1
+  elif ! cites_known_fallo "$text" "$known"; then
+    echo "check-skips: //nolint sin un F-NNNN de FALLOS.md en esa línea: $where" >&2
     bad=1
   fi
 done <<< "$hits"

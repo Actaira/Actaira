@@ -38,6 +38,26 @@ test_fmt_check_fails_on_unformatted_go() {
   assert_contains "$out" "pkg/demo/bad.go"
 }
 
+# lint runs the pinned golangci-lint with the repo config (E1 step 1.1): an
+# unchecked error fails, and so does a //nolint that names no linter.
+test_lint_runs_golangci_lint_with_the_repo_config() {
+  local gl=("$REPO_DIR"/.tools/golangci-lint-*)
+  assert_eq "${#gl[@]}" "1" "un solo golangci-lint fijado en .tools (${gl[*]})"
+  go_module "$T/m"
+  cp "$REPO_DIR/.golangci.yml" "$T/m/"
+  printf 'package demo\n\nfunc f() error { return nil }\n\nfunc G() { f() }\n' > "$T/m/pkg/demo/unchecked.go"
+  local out rc=0
+  out="$(cd "$T/m" && make -s -f "$REPO_DIR/Makefile" lint GOLANGCI_LINT="${gl[0]}" HARNESS_SCRIPTS= 2>&1)" || rc=$?
+  assert_eq "$rc" "2" "lint con un error sin comprobar"
+  assert_contains "$out" "unchecked.go:5"
+  assert_contains "$out" "(errcheck)"
+  printf 'package demo\n\nfunc f() error { return nil }\n\nfunc G() { f() } //nolint // F-0001\n' > "$T/m/pkg/demo/unchecked.go"
+  rc=0
+  out="$(cd "$T/m" && make -s -f "$REPO_DIR/Makefile" lint GOLANGCI_LINT="${gl[0]}" HARNESS_SCRIPTS= 2>&1)" || rc=$?
+  assert_eq "$rc" "2" "lint con un //nolint sin linter"
+  assert_contains "$out" "(nolintlint)"
+}
+
 test_fmt_check_skips_testdata_fixtures() {
   go_module "$T/m"
   mkdir -p "$T/m/pkg/demo/testdata"

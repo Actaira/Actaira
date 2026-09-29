@@ -160,4 +160,47 @@ test_skip_method_in_production_code_passes() {
   assert_eq "$(skips)" "0" "un método Skip propio en código de producción ($(cat "$T/out"))"
 }
 
+# //nolint switches golangci-lint off (L-003, E1 step 1.1): the directive names
+# its linters and cites a recorded F-NNNN on the same line.
+nolint_file() { # <path> <comment after the call>
+  mkdir -p "$(dirname "$1")"
+  printf 'package demo\n\nfunc f() error { return nil }\n\nfunc g() {\n\tf() %s\n}\n' "$2" > "$1"
+}
+
+test_nolint_without_a_fallo_fails() {
+  repo_with_fallo
+  nolint_file "$T/repo/pkg/demo/g.go" '//nolint:errcheck // the caller logs it'
+  assert_eq "$(skips)" "1" "//nolint sin F-NNNN"
+  assert_contains "$(cat "$T/out")" "check-skips: //nolint sin un F-NNNN de FALLOS.md en esa línea: pkg/demo/g.go:6"
+}
+
+test_nolint_citing_a_known_fallo_passes() {
+  repo_with_fallo
+  nolint_file "$T/repo/pkg/demo/g.go" '//nolint:errcheck // F-0007: the caller logs it'
+  assert_eq "$(skips)" "0" "//nolint justificado ($(cat "$T/out"))"
+}
+
+test_nolint_citing_an_unknown_fallo_fails() {
+  repo_with_fallo
+  nolint_file "$T/repo/pkg/demo/g.go" '//nolint:errcheck // F-0999: the caller logs it'
+  assert_eq "$(skips)" "1" "//nolint que cita un fallo inexistente"
+}
+
+test_nolint_without_a_linter_fails() {
+  repo_with_fallo
+  nolint_file "$T/repo/pkg/demo/a.go" '//nolint // F-0007: the caller logs it'
+  nolint_file "$T/repo/pkg/demo/b.go" '//nolint:all // F-0007: the caller logs it'
+  nolint_file "$T/repo/pkg/demo/c.go" '// nolint:errcheck // F-0007: the caller logs it'
+  assert_eq "$(skips)" "1" "//nolint sin linter concreto"
+  assert_contains "$(cat "$T/out")" "check-skips: //nolint sin nombrar su linter: pkg/demo/a.go:6"
+  assert_contains "$(cat "$T/out")" "check-skips: //nolint sin nombrar su linter: pkg/demo/b.go:6"
+  assert_contains "$(cat "$T/out")" "check-skips: //nolint mal escrito (golangci-lint no lo lee con un espacio tras //): pkg/demo/c.go:6"
+}
+
+test_nolint_in_testdata_is_ignored() {
+  repo_with_fallo
+  nolint_file "$T/repo/pkg/demo/testdata/fixture/g.go" '//nolint // fixture of an analysed repo'
+  assert_eq "$(skips)" "0" "testdata son fixtures ($(cat "$T/out"))"
+}
+
 run_tests "$@"

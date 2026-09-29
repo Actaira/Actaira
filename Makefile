@@ -23,6 +23,18 @@ HOST_OS   := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 HOST_ARCH := $(patsubst x86_64,x64,$(patsubst amd64,x64,$(patsubst aarch64,arm64,$(shell uname -m))))
 GITLEAKS_PLATFORM := $(HOST_OS)_$(HOST_ARCH)
 GITLEAKS := $(TOOLS_DIR)/gitleaks-$(GITLEAKS_VERSION)
+# golangci-lint, pinned by version and sha256 (from golangci-lint-<version>-checksums.txt
+# of the official release: https://github.com/golangci/golangci-lint/releases),
+# with the config in .golangci.yml. Built with go1.27.0, so it reads this module.
+GOLANGCI_LINT_VERSION := 2.14.0
+GOLANGCI_LINT_SHA256_linux_amd64  := ab90aeb7b066f92a33415b638a50fe5344bbb75a0d32ad30cc248d88f81032ab
+GOLANGCI_LINT_SHA256_linux_arm64  := ee7ec5f3453d15ddf106fae5a4d6c71737712348a979d1fe9cd52ec7ea299bae
+GOLANGCI_LINT_SHA256_darwin_amd64 := a5667c1c3536be1740133213e1e822bfb8f0d98ea12903174d6d5f635e4ed68d
+GOLANGCI_LINT_SHA256_darwin_arm64 := 5ef5f36a7147e91dc58ef9ef4d11bb7bad5ead0c76eb6c01327a73c641d1dcc3
+GOLANGCI_LINT_OS_ARCH := $(HOST_OS)_$(patsubst x64,amd64,$(HOST_ARCH))
+GOLANGCI_LINT_PLATFORM := $(subst _,-,$(GOLANGCI_LINT_OS_ARCH))
+GOLANGCI_LINT := $(TOOLS_DIR)/golangci-lint-$(GOLANGCI_LINT_VERSION)
+
 # Exported so every recipe runs the harness tests with the same environment:
 # test-harness and check-fallos execute the same guards (F-0003).
 export GITLEAKS
@@ -52,8 +64,9 @@ fmt-check:
 	  if [ -n "$$bad" ]; then echo "gofmt: ficheros sin formatear:"; echo "$$bad"; exit 1; fi; \
 	fi
 
-lint:
+lint: $(GOLANGCI_LINT)
 	go vet ./...
+	$(GOLANGCI_LINT) run ./...
 	@for f in $(HARNESS_SCRIPTS); do bash -n "$$f"; done
 
 test:
@@ -63,7 +76,7 @@ test:
 determinism:
 	@echo "determinism: sin prueba de determinismo todavía (llega en E1 con actaira.lock)"
 
-test-harness: $(GITLEAKS)
+test-harness: $(GITLEAKS) $(GOLANGCI_LINT)
 	bash scripts/harness/tests/run.sh
 
 secrets: $(GITLEAKS)
@@ -106,9 +119,15 @@ install-hooks:
 	  echo "$$name instalado en $$hook"; \
 	done
 
-tools: $(GITLEAKS)
+tools: $(GITLEAKS) $(GOLANGCI_LINT)
 
 $(GITLEAKS):
 	scripts/harness/fetch-tool.sh \
 	  "https://github.com/gitleaks/gitleaks/releases/download/v$(GITLEAKS_VERSION)/gitleaks_$(GITLEAKS_VERSION)_$(GITLEAKS_PLATFORM).tar.gz" \
 	  "$(GITLEAKS_SHA256_$(GITLEAKS_PLATFORM))" gitleaks "$@"
+
+$(GOLANGCI_LINT):
+	scripts/harness/fetch-tool.sh \
+	  "https://github.com/golangci/golangci-lint/releases/download/v$(GOLANGCI_LINT_VERSION)/golangci-lint-$(GOLANGCI_LINT_VERSION)-$(GOLANGCI_LINT_PLATFORM).tar.gz" \
+	  "$(GOLANGCI_LINT_SHA256_$(GOLANGCI_LINT_OS_ARCH))" \
+	  "golangci-lint-$(GOLANGCI_LINT_VERSION)-$(GOLANGCI_LINT_PLATFORM)/golangci-lint" "$@"
