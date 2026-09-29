@@ -263,7 +263,7 @@ SDK Python / TS  ──socket──►    ├ proxy MCP (stdio / HTTP)          
 ```
 
 - **Inquilino.** No va en el payload: Actaira lo deriva de la conexión mTLS del runner (ADR 10).
-- **`coverage`** puede ser `mediated`, `observed` (visto por OTel sin punto de decisión), `declared` (solo en el repo) o `unseen`. La vista de cobertura por agente (`docs/cobertura.md`) usa este campo tal cual, sin otro enumerado. El estado de cada fuente (`observed`, `not_configured`, `error` o `stale`) es otro campo, y `unseen` (no mirado) nunca se mezcla con `unresolved` (mirado y no entendido).
+- **`coverage`** puede ser `mediated`, `observed` (visto por OTel sin punto de decisión), `declared` (solo en el repo) o `unseen`. La vista de cobertura por agente (`docs/cobertura.md`) usa este campo tal cual, sin otro enumerado y sin copiarlo a las capacidades: con él calcula qué capacidades están mediadas. El estado de cada fuente (`observed`, `not_configured`, `error` o `stale`) es otro campo, y ahí `observed` significa que la fuente se leyó bien, no que se viera en ejecución. `unseen` (no mirado) nunca se mezcla con `unresolved` (mirado y no entendido).
 
 **Nodos del grafo:** Agent, AgentVersion, Deployment, Model, Prompt, Tool, MCPServer, Subagent, MemoryStore, Identity, Secret, System, Action, Customer, Policy, Evidence.
 
@@ -516,7 +516,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 
 - **Vigilantes de cambio**, con sondeo cada 15 minutos o menos y webhooks donde existan. El hash de las tools MCP se calcula en el proxy sobre la sesión real del agente (dato mediado). El sondeo desde el runner se marca `observed` con la identidad usada, y si el servidor da listas distintas por identidad, se avisa.
 - **Alerta** "ha adquirido `customer.delete`", con la ruta en el grafo, la fuente, la hora y el blast radius, y una explicación de la IA (pieza 2) cuando la hay.
-- **Mínimo privilegio** (pieza 3): la diferencia entre lo efectivo y lo observado durante un periodo configurable se calcula sin IA; la IA redacta el cambio de permisos por sistema (política IAM, permission set de Salesforce, clave restringida de Stripe), que se valida y se enseña como diff de capacidades.
+- **Mínimo privilegio** (pieza 3): la diferencia entre lo efectivo y lo observado durante un periodo configurable se calcula sin IA. Hasta que haya llamadas vistas en ejecución, se calcula con la capacidad potencial de las tools del agente, y si alguna es de efecto desconocido o hay ubicaciones `unresolved`, esos permisos salen como uso desconocido (`docs/cobertura.md`); la IA redacta el cambio de permisos por sistema (política IAM, permission set de Salesforce, clave restringida de Stripe), que se valida y se enseña como diff de capacidades.
 
 **Listo cuando:**
 
@@ -678,7 +678,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
   - Vanta por su API de documentos y Drata por sus conexiones personalizadas;
   - OSCAL `assessment-results` después.
 - **Paquete de auditoría por periodo:**
-  - la **población de caminos mediados**, con la cobertura del periodo como N de M fuentes observadas y lo no visto, nunca como porcentaje;
+  - la **población de caminos mediados**, con la cobertura del periodo como N de M capacidades mediadas, N de M credenciales intermediadas y N de M fuentes observadas, con la lista de lo no mediado y lo no visto, nunca como porcentaje;
   - una **conciliación con fuentes independientes** (CloudTrail, registros de auditoría de los SaaS), para que el auditor pueda probar integridad y exactitud.
 - **Retención:** mínimo de 6 meses en los planes de pago, con aviso en la exportación si la retención contratada es menor.
 - **Aviso fijo:** aporta evidencia a controles; no certifica ni dice "cumples".
@@ -717,7 +717,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 
 - En un entorno con dos almacenes conectados, el 100 % de las escrituras mediadas llevan procedencia.
 - Un borrado por sujeto se comprueba con una consulta posterior en los dos.
-- Lo no mediado sale como `unseen`.
+- Lo no mediado sale con su valor de `coverage` (`observed`, `declared` o `unseen`), nunca como mediado.
 
 **Pasada adversarial de C8:**
 
@@ -819,7 +819,7 @@ Son objetivos hasta que un eval los produce; se guardan con fecha y commit.
 | Decisión | p99 de 5 ms como máximo; 0 discrepancias entre cedar-go y la CLI de Cedar |
 | Evasión | 0 acciones prohibidas en 300 casos o más, incluidas la llamada directa, el runner caído y el socket suplantado |
 | Kill switch | p95 de 10 s como máximo; corte local con la nube caída |
-| Cobertura | N de M fuentes observadas y N de M credenciales intermediadas, con lo no visto listado; nunca un porcentaje global (`docs/cobertura.md`) |
+| Cobertura | N de M fuentes observadas, N de M capacidades mediadas y N de M credenciales intermediadas, con lo no visto listado; nunca un porcentaje global (`docs/cobertura.md`) |
 | Causal | Porcentaje de efectos confirmados en el stack de un design partner |
 | Evidencia | 100 % de manipulaciones detectadas, incluida la vista dividida; invalidación al 100 % sobre etiquetado ajeno |
 | Alertas | p95 de 5 minutos como máximo |
