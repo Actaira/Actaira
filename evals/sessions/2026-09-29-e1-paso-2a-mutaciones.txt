@@ -1,0 +1,132 @@
+# E1 paso 1.2a: pruebas por mutación
+fecha: 2026-09-29T15:32:27Z
+comando: python3 evals/sessions/2026-09-29-e1-paso-2a-mutate.py
+copia de 0809d2adff9f1b87d1e47c956a7aa8b2378003f5 en un directorio temporal; el repo no se toca
+
+### treesitter: Close no libera el árbol
+fichero: pkg/extract/treesitter/treesitter.go; test: go:./pkg/extract/treesitter::TestParsingAThousandFilesDoesNotLeak
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestParsingAThousandFilesDoesNotLeak
+    leak_linux_test.go:58: resident memory grew 3479 MB after 1,000 parses (limit 64 MB): a parser or tree is not closed
+--- FAIL: TestParsingAThousandFilesDoesNotLeak (12.16s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/extract/treesitter	12.253s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/extract/treesitter	13.054s
+resultado: OK
+
+### treesitter: un segundo Close libera otra vez
+fichero: pkg/extract/treesitter/treesitter.go; test: go:./pkg/extract/treesitter::TestCloseTwiceIsSafe
+con la mutacion (debe ser rojo): exit 1
+ime.goexit({})
+	/home/usuario/.local/go/src/runtime/asm_amd64.s:1264 +0x1 fp=0x35551436a7e8 sp=0x35551436a7e0 pc=0x48f8c1
+created by runtime.defaultGOMAXPROCSUpdateEnable in goroutine 1
+	/home/usuario/.local/go/src/runtime/proc.go:7134 +0x37
+goroutine 19 gp=0x355514404960 m=nil [finalizer wait]:
+runtime.gopark(0x3555142f21e0?, 0x0?, 0x80?, 0x47?, 0x355514400888?)
+	/home/usuario/.local/go/src/runtime/proc.go:474 +0xca fp=0x35551436e620 sp=0x35551436e600 pc=0x4892aa
+runtime.runFinalizers()
+	/home/usuario/.local/go/src/runtime/mfinal.go:210 +0x107 fp=0x35551436e7e0 sp=0x35551436e620 pc=0x42bc47
+runtime.goexit({})
+	/home/usuario/.local/go/src/runtime/asm_amd64.s:1264 +0x1 fp=0x35551436e7e8 sp=0x35551436e7e0 pc=0x48f8c1
+created by runtime.createfing in goroutine 1
+	/home/usuario/.local/go/src/runtime/mfinal.go:172 +0x3d
+rax    0x0
+rbx    0x8978
+rcx    0x7c2d3149ec0c
+rdx    0x6
+rdi    0x8978
+rsi    0x8978
+rbp    0x7fffe9914f00
+rsp    0x7fffe9914ec0
+r8     0x2800a010
+r9     0x7
+r10    0x8
+r11    0x246
+r12    0x6
+r13    0x5af5e0
+r14    0x16
+r15    0x5acb92
+rip    0x7c2d3149ec0c
+rflags 0x246
+cs     0x33
+fs     0x0
+gs     0x0
+FAIL	github.com/actaira/actaira/pkg/extract/treesitter	0.005s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/extract/treesitter	0.002s
+resultado: OK
+
+### treesitter: TSX con la gramática de TypeScript
+fichero: pkg/extract/treesitter/treesitter.go; test: go:./pkg/extract/treesitter::TestParsesEachLanguage
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestParsesEachLanguage
+=== RUN   TestParsesEachLanguage/python
+=== RUN   TestParsesEachLanguage/typescript
+=== RUN   TestParsesEachLanguage/tsx
+    treesitter_test.go:29: valid tsx parsed with errors
+--- FAIL: TestParsesEachLanguage (0.00s)
+    --- PASS: TestParsesEachLanguage/python (0.00s)
+    --- PASS: TestParsesEachLanguage/typescript (0.00s)
+    --- FAIL: TestParsesEachLanguage/tsx (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/extract/treesitter	0.003s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/extract/treesitter	0.002s
+resultado: OK
+
+### treesitter: TypeScript con la gramática de TSX
+fichero: pkg/extract/treesitter/treesitter.go; test: go:./pkg/extract/treesitter::TestTSXIsNotTypeScript
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestTSXIsNotTypeScript
+    treesitter_test.go:44: JSX parsed without errors by the TypeScript grammar: TSX and TypeScript are the same grammar
+--- FAIL: TestTSXIsNotTypeScript (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/extract/treesitter	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/extract/treesitter	0.002s
+resultado: OK
+
+### treesitter: un lenguaje desconocido cae en Python
+fichero: pkg/extract/treesitter/treesitter.go; test: go:./pkg/extract/treesitter::TestUnknownLanguageIsAnError
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestUnknownLanguageIsAnError
+    treesitter_test.go:65: Parse with an unknown language returned no error
+--- FAIL: TestUnknownLanguageIsAnError (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/extract/treesitter	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/extract/treesitter	0.002s
+resultado: OK
+
+### treesitter: HasError siempre falso
+fichero: pkg/extract/treesitter/treesitter.go; test: go:./pkg/extract/treesitter::TestBrokenSyntaxIsATreeWithErrors
+con la mutacion (debe ser rojo): exit 1
+=== RUN   TestBrokenSyntaxIsATreeWithErrors
+    treesitter_test.go:57: python: broken code parsed without errors
+    treesitter_test.go:57: typescript: broken code parsed without errors
+    treesitter_test.go:57: tsx: broken code parsed without errors
+--- FAIL: TestBrokenSyntaxIsATreeWithErrors (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/extract/treesitter	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/extract/treesitter	0.002s
+resultado: OK
+
+### ci: platforms.yml con permisos de escritura
+fichero: .github/workflows/platforms.yml; test: scripts/harness/tests/ci_test.sh::test_every_workflow_but_release_is_read_only
+con la mutacion (debe ser rojo): exit 1
+    workflows de solo lectura: esperado [], obtenido [platforms.yml sin permissions: contents: read; platforms.yml con permisos de escritura; ]
+--- FAIL: test_every_workflow_but_release_is_read_only
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_every_workflow_but_release_is_read_only
+resultado: OK
+
+repo en uso sin cambios
+TODAS OK

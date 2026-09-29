@@ -1,6 +1,6 @@
 # ADR 0003: tree-sitter con cgo, a través del binding oficial de Go
 
-- **Estado:** aceptado para Linux. El resultado de macOS está en "Plataformas".
+- **Estado:** aceptado, para Linux y macOS.
 - **Fecha:** 2026-09-29.
 - **Decide:** la E1 (`docs/epicas/E1.md`, paso 1.2), con la medición del paso 1.2a.
 
@@ -41,7 +41,11 @@ Está en `evals/results/parser-2026-09-29.json`, con el commit, el entorno y el 
 ## Plataformas
 
 - **Linux amd64:** compila y pasa los tests, en local y en el check obligatorio `check`.
-- **macOS:** lo dice el job `check-macos` del workflow `platforms.yml`, que no es obligatorio. Su resultado se anota aquí al fusionar el paso 1.2a.
+- **macOS:** también compila, y pasa `go vet` y los tests Go.
+  - Lo comprueba el job `check-macos` de `platforms.yml`, que no es obligatorio, en macOS 26 arm64 (imagen 20260907.0351.1) con go1.27.1 y el Clang de las Command Line Tools.
+  - Primera ejecución: https://github.com/Actaira/Actaira/actions/runs/36590466878 (`evals/sessions/2026-09-29-e1-paso-2a-ci.txt`).
+  - El test de fugas no corre ahí: lee `/proc` y es solo para Linux.
+  - La E1 y la E2 no tienen que salir solo para Linux. Si se distribuyen binarios de macOS, y cómo, se decide en el paso 1.2b. Apple no admite binarios estáticos.
 - **Harness en macOS:** es otra cuestión (backlog): GNU make, bash 4 y GNU sed. No cuenta para esta decisión.
 
 ## Opciones

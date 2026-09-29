@@ -1,0 +1,25 @@
+# E1 paso 1.2a: CI del PR #5 (2026-09-29)
+Workflow platforms.yml, run https://github.com/Actaira/Actaira/actions/runs/36590466878; check (ci.yml): https://github.com/Actaira/Actaira/actions/runs/36590466927
+
+## check-macos (pass, 1m05s)
+Image: macos-26-arm64
+Version: 20260907.0351.1
+Successfully set up Go version 1.27.1
+go version go1.27.1 darwin/arm64
+?   	github.com/actaira/actaira/cmd/actaira	[no test files]
+?   	github.com/actaira/actaira/evals/bench/parse	[no test files]
+ok  	github.com/actaira/actaira/internal/cli	0.027s
+?   	github.com/actaira/actaira/internal/report	[no test files]
+ok  	github.com/actaira/actaira/internal/repotest	0.748s
+ok  	github.com/actaira/actaira/internal/version	0.008s
+?   	github.com/actaira/actaira/pkg/extract	[no test files]
+ok  	github.com/actaira/actaira/pkg/extract/treesitter	0.015s
+?   	github.com/actaira/actaira/pkg/lock	[no test files]
+?   	github.com/actaira/actaira/pkg/model	[no test files]
+
+## check-ubuntu-26 (pass, 1m50s)
+Version: 20260920.143.1
+Included Software: https://github.com/actions/runner-images/blob/ubuntu26/20260920.143/images/ubuntu/Ubuntu2604-Readme.md
+go version go1.27.1 linux/amd64
+check: OK
+PASS del harness en ubuntu-26.04: 230
