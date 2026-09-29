@@ -1,0 +1,13 @@
+{
+  "date": "2026-09-29T16:00:23Z",
+  "commit": "ddb73f93ce0d9bcd1efcb3136c78760d19f7f41c",
+  "environment": {
+    "go": "go version go1.27.1 linux/amd64",
+    "os": "Linux 6.6.87.2-microsoft-standard-WSL2",
+    "cc": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+  },
+  "command": "go build -trimpath ./cmd/actaira, as it is and with a blank import of pkg/extract/treesitter",
+  "cli_bytes": 2368002,
+  "cli_with_treesitter_bytes": 6318856,
+  "added_bytes": 3950854
+}

@@ -1,0 +1,71 @@
+{
+  "date": "2026-09-29T16:00:16Z",
+  "commit": "ddb73f93ce0d9bcd1efcb3136c78760d19f7f41c",
+  "command": "go run ./evals/bench/hostile",
+  "go_version": "go1.27.1",
+  "os": "linux",
+  "arch": "amd64",
+  "note": "1 MB per case, no deadline, one process per case; peak_rss_kib is the maximum resident set size of that process (getrusage), including the Go runtime",
+  "results": [
+    {
+      "case": {
+        "name": "ts-unclosed-generics",
+        "grammar": "typescript",
+        "repeated": "a\u003c"
+      },
+      "bytes": 1048576,
+      "seconds": 2.310200842,
+      "peak_rss_kib": 1247500
+    },
+    {
+      "case": {
+        "name": "ts-open-call-args",
+        "grammar": "typescript",
+        "repeated": "(a,"
+      },
+      "bytes": 1048575,
+      "seconds": 2.002065871,
+      "peak_rss_kib": 1108328
+    },
+    {
+      "case": {
+        "name": "ts-open-braces",
+        "grammar": "typescript",
+        "repeated": "{"
+      },
+      "bytes": 1048576,
+      "seconds": 0.33084298,
+      "peak_rss_kib": 272384
+    },
+    {
+      "case": {
+        "name": "tsx-open-elements",
+        "grammar": "tsx",
+        "repeated": "\u003cdiv\u003e"
+      },
+      "bytes": 1048575,
+      "seconds": 0.160318274,
+      "peak_rss_kib": 85248
+    },
+    {
+      "case": {
+        "name": "py-open-parens",
+        "grammar": "python",
+        "repeated": "("
+      },
+      "bytes": 1048576,
+      "seconds": 0.272079741,
+      "peak_rss_kib": 263680
+    },
+    {
+      "case": {
+        "name": "py-open-brackets",
+        "grammar": "python",
+        "repeated": "["
+      },
+      "bytes": 1048576,
+      "seconds": 0.273566812,
+      "peak_rss_kib": 263552
+    }
+  ]
+}

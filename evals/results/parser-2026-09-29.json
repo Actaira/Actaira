@@ -1,39 +1,66 @@
 {
-  "date": "2026-09-29T15:20:17Z",
-  "commit": "f25defe827c24a28edaefaf3c9503c377952e9a8",
+  "date": "2026-09-29T16:00:15Z",
+  "commit": "ddb73f93ce0d9bcd1efcb3136c78760d19f7f41c",
+  "uncommitted_changes": false,
   "command": "go run ./evals/bench/parse -n 1000",
   "go_version": "go1.27.1",
   "os": "linux",
   "arch": "amd64",
   "cpus": 14,
-  "bench_binary_bytes": 8399536,
+  "kernel": "Linux 6.6.87.2-microsoft-standard-WSL2",
+  "cc": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "bench_binary_bytes": 8416992,
   "note": "one goroutine, files read before timing, every tree closed; bench_binary_bytes is this program, with tree-sitter and the Python, TypeScript and TSX grammars linked in",
   "results": [
     {
       "repo": {
         "name": "langchain",
         "url": "https://github.com/langchain-ai/langchain",
-        "commit": "aaf25d0abd183a9b5978772c470a0ef11578ce3a"
+        "commit": "aaf25d0abd183a9b5978772c470a0ef11578ce3a",
+        "grammar": "python"
       },
       "files": 1000,
+      "empty_files": 50,
       "bytes": 5993053,
-      "total_ms": 536.518,
+      "total_ms": 539.239,
       "median_ms_per_file": 0.081,
-      "p95_ms_per_file": 2.227,
-      "files_with_syntax_errors": 0
+      "p95_ms_per_file": 2.283,
+      "files_with_syntax_errors": 0,
+      "error_files": null
     },
     {
       "repo": {
         "name": "langchainjs",
         "url": "https://github.com/langchain-ai/langchainjs",
-        "commit": "17b6bba8343bdd3f3dfc5c59578e0b72337ec740"
+        "commit": "17b6bba8343bdd3f3dfc5c59578e0b72337ec740",
+        "grammar": "typescript"
       },
       "files": 1000,
-      "bytes": 3626844,
-      "total_ms": 303.489,
-      "median_ms_per_file": 0.143,
-      "p95_ms_per_file": 1.092,
-      "files_with_syntax_errors": 0
+      "empty_files": 0,
+      "bytes": 3653356,
+      "total_ms": 297.749,
+      "median_ms_per_file": 0.139,
+      "p95_ms_per_file": 1.059,
+      "files_with_syntax_errors": 0,
+      "error_files": null
+    },
+    {
+      "repo": {
+        "name": "vercel-ai",
+        "url": "https://github.com/vercel/ai",
+        "commit": "4556206a2d4385eb1be698e365fa1660d6ca98b8",
+        "grammar": "tsx"
+      },
+      "files": 520,
+      "empty_files": 0,
+      "bytes": 1500420,
+      "total_ms": 130.38,
+      "median_ms_per_file": 0.138,
+      "p95_ms_per_file": 0.818,
+      "files_with_syntax_errors": 1,
+      "error_files": [
+        "apps/docs/app/[lang]/unauthenticated-ai-gateway/page.tsx"
+      ]
     }
   ]
 }
