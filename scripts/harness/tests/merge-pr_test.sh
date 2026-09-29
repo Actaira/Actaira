@@ -22,7 +22,12 @@ case "\$*" in
   *commit.author.email*) cat "$T/merged-email" ;;
   "api "*) cat "$T/merged-msg" ;;
   "pr view"*) cat "$T/pr.json" ;;
-  "pr checks"*"--watch"*) exit ${1:-0} ;;
+  "pr checks"*"--watch"*)
+    if [ "\$(cat "$T/no-checks" 2>/dev/null || echo 0)" -gt 0 ]; then
+      echo "no checks reported on the 'demo' branch" >&2
+      exit 1
+    fi
+    exit ${1:-0} ;;
   "pr checks"*)
     n="\$(cat "$T/no-checks" 2>/dev/null || echo 0)"
     if [ "\$n" -gt 0 ]; then
@@ -182,6 +187,11 @@ test_gives_up_when_no_check_appears() {
   assert_contains "$(cat "$T/out")" "merge-pr: el PR 7 sigue sin checks tras 3 intentos; no se fusiona"
   assert_not_contains "$(gh_log)" "--watch" "no llega a esperar a checks que no existen"
   assert_not_contains "$(gh_log)" "pr merge" "no se fusiona"
+  rc=0
+  GITLEAKS="$T/bin/gitleaks" HOME="$T/home" PATH="$T/bin:$PATH" MERGE_PR_CHECK_WAIT=0 MERGE_PR_CHECK_TRIES=abc \
+    "$HARNESS_DIR/merge-pr.sh" 7 "E0 step 9: demo (#7)" "$T/body.md" >"$T/out" 2>&1 || rc=$?
+  assert_eq "$rc" "2" "un número de intentos que no es un número"
+  assert_contains "$(cat "$T/out")" "tienen que ser números enteros"
 }
 
 run_tests "$@"

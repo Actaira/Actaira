@@ -55,7 +55,7 @@ Una lección que no se ha convertido en algo que se comprueba solo sigue siendo 
 ## L-003 Toda excepción que apaga una comprobación cita una entrada de FALLOS.md
 - nace de: F-0006
 - regla: un mecanismo que apaga una comprobación (ficheros de excepción de gitleaks, comentarios allow, `t.Skip`, `//nolint`, configuraciones que quitan reglas) solo vale si está en git y cita un `F-NNNN` que exista en FALLOS.md
-- dónde se comprueba: lint:scripts/harness/secrets-scan.sh (excepciones de gitleaks) y lint:scripts/harness/check-skips.sh (`t.Skip` y restricciones de compilación en los tests). Pendiente de guardia: `//nolint` (E1, con golangci-lint), y las formas de `.gitleaks.toml` que quitan reglas aunque extiendan las de serie (`disabledRules`, `[[allowlists]]`, `extend.path`) y los comentarios allow que solo están en la historia (backlog)
+- dónde se comprueba: lint:scripts/harness/secrets-scan.sh (excepciones de gitleaks) y lint:scripts/harness/check-skips.sh (`t.Skip` y restricciones de compilación en los tests). Pendiente de guardia: `//nolint` (E1, con golangci-lint), y las formas de `.gitleaks.toml` que quitan reglas aunque extiendan las de serie (`disabledRules`, `[[allowlists]]`, `extend.path`) y los comentarios allow que solo están en la historia (backlog). El correo de contacto que permite `check-personal.sh` no cita un F-NNNN sino la decisión de Marcos del 2026-09-29, y está en git (`config/contact.env`) con su contenido fijado por `personal_test.sh::test_contact_config_is_the_reviewed_one`
 
 ## L-004 Un hook de shell lee palabras de órdenes simples, y ante lo que no puede evaluar, bloquea
 - nace de: F-0007, F-0010, F-0013

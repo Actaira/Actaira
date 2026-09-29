@@ -20,8 +20,9 @@
 #     their own address). The project contact address is not personal
 #     (Marcos, 2026-09-29): the one that config/contact.env sets as
 #     ACTAIRA_CONTACT_EMAIL may go on the website and in user docs, but not
-#     in code files, which read it from that variable. Any other personal
-#     address still fails.
+#     fixed in code files, which must read it from that variable. The file
+#     must set it once, bare, and personal_test.sh pins its content, so
+#     changing it shows in the diff. Any other personal address still fails.
 # A finding names the category and the place, never the text: the CI logs of
 # a public repo are public too.
 # With --files, only the given files are scanned (merge-pr.sh: the squash
@@ -64,25 +65,35 @@ EMAIL = re.compile(
     r"[A-Za-z0-9._%+-]+@(?:gmail|googlemail|hotmail|outlook|live|msn|yahoo|ymail|icloud|me|proton|protonmail|pm|gmx)\.[A-Za-z]{2,}",
     re.IGNORECASE,
 )
-# Source files: the contact address never goes fixed in them.
-CODE = re.compile(r"\.(go|py|pyi|ts|tsx|js|jsx|mjs|cjs|mts|cts|sh|bash)$")
+# Source files, where the contact address never goes fixed: by extension,
+# by name, the CI workflows, and any file that starts with a shebang.
+CODE = re.compile(r"(\.(go|py|pyi|ts|tsx|js|jsx|mjs|cjs|mts|cts|sh|bash)$|(^|/)(Makefile|Dockerfile)$|^\.github/workflows/)",
+                  re.IGNORECASE)
 
 
 def contact_address():
-    """ACTAIRA_CONTACT_EMAIL from config/contact.env of this repo, lowercased, or ""."""
+    """(address, problem): ACTAIRA_CONTACT_EMAIL from config/contact.env of this
+    repo, lowercased. The file must be a real file that sets it exactly once,
+    bare (no quotes, no export, no trailing comment); otherwise no address is
+    allowed and the problem is a finding, so a second line cannot change it
+    quietly."""
     top = subprocess.run(["git", "rev-parse", "--show-toplevel"], stdout=subprocess.PIPE,
                          stderr=subprocess.DEVNULL, text=True)
     path = os.path.join(top.stdout.strip(), "config", "contact.env")
-    if top.returncode != 0 or not os.path.isfile(path):
-        return ""
-    for line in open(path, encoding="utf-8"):
-        key, sep, value = line.strip().partition("=")
-        if sep and key.strip() == "ACTAIRA_CONTACT_EMAIL" and re.fullmatch(r"[^@\s]+@[^@\s]+", value.strip()):
-            return value.strip().lower()
-    return ""
+    if top.returncode != 0 or not os.path.lexists(path):
+        return "", ""
+    problem = "config/contact.env tiene que fijar ACTAIRA_CONTACT_EMAIL una sola vez, sin comillas, export ni comentarios"
+    if os.path.islink(path) or not os.path.isfile(path):
+        return "", problem
+    lines = [l.strip() for l in open(path, encoding="utf-8") if "ACTAIRA_CONTACT_EMAIL" in l]
+    if len(lines) == 1:
+        key, _, value = lines[0].partition("=")
+        if key == "ACTAIRA_CONTACT_EMAIL" and re.fullmatch(r"[^@\s\"'#]+@[^@\s\"'#]+", value):
+            return value.lower(), ""
+    return "", problem
 
 
-CONTACT = contact_address()
+CONTACT, CONTACT_PROBLEM = contact_address()
 
 
 def normalize(text):
@@ -145,7 +156,7 @@ def git(*args):
     return subprocess.run(["git", *args], stdout=subprocess.PIPE, check=True).stdout
 
 
-bad = []
+bad = [CONTACT_PROBLEM] if CONTACT_PROBLEM else []
 if len(sys.argv) > 2:
     for path in sys.argv[2:]:
         for what, line in findings_in(decode(open(path, "rb").read())):
@@ -167,7 +178,8 @@ for raw in git("ls-files", "-z", "--cached", "--others", "--exclude-standard").s
     if "\0" in text:
         continue
     fixture = path.startswith("testdata/") or "/testdata/" in path
-    for what, line in findings_in(text, emails=not fixture, code=bool(CODE.search(path))):
+    code = bool(CODE.search(path)) or text.startswith("#!")
+    for what, line in findings_in(text, emails=not fixture, code=code):
         bad.append(f"{what} en {path}:{line}")
 
 

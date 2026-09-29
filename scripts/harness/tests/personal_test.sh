@@ -165,9 +165,51 @@ test_contact_email_fixed_in_code_fails() {
   mkdir -p "$T/repo/cmd" "$T/repo/web"
   printf 'package main\n\nconst contact = "%s"\n' "$contact" > "$T/repo/cmd/main.go"
   printf 'export const contact = "%s";\n' "$contact" > "$T/repo/web/contact.ts"
+  mkdir -p "$T/repo/hooks"
+  printf '#!/usr/bin/env bash\n# contacto: %s\n' "$contact" > "$T/repo/hooks/pre-push"
+  printf 'CONTACT = %s\n' "$contact" > "$T/repo/Makefile"
+  printf 'var contact = "%s"\n' "$contact" > "$T/repo/cmd/Other.GO"
   assert_eq "$(personal "$T/repo")" "1" "correo de contacto fijo en el código"
+  assert_contains "$(cat "$T/out")" "en hooks/pre-push:2"
+  assert_contains "$(cat "$T/out")" "en Makefile:1"
+  assert_contains "$(cat "$T/out")" "en cmd/Other.GO:1"
   assert_contains "$(cat "$T/out")" "correo de contacto fijo en el código (va por ACTAIRA_CONTACT_EMAIL) en cmd/main.go:3"
   assert_contains "$(cat "$T/out")" "correo de contacto fijo en el código (va por ACTAIRA_CONTACT_EMAIL) en web/contact.ts:1"
+}
+
+# A second line, quotes or a symlink would change the allowed address quietly.
+test_contact_config_must_set_the_address_once_in_a_real_file() {
+  init_repo "$T/repo"
+  local contact="proyecto.ficticio@""gmail.com" other="alguien.ejemplo@""gmail.com"
+  printf 'Contacto: %s\n' "$contact" > "$T/repo/docs.md"
+  mkdir -p "$T/repo/config"
+  printf 'ACTAIRA_CONTACT_EMAIL=%s\nACTAIRA_CONTACT_EMAIL=%s\n' "$other" "$contact" > "$T/repo/config/contact.env"
+  assert_eq "$(personal "$T/repo")" "1" "dos líneas"
+  assert_contains "$(cat "$T/out")" "config/contact.env tiene que fijar ACTAIRA_CONTACT_EMAIL una sola vez"
+  assert_contains "$(cat "$T/out")" "correo de un proveedor personal en docs.md:1"
+  printf 'export ACTAIRA_CONTACT_EMAIL="%s"\n' "$contact" > "$T/repo/config/contact.env"
+  assert_eq "$(personal "$T/repo")" "1" "con export y comillas"
+  assert_contains "$(cat "$T/out")" "config/contact.env tiene que fijar ACTAIRA_CONTACT_EMAIL una sola vez"
+  printf 'ACTAIRA_CONTACT_EMAIL=%s\n' "$contact" > "$T/outside.env"
+  rm "$T/repo/config/contact.env"
+  ln -s "$T/outside.env" "$T/repo/config/contact.env"
+  assert_eq "$(personal "$T/repo")" "1" "enlace simbólico"
+  assert_contains "$(cat "$T/out")" "config/contact.env tiene que fijar ACTAIRA_CONTACT_EMAIL una sola vez"
+}
+
+# The allowed address is Marcos's decision of 2026-09-29: changing it has to
+# change this test in the same PR, in plain sight in the diff (as L-006).
+test_contact_config_is_the_reviewed_one() {
+  local expected
+  expected="$(printf '%s\n' \
+    "# Project contact address (Marcos, 2026-09-29). It is not personal data: it" \
+    "# goes on the website (security.txt, legal notice, contact page) and in user" \
+    "# documentation. Code must not have it fixed: it must read" \
+    "# ACTAIRA_CONTACT_EMAIL. scripts/harness/check-personal.sh allows this" \
+    "# address, and only this one, outside code files; personal_test.sh pins the" \
+    "# content of this file, so changing it shows in the diff." \
+    "ACTAIRA_CONTACT_EMAIL=actairasolutions@""gmail.com")"
+  assert_eq "$(cat "$REPO_DIR/config/contact.env")" "$expected" "config/contact.env es el revisado"
 }
 
 test_contact_email_without_its_config_fails() {
