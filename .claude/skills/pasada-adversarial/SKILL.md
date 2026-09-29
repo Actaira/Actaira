@@ -1,6 +1,6 @@
 ---
 name: pasada-adversarial
-description: Ronda de revisión hostil sobre el paso actual con el subagente revisor-adversarial, con como mucho tres rondas y reglas estrictas de qué se corrige y qué va a backlog.
+description: Ronda de revisión hostil sobre el paso actual con el subagente revisor-adversarial, con como mucho tres rondas (una en los pasos de solo documentación) y reglas estrictas de qué se corrige y qué va a backlog.
 ---
 
 # Pasada adversarial
@@ -13,6 +13,7 @@ description: Ronda de revisión hostil sobre el paso actual con el subagente rev
    - **bajo:** a backlog o se descarta, diciendo por qué;
    - **falso positivo:** se descarta con la prueba (comando y salida) de que no aplica.
 3. **Ronda 2** solo si la 1 tuvo críticos o altos, y **ronda 3** solo si la 2 los tuvo. Cada ronda revisa el diff completo, no solo las correcciones.
+   - **Paso de solo documentación** (su diff no toca código, scripts, tests ni configuración que se ejecute): una sola ronda (L-011). Los críticos se corrigen en el paso, con `registrar-fallo`. Los altos, medios y bajos van a `docs/BACKLOG.md` o al paso de código que los implementa, escritos en su épica. No hay ronda 2.
 4. **Si tras la ronda 3 queda algún crítico o alto:** para, deja el diagnóstico en `docs/estado/` y devuelve el control a Marcos.
 5. **Deja el resumen en el PR:** rondas, hallazgos por severidad y qué se hizo con cada uno.
 

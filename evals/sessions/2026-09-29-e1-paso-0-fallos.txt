@@ -16,3 +16,5 @@ exit: 2
 F-0018: no existe .claude/rules/go.md
 make: *** [Makefile:79: fallos] Error 1
 exit: 2
+
+Nota (ronda 3, hallazgo bajo 10): .claude/rules/go.md ya existía en main, así que la mutación borra el fichero entero y no la línea de la corrección: check-fallos.sh solo comprueba que el fichero de una guardia de tipo regla exista (como en F-0005 y F-0008). L-009 y L-010 lo marcan como pendiente de guardia automática.

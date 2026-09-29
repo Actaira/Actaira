@@ -189,7 +189,7 @@ Cada fallo encontrado (test en rojo que no era esperado, bug, hallazgo crítico 
 ## F-0017 La vista de cobertura daba números y estados sin haber visto lo que podía cambiarlos
 - fecha: 2026-09-29
 - épica y paso: E1 / 0 (vista de cobertura, solo documentación), rondas adversariales 1 y 2
-- síntoma: la especificación de `docs/cobertura.md` tenía ocho hallazgos altos.
+- síntoma: la especificación de `docs/cobertura.md` tenía siete hallazgos altos.
   - "Efectivas no usadas" daba número con tools de efecto desconocido, servidores MCP sin listar o partes sin ver.
   - "Mediadas" tomaba el valor más fuerte de una capacidad y, sin nada que vea las llamadas no mediadas, se cumplía por construcción.
   - Una instantánea pública del registro dejaba `observed` una fuente MCP.
@@ -207,14 +207,13 @@ Cada fallo encontrado (test en rojo que no era esperado, bug, hallazgo crítico 
 
 ## F-0018 El lockfile dependía de ficheros que git no versiona
 - fecha: 2026-09-29
-- épica y paso: E1 / 0 (vista de cobertura, solo documentación), rondas adversariales 1 y 2
+- épica y paso: E1 / 0 (vista de cobertura, solo documentación), rondas adversariales 1, 2 y 3
 - síntoma: `coverage.skipped` anotaba los directorios ignorados que hubiera en disco (`node_modules`, `.venv`). Además, el recorrido de la E1 no respetaba `.gitignore` y entraba en repos anidados, como `.claude/worktrees/` en este mismo repo. Un `actaira lock` en local y un `actaira lock --check` en la CI, sobre un clon limpio, darían ficheros distintos.
 - causa raíz: el determinismo se especificó como "el mismo fichero en 10 ejecuciones sobre el mismo árbol". Ese test no puede ver la diferencia entre el árbol de un desarrollador y el checkout de la CI, que es donde se compara.
 - corrección:
-  - el recorrido respeta `.gitignore` en todos los niveles, leído sin ejecutar git;
-  - no entra en repos anidados ni submódulos, y no sigue enlaces simbólicos;
-  - se anotan los puntos de corte y las reglas de ignorado, siempre y como reglas;
-  - el test de determinismo compara el mismo repo con y sin ficheros ignorados en disco.
+  - La ronda 3 mostró que el mecanismo propuesto en la ronda 2 tampoco bastaba. Respetar `.gitignore` no es leer lo que git versiona: un submódulo sin inicializar en la CI o un fichero excluido solo en local cambian el lockfile. Además, lo versionado que no se lee no dejaba rastro.
+  - Por decisión de Marcos (opción B), la documentación fija solo la regla: todo lo versionado que un extractor leería se lee o deja una entrada con su motivo, y lo no versionado no deja ninguna.
+  - El mecanismo lo decide y lo prueba el paso 1.4 de la E1, con cinco tests obligatorios: el índice de git, los submódulos, los enlaces simbólicos, los ficheros ignorados solo en local y la regla misma.
   - Rama `e1/paso-0-cobertura`.
 - guardia: regla:.claude/rules/go.md
 - guardia: regla:.claude/rules/cobertura.md

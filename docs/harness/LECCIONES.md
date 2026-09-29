@@ -89,5 +89,10 @@ Una lección que no se ha convertido en algo que se comprueba solo sigue siendo 
 
 ## L-010 Un fichero generado que la CI comprueba se prueba contra el árbol de la CI
 - nace de: F-0018
-- regla: un fichero que se genera, se commitea y la CI vuelve a comprobar (`actaira.lock`, salidas doradas) solo depende de lo que git versiona. Su test compara el repo con y sin ficheros ignorados en disco, no solo varias ejecuciones sobre el mismo árbol
-- dónde se comprueba: regla:.claude/rules/go.md (pendiente de guardia automática: el test de determinismo de la E1)
+- regla: un fichero que se genera, se commitea y la CI vuelve a comprobar (`actaira.lock`, salidas doradas) solo depende de lo que git versiona. Sus tests comparan el lockfile de un clon limpio con el de un árbol con submódulos inicializados, ficheros sin seguimiento o excluidos solo en local, no solo varias ejecuciones sobre el mismo árbol
+- dónde se comprueba: regla:.claude/rules/go.md (pendiente de guardia automática: los tests obligatorios del paso 1.4 de la E1)
+
+## L-011 Un paso de solo documentación tiene una ronda adversarial
+- nace de: el paso 0 de la E1, que dio tres rondas y 60 hallazgos sobre una especificación sin código y paró con dos altos abiertos; decisión de Marcos del 2026-09-29. Acota L-000c
+- regla: un paso cuyo diff no toca código, scripts, tests ni configuración que se ejecute tiene como mucho una ronda adversarial. Los críticos se corrigen en el paso; los altos, medios y bajos van a `docs/BACKLOG.md` o al paso de código que los implementa, escritos en su épica. Las tres rondas quedan para los pasos con código y los cierres
+- dónde se comprueba: `CLAUDE.md` (anti-bucle) y skill `pasada-adversarial`, punto 3 (pendiente de guardia automática)
