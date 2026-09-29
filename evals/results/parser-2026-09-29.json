@@ -1,6 +1,6 @@
 {
-  "date": "2026-09-29T16:00:15Z",
-  "commit": "ddb73f93ce0d9bcd1efcb3136c78760d19f7f41c",
+  "date": "2026-09-29T16:33:06Z",
+  "commit": "ba024b12eef5a6881dfd39796b5c347572bc57f4",
   "uncommitted_changes": false,
   "command": "go run ./evals/bench/parse -n 1000",
   "go_version": "go1.27.1",
@@ -9,7 +9,7 @@
   "cpus": 14,
   "kernel": "Linux 6.6.87.2-microsoft-standard-WSL2",
   "cc": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
-  "bench_binary_bytes": 8416992,
+  "bench_binary_bytes": 8422256,
   "note": "one goroutine, files read before timing, every tree closed; bench_binary_bytes is this program, with tree-sitter and the Python, TypeScript and TSX grammars linked in",
   "results": [
     {
@@ -22,9 +22,9 @@
       "files": 1000,
       "empty_files": 50,
       "bytes": 5993053,
-      "total_ms": 539.239,
-      "median_ms_per_file": 0.081,
-      "p95_ms_per_file": 2.283,
+      "total_ms": 525.488,
+      "median_ms_per_file": 0.08,
+      "p95_ms_per_file": 2.23,
       "files_with_syntax_errors": 0,
       "error_files": null
     },
@@ -38,9 +38,9 @@
       "files": 1000,
       "empty_files": 0,
       "bytes": 3653356,
-      "total_ms": 297.749,
-      "median_ms_per_file": 0.139,
-      "p95_ms_per_file": 1.059,
+      "total_ms": 302.589,
+      "median_ms_per_file": 0.144,
+      "p95_ms_per_file": 1.06,
       "files_with_syntax_errors": 0,
       "error_files": null
     },
@@ -54,34 +54,13 @@
       "files": 520,
       "empty_files": 0,
       "bytes": 1500420,
-      "total_ms": 130.38,
-      "median_ms_per_file": 0.138,
-      "p95_ms_per_file": 0.818,
+      "total_ms": 129.788,
+      "median_ms_per_file": 0.137,
+      "p95_ms_per_file": 0.879,
       "files_with_syntax_errors": 1,
       "error_files": [
         "apps/docs/app/[lang]/unauthenticated-ai-gateway/page.tsx"
       ]
     }
-  ],
-  "ci": {
-    "commit": "154722afafa50cf71aed03000543438c8aa3f3b0",
-    "note": "CI of the commit that adds these results: the same code as the measured commit. check is the required job, on Linux (ubuntu-latest, amd64); check-macos compiles with cgo and runs the Go tests on macOS 26 arm64; check-ubuntu-26 runs make check on Ubuntu 26.04",
-    "runs": [
-      {
-        "conclusion": "success",
-        "job": "check",
-        "url": "https://github.com/Actaira/Actaira/actions/runs/36594544249/job/109495950421"
-      },
-      {
-        "conclusion": "success",
-        "job": "check-macos",
-        "url": "https://github.com/Actaira/Actaira/actions/runs/36594544309/job/109495959056"
-      },
-      {
-        "conclusion": "success",
-        "job": "check-ubuntu-26",
-        "url": "https://github.com/Actaira/Actaira/actions/runs/36594544309/job/109495959237"
-      }
-    ]
-  }
+  ]
 }

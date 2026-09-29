@@ -53,9 +53,9 @@ MUTATIONS = [
     # Review round 1.
     ("treesitter: Parse no cierra el parser", TS,
      "\tparser := sitter.NewParser()\n\tdefer parser.Close()\n", "\tparser := sitter.NewParser()\n",
-     TS_T, "TestParsingTwentyThousandTinyFilesDoesNotLeakParsers"),
+     TS_T, "TestParsingManyTinyFilesDoesNotLeakParsers"),
     ("treesitter: el plazo no para el parseo", TS,
-     "ProgressCallback: func(sitter.ParseState) bool { return ctx.Err() != nil }", "ProgressCallback: func(sitter.ParseState) bool { return false }",
+     "\t\tparser.SetTimeoutMicros(uint64(left)) //nolint:staticcheck // F-0024: the one way to stop a parse without leaking\n", "\t\t_ = left\n",
      TS_T, "TestADeadlineStopsAHostileParse"),
     ("treesitter: un contexto cancelado parsea igual", TS,
      '\tif err := ctx.Err(); err != nil {\n\t\treturn nil, fmt.Errorf("treesitter: parse not started: %w", err)\n\t}\n', "",
@@ -65,6 +65,14 @@ MUTATIONS = [
      TS_T, "TestUnknownLanguageIsAnError"),
     ("merge-pr: espera a todos los checks (F-0023)", MERGE,
      '  gh pr checks "$pr" --required --watch --fail-fast\n', '  gh pr checks "$pr" --watch --fail-fast\n',
+     MERGE_T, "test_a_failing_check_that_is_not_required_does_not_block_the_merge"),
+    # Review round 2.
+    ("treesitter: el plazo con opciones por llamada (F-0024)", TS,
+     "\tt := parser.ParseWithOptions(read, nil, nil)\n",
+     "\tt := parser.ParseWithOptions(read, nil, &sitter.ParseOptions{ProgressCallback: func(sitter.ParseState) bool { return ctx.Err() != nil }})\n",
+     TS_T, "TestParsingWithADeadlineKeepsNothingOnTheGoHeap"),
+    ("merge-pr: un check no obligatorio en rojo no se enseña", MERGE,
+     '  if ! all_checks="$(gh pr checks "$pr" 2>&1)"; then\n', "  if false; then\n",
      MERGE_T, "test_a_failing_check_that_is_not_required_does_not_block_the_merge"),
 ]
 

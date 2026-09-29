@@ -1,0 +1,26 @@
+{
+  "date": "2026-09-29T16:34:03Z",
+  "repo": "Actaira/Actaira",
+  "commit": "154722afafa50cf71aed03000543438c8aa3f3b0",
+  "command": "bash evals/bench/ci-result.sh <commit>",
+  "runs": [
+    {
+      "conclusion": "success",
+      "job": "check",
+      "status": "completed",
+      "url": "https://github.com/Actaira/Actaira/actions/runs/36594544249/job/109495950421"
+    },
+    {
+      "conclusion": "success",
+      "job": "check-macos",
+      "status": "completed",
+      "url": "https://github.com/Actaira/Actaira/actions/runs/36594544309/job/109495959056"
+    },
+    {
+      "conclusion": "success",
+      "job": "check-ubuntu-26",
+      "status": "completed",
+      "url": "https://github.com/Actaira/Actaira/actions/runs/36594544309/job/109495959237"
+    }
+  ]
+}

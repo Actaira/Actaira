@@ -1,71 +1,132 @@
 {
-  "date": "2026-09-29T16:00:16Z",
-  "commit": "ddb73f93ce0d9bcd1efcb3136c78760d19f7f41c",
+  "date": "2026-09-29T16:33:07Z",
+  "commit": "ba024b12eef5a6881dfd39796b5c347572bc57f4",
+  "uncommitted_changes": false,
   "command": "go run ./evals/bench/hostile",
   "go_version": "go1.27.1",
   "os": "linux",
   "arch": "amd64",
-  "note": "1 MB per case, no deadline, one process per case; peak_rss_kib is the maximum resident set size of that process (getrusage), including the Go runtime",
+  "cpus": 14,
+  "kernel": "Linux 6.6.87.2-microsoft-standard-WSL2",
+  "cc": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "note": "1 MB per file, one process per case, one goroutine; peak_rss_kib is the maximum resident set size of that process (getrusage), including the Go runtime; a parse stopped at its deadline counts as done",
   "results": [
     {
       "case": {
         "name": "ts-unclosed-generics",
         "grammar": "typescript",
-        "repeated": "a\u003c"
+        "repeated": "a\u003c",
+        "files_in_a_row": 1,
+        "deadline_ms_per_file": 0,
+        "malloc_arena_max_1": false
       },
-      "bytes": 1048576,
-      "seconds": 2.310200842,
-      "peak_rss_kib": 1247500
+      "bytes_per_file": 1048576,
+      "seconds": 2.166710927,
+      "peak_rss_kib": 1247300
     },
     {
       "case": {
         "name": "ts-open-call-args",
         "grammar": "typescript",
-        "repeated": "(a,"
+        "repeated": "(a,",
+        "files_in_a_row": 1,
+        "deadline_ms_per_file": 0,
+        "malloc_arena_max_1": false
       },
-      "bytes": 1048575,
-      "seconds": 2.002065871,
-      "peak_rss_kib": 1108328
+      "bytes_per_file": 1048575,
+      "seconds": 1.943184714,
+      "peak_rss_kib": 1108336
     },
     {
       "case": {
         "name": "ts-open-braces",
         "grammar": "typescript",
-        "repeated": "{"
+        "repeated": "{",
+        "files_in_a_row": 1,
+        "deadline_ms_per_file": 0,
+        "malloc_arena_max_1": false
       },
-      "bytes": 1048576,
-      "seconds": 0.33084298,
+      "bytes_per_file": 1048576,
+      "seconds": 0.348778421,
       "peak_rss_kib": 272384
     },
     {
       "case": {
         "name": "tsx-open-elements",
         "grammar": "tsx",
-        "repeated": "\u003cdiv\u003e"
+        "repeated": "\u003cdiv\u003e",
+        "files_in_a_row": 1,
+        "deadline_ms_per_file": 0,
+        "malloc_arena_max_1": false
       },
-      "bytes": 1048575,
-      "seconds": 0.160318274,
+      "bytes_per_file": 1048575,
+      "seconds": 0.162191181,
       "peak_rss_kib": 85248
     },
     {
       "case": {
         "name": "py-open-parens",
         "grammar": "python",
-        "repeated": "("
+        "repeated": "(",
+        "files_in_a_row": 1,
+        "deadline_ms_per_file": 0,
+        "malloc_arena_max_1": false
       },
-      "bytes": 1048576,
-      "seconds": 0.272079741,
+      "bytes_per_file": 1048576,
+      "seconds": 0.289788342,
       "peak_rss_kib": 263680
     },
     {
       "case": {
         "name": "py-open-brackets",
         "grammar": "python",
-        "repeated": "["
+        "repeated": "[",
+        "files_in_a_row": 1,
+        "deadline_ms_per_file": 0,
+        "malloc_arena_max_1": false
       },
-      "bytes": 1048576,
-      "seconds": 0.273566812,
+      "bytes_per_file": 1048576,
+      "seconds": 0.296580055,
       "peak_rss_kib": 263552
+    },
+    {
+      "case": {
+        "name": "ts-unclosed-generics-deadline",
+        "grammar": "typescript",
+        "repeated": "a\u003c",
+        "files_in_a_row": 1,
+        "deadline_ms_per_file": 50,
+        "malloc_arena_max_1": false
+      },
+      "bytes_per_file": 1048576,
+      "seconds": 0.076762186,
+      "peak_rss_kib": 55296
+    },
+    {
+      "case": {
+        "name": "ts-unclosed-generics-deadline-x40",
+        "grammar": "typescript",
+        "repeated": "a\u003c",
+        "files_in_a_row": 40,
+        "deadline_ms_per_file": 50,
+        "malloc_arena_max_1": false
+      },
+      "bytes_per_file": 1048576,
+      "seconds": 3.12692585,
+      "peak_rss_kib": 72064
+    },
+    {
+      "case": {
+        "name": "ts-unclosed-generics-deadline-x40-arena1",
+        "grammar": "typescript",
+        "repeated": "a\u003c",
+        "files_in_a_row": 40,
+        "deadline_ms_per_file": 50,
+        "malloc_arena_max_1": true
+      },
+      "bytes_per_file": 1048576,
+      "seconds": 3.072758546,
+      "peak_rss_kib": 72312
     }
   ]
 }
