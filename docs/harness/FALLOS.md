@@ -247,3 +247,26 @@ Cada fallo encontrado (test en rojo que no era esperado, bug, hallazgo crítico 
 - guardia: test:scripts/harness/tests/check-skips_test.sh::test_nolint_forms_that_golangci_lint_also_reads_fail
 - guardia: test:scripts/harness/tests/check-skips_test.sh::test_every_nolint_form_that_golangci_lint_applies_is_flagged
 - lección: L-012
+
+## F-0021 check-skips.sh no veía lo que la vista de git esconde
+- fecha: 2026-09-29
+- épica y paso: E1 / 1.1, ronda adversarial 3
+- síntoma: pasaban sin un F-NNNN, y golangci-lint o Go los aplicaban:
+  - un `.go` que es un enlace simbólico (git grep lee el enlace; Go y golangci-lint, el destino);
+  - una directiva `//line notes.tmpl:1`, que apaga errcheck en el código que la sigue;
+  - rutas con `:` o fuera de ASCII, que rompen la lectura de la salida de git grep: `pkg/demo/a:b:F-0007.go` se daba por citado, y un `café_test.go` con `t.Skip` pasaba desde la E0;
+  - un paquete de `testdata/` que solo importan los tests, fuera de `./...`;
+  - un helper que importa `testing` con alias.
+- causa raíz: la guardia lee como texto la vista de git y la trata como si fuera la de Go, así que lo que las dos vistas ven distinto queda fuera. Es el patrón de L-005, y en las tres rondas del paso cada una encontró otra variante.
+- corrección: una lista blanca, en vez de perseguir variantes.
+  - Se rechaza todo `.go` que sea enlace simbólico, toda ruta fuera de `[A-Za-z0-9._/-]` y toda directiva `//line`.
+  - `internal/repotest` usa `go list -deps -test`.
+  - Se acepta el alias del import de `testing`.
+  - Por decisión de Marcos, reescribir la guardia en Go queda en el backlog, antes del paso 1.4.
+  - Rama `e1/paso-1-estructura`.
+- guardia: test:scripts/harness/tests/check-skips_test.sh::test_go_symlink_fails
+- guardia: test:scripts/harness/tests/check-skips_test.sh::test_go_path_outside_the_allowed_characters_fails
+- guardia: test:scripts/harness/tests/check-skips_test.sh::test_line_directive_fails
+- guardia: test:scripts/harness/tests/check-skips_test.sh::test_skip_in_a_helper_importing_testing_with_an_alias_fails
+- guardia: test:internal/repotest/repotest_test.go::TestOutsideDotDotDotFindsAPackageOnlyTheTestsImport
+- lección: L-013

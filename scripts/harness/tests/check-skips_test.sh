@@ -278,4 +278,41 @@ test_binary_attributes_do_not_hide_a_go_file() {
   assert_contains "$(cat "$T/out")" "pkg/demo/demo_test.go:6"
 }
 
+# F-0021 (review round 3 of E1 step 1.1): the guard reads git's view of the
+# files, so what that view hides is refused outright, by a white list, instead
+# of chasing each variant.
+test_go_symlink_fails() {
+  repo_with_fallo
+  mkdir -p "$T/repo/docs/notes"
+  printf 'package demo\n\nfunc f() error { return nil }\n\nfunc g() {\n\tf() //nolint:errcheck, all // no reason\n}\n' > "$T/repo/docs/notes/g.txt"
+  ln -s ../../docs/notes/g.txt "$T/repo/pkg/demo/g.go"
+  assert_eq "$(skips)" "1" "un .go que es un enlace simbólico"
+  assert_contains "$(cat "$T/out")" "check-skips: un .go que es un enlace simbólico: pkg/demo/g.go"
+}
+
+test_go_path_outside_the_allowed_characters_fails() {
+  repo_with_fallo
+  nolint_file "$T/repo/pkg/demo/a:b:F-0007.go" '//nolint:errcheck // the caller logs it'
+  go_test_file "$T/repo/pkg/demo/café_test.go" 't.Skip("slow")'
+  assert_eq "$(skips)" "1" "rutas fuera de [A-Za-z0-9._/-]"
+  assert_contains "$(cat "$T/out")" "check-skips: la ruta de un .go tiene caracteres fuera de [A-Za-z0-9._/-]: pkg/demo/a:b:F-0007.go"
+  assert_contains "$(cat "$T/out")" "check-skips: la ruta de un .go tiene caracteres fuera de [A-Za-z0-9._/-]: pkg/demo/café_test.go"
+}
+
+test_line_directive_fails() {
+  repo_with_fallo
+  printf 'package demo\n\n//line notes.tmpl:1\nfunc f() error { return nil }\n' > "$T/repo/pkg/demo/a.go"
+  printf 'package demo\n\nfunc g() error { /*line notes.tmpl:1*/ return nil }\n' > "$T/repo/pkg/demo/b.go"
+  assert_eq "$(skips)" "1" "directivas //line"
+  assert_contains "$(cat "$T/out")" "check-skips: directiva //line (apaga linters en el código que la sigue): pkg/demo/a.go:3"
+  assert_contains "$(cat "$T/out")" "check-skips: directiva //line (apaga linters en el código que la sigue): pkg/demo/b.go:3"
+}
+
+test_skip_in_a_helper_importing_testing_with_an_alias_fails() {
+  repo_with_fallo
+  printf 'package demo\n\nimport tb "testing"\n\nfunc RequireDocker(t *tb.T) {\n\tt.Skip("no docker")\n}\n' > "$T/repo/pkg/demo/helper.go"
+  assert_eq "$(skips)" "1" "helper que importa testing con alias"
+  assert_contains "$(cat "$T/out")" "pkg/demo/helper.go:6"
+}
+
 run_tests "$@"

@@ -177,10 +177,50 @@ func TestSecurityPolicyGivesTheProjectContact(t *testing.T) {
 	}
 }
 
+// outsideDotDotDot returns the packages of the module in dir that are built,
+// by the code or by its tests, but that ./... leaves out: a directory named
+// testdata or starting with _, imported from elsewhere (F-0021).
+func outsideDotDotDot(t *testing.T, dir, module string) []string {
+	t.Helper()
+	list := func(args ...string) []string {
+		cmd := exec.Command("go", append([]string{"list", "-f", "{{.ImportPath}}"}, args...)...)
+		cmd.Dir = dir
+		out, err := cmd.Output()
+		if err != nil {
+			t.Fatalf("go list %v in %s: %v", args, dir, err)
+		}
+		return strings.Split(strings.TrimSpace(string(out)), "\n")
+	}
+	all := map[string]bool{}
+	for _, p := range list("./...") {
+		all[p] = true
+	}
+	var outside []string
+	for _, p := range list("-deps", "-test", "./...") {
+		// Test variants ("p [p.test]") and test mains ("p.test") are not packages.
+		if strings.Contains(p, " [") || strings.HasSuffix(p, ".test") {
+			continue
+		}
+		if (p == module || strings.HasPrefix(p, module+"/")) && !all[p] {
+			outside = append(outside, p)
+		}
+	}
+	return outside
+}
+
+func TestOutsideDotDotDotFindsAPackageOnlyTheTestsImport(t *testing.T) {
+	got := outsideDotDotDot(t, filepath.Join("testdata", "testonly"), "example.invalid/testonly")
+	want := []string{"example.invalid/testonly/a/testdata/h"}
+	if !slices.Equal(got, want) {
+		t.Fatalf("outsideDotDotDot = %v, want %v", got, want)
+	}
+}
+
 // Everything the module builds is in ./..., so go test, go vet, golangci-lint
 // and check-skips.sh see it: no ignore directive in go.mod, and no package of
-// the module that ./... leaves out (a directory starting with _ or named
-// testdata, imported from elsewhere; review round 2 of step 1.1).
+// the module, built by the code or by its tests, that ./... leaves out (a
+// directory starting with _ or named testdata, imported from elsewhere;
+// review rounds 2 and 3 of step 1.1, F-0021).
 func TestEveryPackageOfTheModuleIsInDotDotDot(t *testing.T) {
 	mod := exec.Command("go", "mod", "edit", "-json")
 	mod.Dir = root
@@ -191,23 +231,7 @@ func TestEveryPackageOfTheModuleIsInDotDotDot(t *testing.T) {
 	if strings.Contains(string(out), `"Ignore"`) {
 		t.Errorf("go.mod has an ignore directive: the code it names escapes the checks")
 	}
-	list := func(args ...string) map[string]bool {
-		cmd := exec.Command("go", append([]string{"list", "-f", "{{.ImportPath}}"}, args...)...)
-		cmd.Dir = root
-		out, err := cmd.Output()
-		if err != nil {
-			t.Fatalf("go list %v: %v", args, err)
-		}
-		set := map[string]bool{}
-		for _, p := range strings.Fields(string(out)) {
-			set[p] = true
-		}
-		return set
-	}
-	all := list("./...")
-	for p := range list("-deps", "./...") {
-		if (p == module || strings.HasPrefix(p, module+"/")) && !all[p] {
-			t.Errorf("%s is built but ./... leaves it out", p)
-		}
+	for _, p := range outsideDotDotDot(t, root, module) {
+		t.Errorf("%s is built, by the code or its tests, but ./... leaves it out", p)
 	}
 }

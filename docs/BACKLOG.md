@@ -32,3 +32,7 @@
 - **Lo que la ronda 2 del paso 1.1 de la E1 dejó para después:**
   - hallazgo bajo 7, para el paso 1.5: un pánico de Go sale con 2, que la CLI reserva a los argumentos mal. `Run` tiene que recuperar el pánico y devolver 3, con un test;
   - hallazgo bajo 4, en otro sitio: `secrets-scan.sh` también busca con `git grep -I`, así que un `.gitattributes` que marque un fichero de texto como binario lo esconde de esa búsqueda. En `check-skips.sh` ya se corrigió.
+- **Reescribir `check-skips.sh` en Go, antes del paso 1.4 de la E1** (decisión de Marcos tras la ronda 3 del paso 1.1; F-0020, F-0021): con `go/parser` sobre `go list -deps -test ./...`, para leer los comentarios y las posiciones como golangci-lint en vez de la vista de git como texto. Así se cierran de fondo los enlaces, las rutas raras, los paquetes que solo importan los tests y el `\r` dentro de un comentario, que hoy para `fmt-check`.
+- **Lo que la ronda 3 del paso 1.1 de la E1 dejó para después:**
+  - hallazgo bajo 7, para el paso 1.5: con la tubería cerrada, Go sale por SIGPIPE (141), no con 3. Precisar el README o ignorar SIGPIPE y devolver 3;
+  - hallazgo bajo 8, para el paso 1.2: el código con `//go:build darwin`, `windows` o una etiqueta propia no se compila ni se analiza en el check obligatorio. Lo cubre en parte el job de macOS; si hace falta, `GOOS=darwin golangci-lint run`.

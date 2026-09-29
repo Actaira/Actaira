@@ -157,6 +157,23 @@ MUTATIONS = [
     ("repotest: go.mod con ignore", "go.mod",
      "go 1.27.1\n", "go 1.27.1\n\nignore ./pkg/lock\n",
      REPO_T, "TestEveryPackageOfTheModuleIsInDotDotDot"),
+    # F-0021 (review round 3): the white list.
+    ("skips: un .go enlace simbólico pasa", SKIPS,
+     '  if [ -L "$file" ]; then\n', "  if false; then\n",
+     SKIPS_T, "test_go_symlink_fails"),
+    ("skips: rutas con otros caracteres pasan", SKIPS,
+     '  if [[ ! "$file" =~ ^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._/-]+$ ]]; then\n', "  if false; then\n",
+     SKIPS_T, "test_go_path_outside_the_allowed_characters_fails"),
+    ("skips: //line pasa", SKIPS,
+     '  echo "check-skips: directiva //line (apaga linters en el código que la sigue): $(cut -d: -f1,2 <<< "$hit")" >&2\n  bad=1\n',
+     '  echo "check-skips: directiva //line (apaga linters en el código que la sigue): $(cut -d: -f1,2 <<< "$hit")" >&2\n',
+     SKIPS_T, "test_line_directive_fails"),
+    ("skips: el alias de testing no se ve", SKIPS,
+     '(import[[:space:]]+)?([._[:alnum:]]+[[:space:]]+)?"testing"', '(import[[:space:]]+)?"testing"',
+     SKIPS_T, "test_skip_in_a_helper_importing_testing_with_an_alias_fails"),
+    ("repotest: sin -test no se ven los paquetes que solo importan los tests", "internal/repotest/repotest_test.go",
+     'list("-deps", "-test", "./...")', 'list("-deps", "./...")',
+     REPO_T, "TestOutsideDotDotDotFindsAPackageOnlyTheTestsImport"),
 ]
 
 

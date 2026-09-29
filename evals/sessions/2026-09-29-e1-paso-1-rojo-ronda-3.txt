@@ -1,0 +1,9 @@
+== F-0021: tests nuevos en rojo antes de construir (2026-09-29T14:55:46Z)
+    rutas fuera de [A-Za-z0-9._/-]: esperado [1], obtenido [0]
+--- FAIL: test_go_path_outside_the_allowed_characters_fails
+    un .go que es un enlace simbólico: esperado [1], obtenido [0]
+--- FAIL: test_go_symlink_fails
+    directivas //line: esperado [1], obtenido [0]
+--- FAIL: test_line_directive_fails
+    helper que importa testing con alias: esperado [1], obtenido [0]
+--- FAIL: test_skip_in_a_helper_importing_testing_with_an_alias_fails

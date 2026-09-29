@@ -4,6 +4,7 @@
 - **Fecha:** 2026-09-28.
 - **Decide:** Marcos, tras la ronda 3 de la pasada adversarial del paso 0.3 de la E0 (`docs/estado/E0.md`).
 - **Número:** 0000, porque es una decisión del harness, anterior al producto; la E1 ya reserva del 0001 al 0003.
+- **Ampliado:** por Marcos el 2026-09-29, tras la ronda 3 del paso 1.1 de la E1, con la decisión 6: todas las guardias locales del harness son redes, y así se califica la severidad de lo que las esquiva (L-013).
 
 ## Contexto
 
@@ -22,6 +23,11 @@ En las tres rondas adversariales del paso 0.3, cada ronda encontró otra forma d
 3. **No se persiguen más variantes de parseo de shell en el guard.** Una variante nueva se anota en "Límites conocidos" (L-005).
 4. **Las fusiones que no pasan por `scripts/harness/merge-pr.sh`** (`env gh pr merge`, `sh -c "gh pr merge ..."`, la API) **las cubre el check obligatorio**: GitHub no fusiona hasta que `check` está en verde en la cabeza del PR y al día con `main`, y `check` pasa `check-attribution.sh` por los commits del PR. En este repo, el mensaje del squash que GitHub compone por defecto sale de esos mismos commits (`squash_merge_commit_message: COMMIT_MESSAGES`, https://docs.github.com/en/rest/repos/repos#update-a-repository). Eso cubre la fusión sin mensaje propio: un asunto o un cuerpo propios (`--subject`, `--body`, o `commit_title` y `commit_message` en la API) entran en `main` sin que `check` los haya visto. `merge-pr.sh` los revisa antes de fusionar (atribución y secretos) y el commit que entró, después; en la CI de `main`, el escaneo de secretos lee también los mensajes de commit. La regla del guard sobre `gh pr merge` se queda como está, sin más expresiones regulares.
 5. **`check` en verde tiene que significar `make check` ejecutado** (F-0014, L-006). El servidor solo exige que `check` salga en verde, y lo que ejecuta `check` lo define el propio PR. Por eso `ci.yml` y los prerrequisitos de `check` y `gate` se comparan con su contenido exacto en `make check`, ningún otro workflow puede tener un job `check`, el check tiene que venir de GitHub Actions (app 15368) y nadie tiene excepción al PR obligatorio.
+6. **Todas las guardias locales del harness son redes contra errores accidentales,** no solo los hooks de git: `guard-git.sh`, `pre-push`, `commit-msg`, `check-skips.sh`, `check-weakeners.sh`, `check-pipes.sh`, `check-personal.sh`, `check-attribution.sh`, `secrets-scan.sh` y las que vengan.
+   - En una revisión adversarial, un hallazgo que exige colocar a propósito un fichero, un enlace, una directiva o una orden que se ve en el diff del PR es como mucho bajo, va al backlog y no bloquea el paso.
+   - Alto o crítico, solo lo que puede pasar por accidente, rompe el producto, filtra datos o secretos, o engaña a un usuario de Actaira.
+   - Lo construido a propósito lo para la revisión del diff, que es parte de la frontera junto con la protección de `main`.
+   - En un paso de producto, la revisión se dedica al código del producto, y el harness solo se revisa si el paso lo cambia (L-013).
 
 ## Opciones
 
