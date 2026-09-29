@@ -1,0 +1,18 @@
+== en rojo antes de construir (2026-09-29T13:31:48Z, rama e1/paso-1-estructura)
+comando: go test ./internal/...
+internal/cli/cli_test.go:43:13: undefined: ExitUsage
+internal/cli/cli_test.go:44:45: undefined: ExitUsage
+internal/cli/cli_test.go:56:13: undefined: ExitUsage
+internal/cli/cli_test.go:56:13: too many errors
+FAIL	github.com/actaira/actaira/internal/cli [build failed]
+FAIL	github.com/actaira/actaira/internal/repotest [build failed]
+ok  	github.com/actaira/actaira/internal/version	(cached)
+FAIL
+comando: bash scripts/harness/tests/check-skips_test.sh (tests de //nolint)
+--- PASS: test_nolint_citing_a_known_fallo_passes
+--- FAIL: test_nolint_citing_an_unknown_fallo_fails
+--- PASS: test_nolint_in_testdata_is_ignored
+--- FAIL: test_nolint_without_a_fallo_fails
+--- FAIL: test_nolint_without_a_linter_fails
+    lint con un error sin comprobar: esperado [2], obtenido [0]
+--- FAIL: test_lint_runs_golangci_lint_with_the_repo_config

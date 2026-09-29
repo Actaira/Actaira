@@ -1,0 +1,64 @@
+# E1 paso 1.1: ejecución real de la CLI
+fecha: 2026-09-29T14:58:54Z
+commit: 70a4e37724e3570571aa3831a52f583cb14d9885 (cmd/ e internal/cli no cambian después)
+entorno: Linux 6.6.87.2-microsoft-standard-WSL2, go version go1.27.1 linux/amd64
+
+comando: go build -o actaira ./cmd/actaira (en un directorio temporal)
+exit: 0
+
+comando: ./actaira version
+actaira dev
+exit: 0
+
+comando: ./actaira help
+usage: actaira <command>
+
+commands:
+  version  print the version of actaira
+  help     print this help
+exit: 0
+
+comando: ./actaira 
+usage: actaira <command>
+
+commands:
+  version  print the version of actaira
+  help     print this help
+exit: 2
+
+comando: ./actaira nada
+actaira: unknown command "nada"
+usage: actaira <command>
+
+commands:
+  version  print the version of actaira
+  help     print this help
+exit: 2
+
+comando: ./actaira version extra
+actaira: "version" takes no arguments
+exit: 2
+
+comando: ./actaira --help
+usage: actaira <command>
+
+commands:
+  version  print the version of actaira
+  help     print this help
+exit: 0
+
+comando: ./actaira help extra
+actaira: "help" takes no arguments
+exit: 2
+
+comando: ./actaira -h extra
+actaira: "help" takes no arguments
+exit: 2
+
+comando: ./actaira version > /dev/full
+actaira: writing the version: write /dev/stdout: no space left on device
+exit: 3
+
+comando: ./actaira help > /dev/full
+actaira: writing the help: write /dev/stdout: no space left on device
+exit: 3

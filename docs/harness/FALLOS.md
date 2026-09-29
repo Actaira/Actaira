@@ -228,3 +228,54 @@ Cada fallo encontrado (test en rojo que no era esperado, bug, hallazgo crítico 
 - guardia: test:scripts/harness/tests/merge-pr_test.sh::test_waits_for_the_checks_of_a_new_pr
 - guardia: test:scripts/harness/tests/merge-pr_test.sh::test_gives_up_when_no_check_appears
 - lección: la espera sobre un servicio externo distingue "todavía no hay nada" de "ha fallado", y tiene un límite.
+
+## F-0020 La guardia de //nolint dejaba pasar formas que golangci-lint aplica
+- fecha: 2026-09-29
+- épica y paso: E1 / 1.1, rondas adversariales 1 y 2
+- síntoma: tres comentarios apagan linters, golangci-lint 2.14.0 sale con 0 issues y `check-skips.sh` sale con 0:
+  - `// /nolint:all`, sin F-NNNN y sin linter;
+  - `//nolint:ALL // F-0007`;
+  - `//nolint:errcheck, all // F-0007`.
+  El primero tampoco lo ve nolintlint. En la ronda 2, tras la primera corrección, `//nolint:errcheck ,all // F-0020` volvía a apagar todos los linters. La guardia cortaba la directiva en el primer espacio, y golangci-lint lee la lista hasta el siguiente `//`. El test diferencial no lo veía porque sus formas no citaban un F-NNNN, y la falta de cita tapaba la forma.
+- causa raíz: la guardia se escribió desde la sintaxis documentada (`//nolint:<linter>`), no desde lo que golangci-lint acepta de verdad: quita las barras y los espacios antes de "nolint" y lee los nombres de los linters sin distinguir mayúsculas. Ningún test comparaba la guardia con la herramienta que guarda.
+- corrección: `check-skips.sh` lee cada directiva como golangci-lint.
+  - Mira todo comentario que, quitando barras y espacios y sin distinguir mayúsculas, empiece por "nolint" seguido de `:`, un espacio o el fin de la línea.
+  - Lo lee desde "nolint" hasta el siguiente `//`.
+  - Exige exactamente `//nolint:<linter>[,<linter>...]`, con nombres en minúsculas y ninguno que empiece por `all`, y un F-NNNN en esa línea.
+  - El test diferencial cita un F-NNNN en cada forma y usa una función con dos avisos (errcheck e ineffassign), así que prueba la forma contra la herramienta, sin que la cita la tape.
+  - Rama `e1/paso-1-estructura`.
+- guardia: test:scripts/harness/tests/check-skips_test.sh::test_nolint_forms_that_golangci_lint_also_reads_fail
+- guardia: test:scripts/harness/tests/check-skips_test.sh::test_every_nolint_form_that_golangci_lint_applies_is_flagged
+- lección: L-012
+
+## F-0021 check-skips.sh no veía lo que la vista de git esconde
+- fecha: 2026-09-29
+- épica y paso: E1 / 1.1, ronda adversarial 3
+- síntoma: pasaban sin un F-NNNN, y golangci-lint o Go los aplicaban:
+  - un `.go` que es un enlace simbólico (git grep lee el enlace; Go y golangci-lint, el destino);
+  - una directiva `//line notes.tmpl:1`, que apaga errcheck en el código que la sigue;
+  - rutas con `:` o fuera de ASCII, que rompen la lectura de la salida de git grep: `pkg/demo/a:b:F-0007.go` se daba por citado, y un `café_test.go` con `t.Skip` pasaba desde la E0;
+  - un paquete de `testdata/` que solo importan los tests, fuera de `./...`;
+  - un helper que importa `testing` con alias.
+- causa raíz: la guardia lee como texto la vista de git y la trata como si fuera la de Go, así que lo que las dos vistas ven distinto queda fuera. Es el patrón de L-005, y en las tres rondas del paso cada una encontró otra variante.
+- corrección: una lista blanca, en vez de perseguir variantes.
+  - Se rechaza todo `.go` que sea enlace simbólico, toda ruta fuera de `[A-Za-z0-9._/-]` y toda directiva `//line`.
+  - `internal/repotest` usa `go list -deps -test`.
+  - Se acepta el alias del import de `testing`.
+  - Por decisión de Marcos, reescribir la guardia en Go queda en el backlog, antes del paso 1.4.
+  - Rama `e1/paso-1-estructura`.
+- guardia: test:scripts/harness/tests/check-skips_test.sh::test_go_symlink_fails
+- guardia: test:scripts/harness/tests/check-skips_test.sh::test_go_path_outside_the_allowed_characters_fails
+- guardia: test:scripts/harness/tests/check-skips_test.sh::test_line_directive_fails
+- guardia: test:scripts/harness/tests/check-skips_test.sh::test_skip_in_a_helper_importing_testing_with_an_alias_fails
+- guardia: test:internal/repotest/repotest_test.go::TestOutsideDotDotDotFindsAPackageOnlyTheTestsImport
+- lección: L-013
+
+## F-0022 make fallos no bajaba golangci-lint en un clon limpio
+- fecha: 2026-09-29
+- épica y paso: E1 / 1.1, CI del PR #4
+- síntoma: en la CI, `make check` falló en `fallos` con `F-0020: test_every_nolint_form_that_golangci_lint_applies_is_flagged no existe o no pasa` y `no existe /home/runner/work/Actaira/Actaira/.tools/golangci-lint-2.14.0 (make tools)`. En local, `make check` y `make gate` estaban en verde. Antes, un 500 de GitHub al bajar gitleaks había tumbado otra ejecución, pero ese error era ajeno.
+- causa raíz: `make check` ejecuta `fallos` antes que `lint` y `test-harness`, y `fallos` solo dependía de gitleaks. Las guardias que ejecuta son los tests del harness, y uno de ellos pasó a necesitar golangci-lint. En local, `.tools/` ya lo tenía, así que el fallo solo se ve en un clon limpio, como en F-0003.
+- corrección: `HARNESS_TOOLS` reúne las herramientas fijadas que usan los tests del harness, y `fallos`, `test-harness` y `tools` dependen de esa lista. Rama `e1/paso-1-estructura`.
+- guardia: test:scripts/harness/tests/makefile_test.sh::test_fallos_and_test_harness_fetch_every_harness_tool
+- lección: una herramienta nueva que usa un test del harness entra en `HARNESS_TOOLS`, no en un solo objetivo. Lo que solo pasa en local por lo que ya hay en `.tools/` lo ve la CI, que parte de un clon limpio. Por eso el PR no se fusiona hasta que `check` está en verde.
