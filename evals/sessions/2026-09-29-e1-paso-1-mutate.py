@@ -174,6 +174,9 @@ MUTATIONS = [
     ("repotest: sin -test no se ven los paquetes que solo importan los tests", "internal/repotest/repotest_test.go",
      'list("-deps", "-test", "./...")', 'list("-deps", "./...")',
      REPO_T, "TestOutsideDotDotDotFindsAPackageOnlyTheTestsImport"),
+    ("make: fallos solo con gitleaks (F-0022)", "Makefile",
+     "fallos: $(HARNESS_TOOLS)\n", "fallos: $(GITLEAKS)\n",
+     MAKE_T, "test_fallos_and_test_harness_fetch_every_harness_tool"),
 ]
 
 

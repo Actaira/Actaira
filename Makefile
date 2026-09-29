@@ -39,6 +39,10 @@ GOLANGCI_LINT_OS_ARCH := $(HOST_OS)_$(patsubst x64,amd64,$(HOST_ARCH))
 GOLANGCI_LINT_PLATFORM := $(subst _,-,$(GOLANGCI_LINT_OS_ARCH))
 GOLANGCI_LINT := $(TOOLS_DIR)/golangci-lint-$(GOLANGCI_LINT_VERSION)
 
+# Every pinned tool that the harness tests use. make fallos runs those same
+# tests as guards, so it needs them all too, also in a fresh clone (F-0022).
+HARNESS_TOOLS := $(GITLEAKS) $(GOLANGCI_LINT)
+
 # Exported so every recipe runs the harness tests with the same environment:
 # test-harness and check-fallos execute the same guards (F-0003).
 export GITLEAKS
@@ -80,7 +84,7 @@ test:
 determinism:
 	@echo "determinism: sin prueba de determinismo todavía (llega en E1 con actaira.lock)"
 
-test-harness: $(GITLEAKS) $(GOLANGCI_LINT)
+test-harness: $(HARNESS_TOOLS)
 	bash scripts/harness/tests/run.sh
 
 secrets: $(GITLEAKS)
@@ -92,7 +96,7 @@ weakeners:
 pipes:
 	scripts/harness/check-pipes.sh
 
-fallos: $(GITLEAKS)
+fallos: $(HARNESS_TOOLS)
 	scripts/harness/check-fallos.sh
 
 skips:
@@ -123,7 +127,7 @@ install-hooks:
 	  echo "$$name instalado en $$hook"; \
 	done
 
-tools: $(GITLEAKS) $(GOLANGCI_LINT)
+tools: $(HARNESS_TOOLS)
 
 $(GITLEAKS):
 	scripts/harness/fetch-tool.sh \

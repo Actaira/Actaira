@@ -1,0 +1,7 @@
+== F-0022: el test en rojo antes de corregir
+  "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb" gitleaks ".tools/gitleaks-8.30.1"
+scripts/harness/check-fallos.sh]
+--- FAIL: test_fallos_and_test_harness_fetch_every_harness_tool
+
+== ejecución real: make fallos en un clon limpio sin .tools, tras la corrección
+exit: 0

@@ -270,3 +270,12 @@ Cada fallo encontrado (test en rojo que no era esperado, bug, hallazgo crítico 
 - guardia: test:scripts/harness/tests/check-skips_test.sh::test_skip_in_a_helper_importing_testing_with_an_alias_fails
 - guardia: test:internal/repotest/repotest_test.go::TestOutsideDotDotDotFindsAPackageOnlyTheTestsImport
 - lección: L-013
+
+## F-0022 make fallos no bajaba golangci-lint en un clon limpio
+- fecha: 2026-09-29
+- épica y paso: E1 / 1.1, CI del PR #4
+- síntoma: en la CI, `make check` falló en `fallos` con `F-0020: test_every_nolint_form_that_golangci_lint_applies_is_flagged no existe o no pasa` y `no existe /home/runner/work/Actaira/Actaira/.tools/golangci-lint-2.14.0 (make tools)`. En local, `make check` y `make gate` estaban en verde. Antes, un 500 de GitHub al bajar gitleaks había tumbado otra ejecución, pero ese error era ajeno.
+- causa raíz: `make check` ejecuta `fallos` antes que `lint` y `test-harness`, y `fallos` solo dependía de gitleaks. Las guardias que ejecuta son los tests del harness, y uno de ellos pasó a necesitar golangci-lint. En local, `.tools/` ya lo tenía, así que el fallo solo se ve en un clon limpio, como en F-0003.
+- corrección: `HARNESS_TOOLS` reúne las herramientas fijadas que usan los tests del harness, y `fallos`, `test-harness` y `tools` dependen de esa lista. Rama `e1/paso-1-estructura`.
+- guardia: test:scripts/harness/tests/makefile_test.sh::test_fallos_and_test_harness_fetch_every_harness_tool
+- lección: una herramienta nueva que usa un test del harness entra en `HARNESS_TOOLS`, no en un solo objetivo. Lo que solo pasa en local por lo que ya hay en `.tools/` lo ve la CI, que parte de un clon limpio. Por eso el PR no se fusiona hasta que `check` está en verde.

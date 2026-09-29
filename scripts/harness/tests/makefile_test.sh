@@ -109,6 +109,19 @@ EOF
   assert_eq "$(cat "$REPO_DIR/.golangci.yml")" "$expected" ".golangci.yml es el revisado"
 }
 
+# F-0022: make fallos runs the guards of FALLOS.md, and they need every tool
+# that test-harness needs. In a fresh clone (the CI), .tools is empty: both
+# targets have to fetch them all.
+test_fallos_and_test_harness_fetch_every_harness_tool() {
+  mkdir -p "$T/empty"
+  local target out
+  for target in fallos test-harness; do
+    out="$(cd "$T/empty" && make -n -f "$REPO_DIR/Makefile" "$target" 2>&1)"
+    assert_contains "$out" "/gitleaks/releases/download/" "$target baja gitleaks"
+    assert_contains "$out" "/golangci-lint/releases/download/" "$target baja golangci-lint"
+  done
+}
+
 test_fmt_check_skips_testdata_fixtures() {
   go_module "$T/m"
   mkdir -p "$T/m/pkg/demo/testdata"
