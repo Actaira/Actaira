@@ -1,7 +1,7 @@
-# E1 paso 1.1: pruebas por mutación (tras la ronda 3 y la decisión de Marcos)
-fecha: 2026-09-29T15:01:34Z
+# E1 paso 1.1: pruebas por mutación (tras la ronda 3, la decisión de Marcos y F-0022)
+fecha: 2026-09-29T15:10:15Z
 comando: python3 evals/sessions/2026-09-29-e1-paso-1-mutate.py
-copia de ea9197a5b4d147f5c4fcb1b520bc637391be7e68 en un directorio temporal; el repo no se toca
+copia de c7212e89f331f501bae9f2af4c46afdc89d901b3 en un directorio temporal; el repo no se toca
 
 ### cli: version sin el nombre
 fichero: internal/cli/cli.go; test: go:./internal/cli::TestVersionPrintsTheBuildVersion
@@ -10,10 +10,10 @@ con la mutacion (debe ser rojo): exit 1
     cli_test.go:35: stdout = "dev\n", want "actaira dev\n"
 --- FAIL: TestVersionPrintsTheBuildVersion (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/cli	0.001s
+FAIL	github.com/actaira/actaira/internal/cli	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
 resultado: OK
 
 ### cli: version acepta argumentos
@@ -23,7 +23,7 @@ con la mutacion (debe ser rojo): exit 1
     cli_test.go:45: exit code = 0, want 2
 --- FAIL: TestVersionRejectsArguments (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/cli	0.002s
+FAIL	github.com/actaira/actaira/internal/cli	0.001s
 FAIL
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
@@ -39,7 +39,7 @@ FAIL
 FAIL	github.com/actaira/actaira/internal/cli	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
 resultado: OK
 
 ### cli: comando desconocido sale con 0
@@ -80,10 +80,10 @@ con la mutacion (debe ser rojo): exit 1
         commands:
 --- FAIL: TestCommandsAreImplementedAndListedInTheUsage (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/cli	0.001s
+FAIL	github.com/actaira/actaira/internal/cli	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
 resultado: OK
 
 ### cli: otro código de error interno
@@ -93,10 +93,10 @@ con la mutacion (debe ser rojo): exit 1
     cli_test.go:24: exit codes = [0 1 2 4], want [0 1 2 3]
 --- FAIL: TestExitCodesAreTheDocumentedOnes (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/cli	0.008s
+FAIL	github.com/actaira/actaira/internal/cli	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.002s
 resultado: OK
 
 ### repotest: pkg importa internal
@@ -121,7 +121,7 @@ con la mutacion (debe ser rojo): exit 1
     repotest_test.go:85: no Go files in pkg/lock
 --- FAIL: TestPkgDoesNotImportInternal (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/repotest	0.001s
+FAIL	github.com/actaira/actaira/internal/repotest	0.002s
 FAIL
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.002s
@@ -137,7 +137,7 @@ FAIL
 FAIL	github.com/actaira/actaira/internal/repotest	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.001s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.002s
 resultado: OK
 
 ### repotest: el README en inglés enseña un comando que no existe
@@ -163,7 +163,7 @@ FAIL
 FAIL	github.com/actaira/actaira/internal/repotest	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.001s
 resultado: OK
 
 ### repotest: SECURITY.md con otro correo que el de contacto
@@ -386,7 +386,7 @@ con la mutacion (debe ser rojo): exit 1
     cli_test.go:142: help: exit code = 0, want 3
 --- FAIL: TestFailingToWriteTheOutputIsAnInternalError (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/cli	0.002s
+FAIL	github.com/actaira/actaira/internal/cli	0.001s
 FAIL
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/cli	0.001s
@@ -397,12 +397,12 @@ fichero: pkg/model/doc.go; test: go:./internal/repotest::TestPkgDoesNotDependOnI
 con la mutacion (debe ser rojo): exit 1
 === RUN   TestPkgDoesNotDependOnInternal
     repotest_test.go:41: pkg/ depends on github.com/actaira/actaira/internal/version: pkg/ cannot depend on internal/
---- FAIL: TestPkgDoesNotDependOnInternal (0.11s)
+--- FAIL: TestPkgDoesNotDependOnInternal (0.12s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/repotest	0.114s
+FAIL	github.com/actaira/actaira/internal/repotest	0.119s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.110s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.118s
 resultado: OK
 
 ### repotest: los bloques ~~~ no se miran
@@ -415,7 +415,7 @@ FAIL
 FAIL	github.com/actaira/actaira/internal/repotest	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.001s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.002s
 resultado: OK
 
 ### repotest: el código en línea que empieza por actaira no se mira
@@ -487,12 +487,12 @@ fichero: go.mod; test: go:./internal/repotest::TestEveryPackageOfTheModuleIsInDo
 con la mutacion (debe ser rojo): exit 1
 === RUN   TestEveryPackageOfTheModuleIsInDotDotDot
     repotest_test.go:232: go.mod has an ignore directive: the code it names escapes the checks
---- FAIL: TestEveryPackageOfTheModuleIsInDotDotDot (0.35s)
+--- FAIL: TestEveryPackageOfTheModuleIsInDotDotDot (0.37s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/repotest	0.356s
+FAIL	github.com/actaira/actaira/internal/repotest	0.375s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.357s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.365s
 resultado: OK
 
 ### skips: un .go enlace simbólico pasa
@@ -537,12 +537,24 @@ fichero: internal/repotest/repotest_test.go; test: go:./internal/repotest::TestO
 con la mutacion (debe ser rojo): exit 1
 === RUN   TestOutsideDotDotDotFindsAPackageOnlyTheTestsImport
     repotest_test.go:215: outsideDotDotDot = [], want [example.invalid/testonly/a/testdata/h]
---- FAIL: TestOutsideDotDotDotFindsAPackageOnlyTheTestsImport (0.24s)
+--- FAIL: TestOutsideDotDotDotFindsAPackageOnlyTheTestsImport (0.23s)
 FAIL
-FAIL	github.com/actaira/actaira/internal/repotest	0.243s
+FAIL	github.com/actaira/actaira/internal/repotest	0.232s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.269s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/internal/repotest	0.249s
+resultado: OK
+
+### make: fallos solo con gitleaks (F-0022)
+fichero: Makefile; test: scripts/harness/tests/makefile_test.sh::test_fallos_and_test_harness_fetch_every_harness_tool
+con la mutacion (debe ser rojo): exit 1
+    fallos baja golangci-lint: no contiene [/golangci-lint/releases/download/]; salida: [scripts/harness/fetch-tool.sh \
+  "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz" \
+  "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb" gitleaks ".tools/gitleaks-8.30.1"
+scripts/harness/check-fallos.sh]
+--- FAIL: test_fallos_and_test_harness_fetch_every_harness_tool
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_fallos_and_test_harness_fetch_every_harness_tool
 resultado: OK
 
 repo en uso sin cambios
