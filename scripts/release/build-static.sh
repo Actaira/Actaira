@@ -4,8 +4,9 @@
 #
 # The build runs in golang:<go>-alpine, pinned by the digest of its index, with
 # cgo (tree-sitter) against musl and linked statically, so the binary runs on
-# any Linux whatever its glibc. Then `file` must say "statically linked" and
-# `actaira version` must print the version in Alpine and in Ubuntu 20.04, both
+# any Linux whatever its glibc. Then `file` must say "statically linked",
+# `readelf` must show no DYNAMIC segment, and `actaira version` must print the
+# version in Alpine and in Ubuntu 20.04 (an old glibc, frozen since 2025), both
 # pinned and without network. The architecture must be the host's: the release
 # workflow builds each one on its native runner.
 # Exit 0 if every check passes, 1 with the reason if one fails, 2 on usage.
@@ -58,6 +59,13 @@ case "$info" in
     exit 1
     ;;
 esac
+# file decides by PT_DYNAMIC; the program headers say it directly
+# (verificador-apis, step 1.2b). Captured first: no pipe into grep (L-000e).
+headers="$(readelf -lW "$out/$bin")"
+if grep -q 'DYNAMIC' <<< "$headers"; then
+  echo "build-static: $bin tiene un segmento DYNAMIC: no es estático" >&2
+  exit 1
+fi
 
 for image in "$ALPINE_IMAGE" "$UBUNTU_IMAGE"; do
   got=""

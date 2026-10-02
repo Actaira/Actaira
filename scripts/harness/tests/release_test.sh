@@ -21,9 +21,10 @@ job_block() {
   ' "$RELEASE"
 }
 
-# fake_tools <dir>: a docker and a file that only record their calls. The fake
-# docker "builds" by creating the binary under the -v <dir>:/out mount, and
-# answers `version` with $FAKE_VERSION_OUTPUT; the fake file prints $FAKE_FILE_OUTPUT.
+# fake_tools <dir>: a docker, a file and a readelf that only record their
+# calls. The fake docker "builds" by creating the binary under the -v
+# <dir>:/out mount, and answers `version` with $FAKE_VERSION_OUTPUT; the fake
+# file prints $FAKE_FILE_OUTPUT and the fake readelf $FAKE_READELF_OUTPUT.
 fake_tools() {
   mkdir -p "$1"
   cat > "$1/docker" <<'EOF'
@@ -42,7 +43,11 @@ EOF
 #!/usr/bin/env bash
 printf '%s\n' "$FAKE_FILE_OUTPUT"
 EOF
-  chmod +x "$1/docker" "$1/file"
+  cat > "$1/readelf" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "${FAKE_READELF_OUTPUT:-  LOAD           0x000000 0x0000000000400000}"
+EOF
+  chmod +x "$1/docker" "$1/file" "$1/readelf"
 }
 
 # run_build <fake file output> <fake version output>: runs the script for amd64
@@ -71,6 +76,18 @@ test_build_passes_with_a_static_binary_that_prints_its_version() {
 test_build_fails_when_the_binary_is_not_static() {
   assert_eq "$(run_build "ELF 64-bit LSB executable, x86-64, dynamically linked, interpreter /lib/ld-musl-x86_64.so.1" "actaira v9.9.9")" "1" "exit del script"
   assert_contains "$(cat "$T/stderr")" "no es estático" "el motivo"
+}
+
+# file only looks for PT_DYNAMIC; readelf shows it too, so a static-looking
+# binary with a dynamic segment still fails (verificador-apis, step 1.2b).
+test_build_fails_when_the_binary_has_a_dynamic_segment() {
+  local rc=0
+  fake_tools "$T/bin"
+  FAKE_LOG="$T/calls" FAKE_BIN=actaira-linux-amd64 FAKE_FILE_OUTPUT="$STATIC" FAKE_VERSION_OUTPUT="actaira v9.9.9" \
+    FAKE_READELF_OUTPUT="  DYNAMIC        0x2d7e8 0x000000000062d7e8" \
+    PATH="$T/bin:$PATH" bash "$BUILD" amd64 v9.9.9 "$T/out" > "$T/stdout" 2> "$T/stderr" || rc=$?
+  assert_eq "$rc" "1" "exit del script"
+  assert_contains "$(cat "$T/stderr")" "segmento DYNAMIC" "el motivo"
 }
 
 test_build_fails_when_the_binary_prints_another_version() {
@@ -150,11 +167,19 @@ test_dry_run_signs_with_an_ephemeral_key_and_no_transparency_log() {
   [ -f "$RELEASE" ] || fail "no existe $RELEASE"
   local block
   block="$(job_block release-dry-run)"
-  assert_contains "$block" "cosign generate-key-pair" "clave efímera"
-  assert_contains "$block" "--tlog-upload=false" "firma sin Rekor"
+  assert_contains "$block" "generate-key-pair" "clave efímera"
+  assert_contains "$block" "--use-signing-config=false --tlog-upload=false" "firma sin configuración de firma ni Rekor (cosign v3.1.3)"
+  local calls offline
+  calls="$(grep -F '"$cosign_bin" ' <<< "$block")" || fail "release-dry-run no llama a cosign por \$cosign_bin"
+  offline="$(grep -vF 'sudo unshare -n ' <<< "$calls")" || offline=""
+  assert_eq "$offline" "" "llamadas a cosign fuera de un espacio de red sin red"
+  local direct
+  direct="$(grep -E '(^[[:space:]]+|\$\(|; )cosign [a-z]' <<< "$block")" || direct=""
+  assert_eq "$direct" "" "llamadas directas a cosign, sin unshare"
   assert_contains "$block" "--key cosign.key" "firma con la clave efímera"
   assert_contains "$block" "--key cosign.pub" "verificación con la clave efímera"
   assert_contains "$block" "tampered" "prueba con un byte cambiado"
+  assert_contains "$block" "could not verify message" "el motivo del fallo con un byte cambiado"
   assert_not_contains "$block" "certificate-identity" "la prueba no usa identidad de Fulcio"
 }
 

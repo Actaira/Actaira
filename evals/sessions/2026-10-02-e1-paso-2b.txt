@@ -1,0 +1,23 @@
+# E1 paso 1.2b: ejecución real de scripts/release/build-static.sh en local
+fecha: 2026-10-02T14:03:43Z
+commit: 118e816 más los cambios tras verificador-apis, sin commitear
+entorno: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64, Docker version 28.5.1, build e180ab8
+comando: scripts/release/build-static.sh amd64 dryrun-118e816380bf <tmp>
+
+build-static: <tmp>/actaira-linux-amd64, estático; dice "actaira dryrun-118e816380bf" en alpine:3.24 y en ubuntu:20.04
+exit: 0
+
+file:
+actaira-linux-amd64: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, BuildID[sha1]=44e445d334d8d4ba2e56b3b8d5a1a9341b607c03, stripped
+readelf -lW, cabeceras de programa:
+  Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
+  LOAD           0x000000 0x0000000000400000 0x0000000000400000 0x000288 0x000288 R   0x1000
+  LOAD           0x001000 0x0000000000401000 0x0000000000401000 0x0a66e9 0x0a66e9 R E 0x1000
+  LOAD           0x0a8000 0x00000000004a8000 0x00000000004a8000 0x0cfd94 0x0cfd94 R   0x1000
+  LOAD           0x177fa8 0x0000000000578fa8 0x0000000000578fa8 0x009d1a 0x040800 RW  0x1000
+  TLS            0x177fa8 0x0000000000578fa8 0x0000000000578fa8 0x000000 0x000008 R   0x8
+  GNU_STACK      0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW  0x10
+tamaño: 1582096 bytes
+sha256: 34489038f02ee8fb27335a932b3f23d1038c0711cb99f74b6d5ab80de176126c
+
+Límite: la CLI todavía no importa tree-sitter (llega con los extractores, pasos 1.4 y 1.5), así que este binario no enlaza código C. El enlazado estático con tree-sitter se comprueba cuando la CLI lo importe; la sesión del 2026-09-29 compiló así evals/bench/parse, que sí lo lleva.
