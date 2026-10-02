@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://actaira.com/schemas/acm.v0.json",
+  "title": "Agent Capability Manifest, version 0 (draft)",
+  "description": "The capability contract of each agent (docs/spec/acm.md). Rules a schema cannot express (a capability in allow and deny, a limit only on an allowed capability, one contract per agent, member names once and exactly as written, integers written as digits, days that exist, text in NFC) are checked by Actaira's reading of the manifest (pkg/intent).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["acm_version", "contracts"],
+  "properties": {
+    "acm_version": { "const": 0 },
+    "contracts": { "type": "array", "items": { "$ref": "#/$defs/contract" } }
+  },
+  "$defs": {
+    "capability": { "type": "string", "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$" },
+    "capabilities": { "type": "array", "items": { "$ref": "#/$defs/capability" }, "uniqueItems": true },
+    "date": { "type": "string", "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$" },
+    "minor": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+    "host": { "type": "string", "pattern": "^(\\*\\.)?[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$" },
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agent", "status", "owner", "expires"],
+      "properties": {
+        "agent": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+        "status": { "enum": ["accepted", "draft"] },
+        "confidence": { "const": "inferred" },
+        "accepted_by": { "type": "string", "minLength": 1 },
+        "accepted_at": { "$ref": "#/$defs/date" },
+        "owner": { "type": "string", "minLength": 1 },
+        "expires": { "$ref": "#/$defs/date" },
+        "allow": { "$ref": "#/$defs/capabilities" },
+        "deny": { "$ref": "#/$defs/capabilities" },
+        "limits": { "type": "array", "items": { "$ref": "#/$defs/limit" } },
+        "egress": { "type": "array", "items": { "$ref": "#/$defs/host" } }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "accepted" } } },
+          "then": { "required": ["accepted_by", "accepted_at"], "not": { "required": ["confidence"] } }
+        },
+        {
+          "if": { "properties": { "status": { "const": "draft" } } },
+          "then": {
+            "required": ["confidence"],
+            "allOf": [{ "not": { "required": ["accepted_by"] } }, { "not": { "required": ["accepted_at"] } }]
+          }
+        }
+      ]
+    },
+    "limit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capability"],
+      "properties": {
+        "capability": { "$ref": "#/$defs/capability" },
+        "per_operation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["amount", "currency"],
+          "properties": { "amount": { "$ref": "#/$defs/minor" }, "currency": { "$ref": "#/$defs/currency" } }
+        },
+        "per_period": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["period"],
+          "properties": {
+            "period": { "enum": ["day", "week", "month"] },
+            "amount": { "$ref": "#/$defs/minor" },
+            "currency": { "$ref": "#/$defs/currency" },
+            "count": { "$ref": "#/$defs/minor" }
+          },
+          "anyOf": [{ "required": ["amount"] }, { "required": ["count"] }],
+          "dependentRequired": { "amount": ["currency"], "currency": ["amount"] }
+        }
+      },
+      "anyOf": [{ "required": ["per_operation"] }, { "required": ["per_period"] }]
+    }
+  }
+}

@@ -123,6 +123,7 @@ Tests que valen para las dos partes, desde la E1:
   - lo saltado;
   - una entrada `unresolved` fuera de cualquier agente.
 - Tiene fuentes, `unresolved` y `skipped`.
+- En el resumen de un agente, una fuente es una por tipo y nombre entre su bloque y el del repo: el servidor MCP `github` que usa el agente y otro `github` de `.mcp.json` cuentan una vez en M y salen una vez en lo no visto, con las ubicaciones de los dos (ronda 2 del paso 1.3, `TestCoverageSummaryCountsASourceOnce`).
 - Sale en la vista de todos los agentes del repo, porque puede ser de cualquiera. Si no hay ningún agente, sale solo.
 
 ## El campo `coverage` del plan
@@ -145,7 +146,7 @@ Tests que valen para las dos partes, desde la E1:
   - El test de determinismo de la E1 ejecuta los extractores en orden barajado.
 - **Versión:** el bloque se versiona con el lockfile. `coverage.version` solo sube junto con `schema_version`, con su test de compatibilidad hacia atrás.
 
-Esta es la forma que tendría en la E1. Es orientativa: el esquema exacto lo fija el paso 1.3.
+Esta es la forma que tendría en la E1. Es orientativa: el esquema exacto lo fijó el paso 1.3 en `schemas/actaira.lock.v1.json`, donde, por ejemplo, cada ubicación es un objeto con `file`, `line` y `column`, y no una cadena.
 
 ```json
 "coverage": {

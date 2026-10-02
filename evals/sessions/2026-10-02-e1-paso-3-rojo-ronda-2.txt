@@ -1,0 +1,25 @@
+# E1 paso 1.3: tests de la ronda 2 en rojo antes de corregir
+fecha: 2026-10-02T15:39:03Z
+commit: ccdc81f más los tests nuevos sin commitear
+comando: go test -count=1 ./pkg/...
+
+--- FAIL: TestCoverageEdgeEndsHaveTheRightKind (0.00s)
+--- FAIL: TestCoverageNothingReadIsInASkippedPart (0.00s)
+--- FAIL: TestCoverageSummaryCountsASourceOnce (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/coverage	0.003s
+ok  	github.com/actaira/actaira/pkg/extract/treesitter	13.094s
+--- FAIL: TestIntentRejectsTwoLimitsOfTheSameKind (0.00s)
+--- FAIL: TestIntentValidateRejectsACurrencyWithoutAmount (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/intent	0.003s
+--- FAIL: TestLockV1RoundTripsByteForByte (0.00s)
+--- FAIL: TestLockNeverCarriesURLCredentialsOrCommandArguments (0.00s)
+--- FAIL: TestLockTiesCoverageToTheModel (0.00s)
+--- FAIL: TestLockEdgesJoinThingsOfTheRightKind (0.00s)
+--- FAIL: TestLockPathsAreRelativeAndClean (0.00s)
+--- FAIL: TestACMSchemaAndGoAgree (0.01s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/lock	0.049s
+ok  	github.com/actaira/actaira/pkg/model	0.002s
+FAIL
