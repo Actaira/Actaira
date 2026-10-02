@@ -1,8 +1,8 @@
-# E1 paso 1.2b: pruebas por mutación
-fecha: 2026-10-02T14:05:53Z
+# E1 paso 1.2b: pruebas por mutación (tras la ronda 1 de la pasada adversarial)
+fecha: 2026-10-02T14:25:25Z
 comando: python3 evals/sessions/2026-10-02-e1-paso-2b-mutate.py
 
-copia de d187c0fb493e575cceb87474eeb4127bf562d094 en un directorio temporal; el repo no se toca
+copia de a4ae0336dfe78566e7d36335eaf70638fcd058b9 en un directorio temporal; el repo no se toca
 
 ### build: no comprueba que el binario sea estático
 fichero: scripts/release/build-static.sh; test: scripts/harness/tests/release_test.sh::test_build_fails_when_the_binary_is_not_static
@@ -25,7 +25,7 @@ resultado: OK
 ### build: acepta cualquier arquitectura
 fichero: scripts/release/build-static.sh; test: scripts/harness/tests/release_test.sh::test_build_rejects_an_unknown_architecture
 con la mutacion (debe ser rojo): exit 1
-build-static: /tmp/tmp.Ltl1Re2c8o/out/actaira-linux-riscv64, estático; dice "actaira v9.9.9" en alpine:3.24 y en ubuntu:20.04
+build-static: /tmp/tmp.P30DVWEEFt/out/actaira-linux-riscv64, estático; dice "actaira v9.9.9" en alpine:3.24 y en ubuntu:20.04
     exit del script: esperado [2], obtenido [0]
 --- FAIL: test_build_rejects_an_unknown_architecture
 restaurado byte a byte: True
@@ -35,9 +35,9 @@ resultado: OK
 ### build: prueba el binario con red
 fichero: scripts/release/build-static.sh; test: scripts/harness/tests/release_test.sh::test_build_passes_with_a_static_binary_that_prints_its_version
 con la mutacion (debe ser rojo): exit 1
-taira/internal/version.Version=v9.9.9 -linkmode external -extldflags -static -e OWNER=1001:1001 golang:1.27.1-alpine@sha256:8a5910f31396cd4d89662f56c68b3ae31d374308270a1c3bd96672ee5ed43414 sh -euc apk add --no-cache gcc musl-dev > /dev/null && go build -trimpath -buildvcs=false -ldflags "$LDFLAGS" -o "/out/$BIN" ./cmd/actaira && chown "$OWNER" "/out/$BIN"
-run --rm --platform linux/amd64 -v /tmp/tmp.brOvYGSSMf/out:/out:ro alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6 /out/actaira-linux-amd64 version
-run --rm --platform linux/amd64 -v /tmp/tmp.brOvYGSSMf/out:/out:ro ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214 /out/actaira-linux-amd64 version]
+on=v9.9.9 -linkmode external -extldflags -static -e OWNER=1001:1001 golang:1.27.1-alpine@sha256:8a5910f31396cd4d89662f56c68b3ae31d374308270a1c3bd96672ee5ed43414 sh -euc apk add --no-cache gcc musl-dev > /dev/null && apk info -v gcc musl-dev && go build -trimpath -buildvcs=false -ldflags "$LDFLAGS" -o "/out/$BIN" ./cmd/actaira && chown "$OWNER" "/out/$BIN"
+run --rm --platform linux/amd64 -v /tmp/tmp.yeOZUbGEm1/out:/out:ro alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6 /out/actaira-linux-amd64 version
+run --rm --platform linux/amd64 -v /tmp/tmp.yeOZUbGEm1/out:/out:ro ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214 /out/actaira-linux-amd64 version]
 --- FAIL: test_build_passes_with_a_static_binary_that_prints_its_version
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: --- PASS: test_build_passes_with_a_static_binary_that_prints_its_version
@@ -46,9 +46,9 @@ resultado: OK
 ### build: enlaza en dinámico
 fichero: scripts/release/build-static.sh; test: scripts/harness/tests/release_test.sh::test_build_passes_with_a_static_binary_that_prints_its_version
 con la mutacion (debe ser rojo): exit 1
-ctaira/actaira/internal/version.Version=v9.9.9 -e OWNER=1001:1001 golang:1.27.1-alpine@sha256:8a5910f31396cd4d89662f56c68b3ae31d374308270a1c3bd96672ee5ed43414 sh -euc apk add --no-cache gcc musl-dev > /dev/null && go build -trimpath -buildvcs=false -ldflags "$LDFLAGS" -o "/out/$BIN" ./cmd/actaira && chown "$OWNER" "/out/$BIN"
-run --rm --network none --platform linux/amd64 -v /tmp/tmp.Bq0iGOFLyl/out:/out:ro alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6 /out/actaira-linux-amd64 version
-run --rm --network none --platform linux/amd64 -v /tmp/tmp.Bq0iGOFLyl/out:/out:ro ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214 /out/actaira-linux-amd64 version]
+ion.Version=v9.9.9 -e OWNER=1001:1001 golang:1.27.1-alpine@sha256:8a5910f31396cd4d89662f56c68b3ae31d374308270a1c3bd96672ee5ed43414 sh -euc apk add --no-cache gcc musl-dev > /dev/null && apk info -v gcc musl-dev && go build -trimpath -buildvcs=false -ldflags "$LDFLAGS" -o "/out/$BIN" ./cmd/actaira && chown "$OWNER" "/out/$BIN"
+run --rm --network none --platform linux/amd64 -v /tmp/tmp.Mojeg0IXzC/out:/out:ro alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6 /out/actaira-linux-amd64 version
+run --rm --network none --platform linux/amd64 -v /tmp/tmp.Mojeg0IXzC/out:/out:ro ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214 /out/actaira-linux-amd64 version]
 --- FAIL: test_build_passes_with_a_static_binary_that_prints_its_version
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: --- PASS: test_build_passes_with_a_static_binary_that_prints_its_version
@@ -246,6 +246,110 @@ con la mutacion (debe ser rojo): exit 1
 --- FAIL: test_dry_run_signs_with_an_ephemeral_key_and_no_transparency_log
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: --- PASS: test_dry_run_signs_with_an_ephemeral_key_and_no_transparency_log
+resultado: OK
+
+### release: release-build sin el script (M1 de la ronda 1)
+fichero: .github/workflows/release.yml; test: scripts/harness/tests/release_test.sh::test_release_workflow_is_exactly_the_reviewed_one
+con la mutacion (debe ser rojo): exit 1
+ions.githubusercontent.com checksums.txt
+      - name: Publish the release, as a draft until its assets are up
+        working-directory: dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          gh release create "$VERSION" --repo "$REPO" --draft --verify-tag --title "$VERSION" --notes "Static Linux binaries of actaira $VERSION. Verify checksums.txt with cosign (docs/epicas/E1.md, step 1.2), then sha256sum -c checksums.txt."
+          gh release upload "$VERSION" --repo "$REPO" actaira-linux-amd64 actaira-linux-arm64 checksums.txt checksums.txt.sigstore.json
+          gh release edit "$VERSION" --repo "$REPO" --draft=false]
+--- FAIL: test_release_workflow_is_exactly_the_reviewed_one
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_release_workflow_is_exactly_the_reviewed_one
+resultado: OK
+
+### release: arm64 en un runner amd64 (M2)
+fichero: .github/workflows/release.yml; test: scripts/harness/tests/release_test.sh::test_release_workflow_is_exactly_the_reviewed_one
+con la mutacion (debe ser rojo): exit 1
+ions.githubusercontent.com checksums.txt
+      - name: Publish the release, as a draft until its assets are up
+        working-directory: dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          gh release create "$VERSION" --repo "$REPO" --draft --verify-tag --title "$VERSION" --notes "Static Linux binaries of actaira $VERSION. Verify checksums.txt with cosign (docs/epicas/E1.md, step 1.2), then sha256sum -c checksums.txt."
+          gh release upload "$VERSION" --repo "$REPO" actaira-linux-amd64 actaira-linux-arm64 checksums.txt checksums.txt.sigstore.json
+          gh release edit "$VERSION" --repo "$REPO" --draft=false]
+--- FAIL: test_release_workflow_is_exactly_the_reviewed_one
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_release_workflow_is_exactly_the_reviewed_one
+resultado: OK
+
+### release: una etiqueta con versión dryrun (M3)
+fichero: .github/workflows/release.yml; test: scripts/harness/tests/release_test.sh::test_release_workflow_is_exactly_the_reviewed_one
+con la mutacion (debe ser rojo): exit 1
+ions.githubusercontent.com checksums.txt
+      - name: Publish the release, as a draft until its assets are up
+        working-directory: dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          gh release create "$VERSION" --repo "$REPO" --draft --verify-tag --title "$VERSION" --notes "Static Linux binaries of actaira $VERSION. Verify checksums.txt with cosign (docs/epicas/E1.md, step 1.2), then sha256sum -c checksums.txt."
+          gh release upload "$VERSION" --repo "$REPO" actaira-linux-amd64 actaira-linux-arm64 checksums.txt checksums.txt.sigstore.json
+          gh release edit "$VERSION" --repo "$REPO" --draft=false]
+--- FAIL: test_release_workflow_is_exactly_the_reviewed_one
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_release_workflow_is_exactly_the_reviewed_one
+resultado: OK
+
+### release: publica también con workflow_dispatch (M4)
+fichero: .github/workflows/release.yml; test: scripts/harness/tests/release_test.sh::test_release_workflow_is_exactly_the_reviewed_one
+con la mutacion (debe ser rojo): exit 1
+ions.githubusercontent.com checksums.txt
+      - name: Publish the release, as a draft until its assets are up
+        working-directory: dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          gh release create "$VERSION" --repo "$REPO" --draft --verify-tag --title "$VERSION" --notes "Static Linux binaries of actaira $VERSION. Verify checksums.txt with cosign (docs/epicas/E1.md, step 1.2), then sha256sum -c checksums.txt."
+          gh release upload "$VERSION" --repo "$REPO" actaira-linux-amd64 actaira-linux-arm64 checksums.txt checksums.txt.sigstore.json
+          gh release edit "$VERSION" --repo "$REPO" --draft=false]
+--- FAIL: test_release_workflow_is_exactly_the_reviewed_one
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_release_workflow_is_exactly_the_reviewed_one
+resultado: OK
+
+### release: la prueba no verifica la firma buena (M5)
+fichero: .github/workflows/release.yml; test: scripts/harness/tests/release_test.sh::test_release_workflow_is_exactly_the_reviewed_one
+con la mutacion (debe ser rojo): exit 1
+ions.githubusercontent.com checksums.txt
+      - name: Publish the release, as a draft until its assets are up
+        working-directory: dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          gh release create "$VERSION" --repo "$REPO" --draft --verify-tag --title "$VERSION" --notes "Static Linux binaries of actaira $VERSION. Verify checksums.txt with cosign (docs/epicas/E1.md, step 1.2), then sha256sum -c checksums.txt."
+          gh release upload "$VERSION" --repo "$REPO" actaira-linux-amd64 actaira-linux-arm64 checksums.txt checksums.txt.sigstore.json
+          gh release edit "$VERSION" --repo "$REPO" --draft=false]
+--- FAIL: test_release_workflow_is_exactly_the_reviewed_one
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_release_workflow_is_exactly_the_reviewed_one
+resultado: OK
+
+### go.mod pide un Go más nuevo que la imagen
+fichero: go.mod; test: scripts/harness/tests/release_test.sh::test_golang_image_is_the_go_of_go_mod
+con la mutacion (debe ser rojo): exit 1
+    versión de Go de GOLANG_IMAGE frente a go.mod: esperado [1.27.2], obtenido [1.27.1]
+--- FAIL: test_golang_image_is_the_go_of_go_mod
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: --- PASS: test_golang_image_is_the_go_of_go_mod
 resultado: OK
 
 ### build: no mira el segmento DYNAMIC
