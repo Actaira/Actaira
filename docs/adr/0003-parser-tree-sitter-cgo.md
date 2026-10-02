@@ -25,11 +25,12 @@ Los extractores de la E1 leen código Python, TypeScript y TSX sin ejecutarlo (p
 3. **`pkg/extract/treesitter` es la única puerta:**
    - `Parse(ctx, lang, src)` crea el parser, lo cierra y devuelve un árbol que se cierra con `Close`.
    - Un segundo `Close` no hace nada, porque go-tree-sitter liberaría la misma memoria dos veces.
-   - El parseo se para en el plazo del contexto, con `SetTimeoutMicros`, y el error envuelve `context.DeadlineExceeded`. Hace falta porque un fichero hostil cuesta segundos y más de 1 GB (ver "Latencia").
+   - El plazo del contexto se pasa con `SetTimeoutMicros`, y si el parseo se para, el error envuelve `context.DeadlineExceeded`. Lo medido es un solo punto: con 50 ms, un fichero hostil de 1 MB se paró a los 0,08 s (ver "Latencia").
+   - **Nada medido dice que el plazo acote la memoria,** y la ronda 3 de la revisión vio que no la acota (F-0026). El paso 1.4 la acota con un tamaño máximo por fichero antes de parsear, fijado con una medición y con su test.
    - Una cancelación sin plazo solo se mira antes de empezar. El callback de progreso de `ParseOptions` pararía también a mitad, pero go-tree-sitter v0.25.0 nunca libera las opciones que recibe, y con ellas el contexto del llamante (F-0024). `SetTimeoutMicros` está marcada como obsoleta en la 0.25 y desaparece en la 0.26: subir de versión exige revisar esto.
 4. **Los objetos de tree-sitter se liberan siempre** (`.claude/rules/go.md`). Lo fijan dos tests de fugas:
    - 1.000 parseos de un fichero de 60 KB: sin `Tree.Close`, la memoria del proceso crece 3.479 MB;
-   - 100.000 parseos de un fichero mínimo: sin cerrar el parser, 20.000 ya crecían 84 MB (`evals/sessions/2026-09-29-e1-paso-2a-mutaciones.txt`).
+   - 100.000 parseos de un fichero mínimo: sin cerrar el parser, la memoria del proceso crece 401 MB (`evals/sessions/2026-09-29-e1-paso-2a-mutaciones.txt`).
    - Y un tercero cuenta los objetos vivos del heap de Go tras 10.000 parseos con plazo (F-0024).
 5. **El binario con cgo es dinámico.** El binario estático para distribuir se compila en Alpine en el paso 1.2b.
 
@@ -86,30 +87,30 @@ Es la única opción con gramáticas oficiales de los tres lenguajes, errores lo
 
 | Caso | Gramática | Plazo por fichero | Ficheros seguidos | Tiempo | Memoria máxima del proceso |
 |---|---|---|---|---|---|
-| `a<` repetido (genéricos sin cerrar) | TypeScript | ninguno | 1 | 2,2 s | 1.218 MB |
-| `(a,` repetido | TypeScript | ninguno | 1 | 1,9 s | 1.082 MB |
-| `{` repetido | TypeScript | ninguno | 1 | 0,35 s | 266 MB |
-| `<div>` repetido | TSX | ninguno | 1 | 0,16 s | 83 MB |
-| `(` o `[` repetidos | Python | ninguno | 1 | 0,3 s | 258 MB |
-| `a<` repetido | TypeScript | 50 ms | 1 | 0,08 s | 54 MB |
-| `a<` repetido | TypeScript | 50 ms | 40, en una goroutine | 3,1 s | 70 MB |
-| `a<` repetido, con `MALLOC_ARENA_MAX=1` | TypeScript | 50 ms | 40, en una goroutine | 3,1 s | 71 MB |
+| `a<` repetido (genéricos sin cerrar) | TypeScript | ninguno | 1 | 2,2 s | 1.218 MiB |
+| `(a,` repetido | TypeScript | ninguno | 1 | 1,9 s | 1.082 MiB |
+| `{` repetido | TypeScript | ninguno | 1 | 0,35 s | 266 MiB |
+| `<div>` repetido | TSX | ninguno | 1 | 0,16 s | 83 MiB |
+| `(` o `[` repetidos | Python | ninguno | 1 | 0,3 s | 258 MiB |
+| `a<` repetido | TypeScript | 50 ms | 1 | 0,08 s | 54 MiB |
+| `a<` repetido | TypeScript | 50 ms | 40, en una goroutine | 3,1 s | 70 MiB |
+| `a<` repetido, con `MALLOC_ARENA_MAX=1` | TypeScript | 50 ms | 40, en una goroutine | 3,1 s | 71 MiB |
 
-- **Con plazo:** el plazo corta el tiempo y también la memoria, porque tree-sitter para antes de llegar a reservarla. 40 parseos seguidos en una goroutine se quedan en 70 MB.
-- **Límite de la medición:**
-  - la ronda 2 de la revisión vio picos de hasta 465 MB con 40 parseos cancelados, cada uno en una goroutine nueva (el `-test.count` de `go test`);
-  - glibc guarda una arena por hilo, y cada goroutine puede caer en otro hilo;
-  - con `MALLOC_ARENA_MAX=1` se quedó en 74 MB.
+- **Lo medido sin plazo:** un fichero hostil de 1 MB cuesta hasta 2,2 s y 1.218 MiB.
+- **Lo medido con plazo es un solo punto, 50 ms,** y una sola ejecución de cada caso. Con 50 ms, el parseo se paró a los 0,08 s y en 54 MiB. No es una cota general.
+- **Nada medido dice que el plazo acote la memoria** (F-0026). La ronda 3 de la revisión vio que tree-sitter hace al final del fichero una recuperación de errores que no mira el plazo, y que con plazos más largos un fichero hostil de 1 MB llega a la misma memoria que sin plazo. Es una hipótesis: esa medición no está en `evals/results/`. Para medirla, `hostile` con 64 KB, 1 MB y 2 MB y plazos de 50 ms, 1 s y 2 s, anotando si cada parseo terminó y con varias repeticiones.
+- **Memoria de una serie de parseos:** 40 seguidos con plazo dieron 70 MiB en una sola ejecución. Es una hipótesis que sea estable: glibc guarda una arena por hilo, y la ronda 2 de la revisión vio picos mayores con cada parseo en una goroutine nueva, sin medición en `evals/results/` (backlog).
 - **Paso 1.4:**
+  - **un tamaño máximo por fichero antes de parsear,** que es lo que acota la memoria, con el test `TestFileOverTheParseLimitIsRecordedNotParsed`. El fichero que lo supera no se parsea y queda en `coverage.skipped` con su motivo. El tamaño se fija midiendo con `hostile` el peor caso a ese tamaño (tiempo y memoria máxima), y el ADR cita esa medición;
   - los extractores parsean los ficheros de uno en uno, en una sola goroutine y con un plazo por fichero;
   - anotan como `unresolved` lo que no termina;
   - miden en el corpus la memoria máxima de `discover`.
-  - Si sube como en la revisión, se decide con esa medición entre fijar el hilo (`runtime.LockOSThread`) o limitar las arenas.
+  - Si la memoria de una serie sube como en la revisión, se decide con esa medición entre fijar el hilo (`runtime.LockOSThread`) o limitar las arenas.
 
 ## Errores
 
 - **Código roto:** se parsea igual, con nodos ERROR y MISSING, que los extractores anotan como `unresolved`.
-- **Un fichero que no termina de parsearse en su plazo:** `Parse` devuelve un error que envuelve `context.DeadlineExceeded`, y el extractor lo anota como `unresolved`.
+- **Un fichero que no termina de parsearse en su plazo:** `Parse` devuelve un error que envuelve `context.DeadlineExceeded`, y el extractor lo anota como `unresolved`. Según la ronda 3 de la revisión, el plazo no se mira en la recuperación final de tree-sitter (F-0026, sin medición en `evals/results/` todavía); por eso el paso 1.4 no parsea un fichero de más del tamaño máximo.
 - **Una cancelación sin plazo a mitad de un parseo:** no lo para; se mira antes de empezar (F-0024). Los extractores usan plazos.
 - **Una gramática con una versión de ABI incompatible:** `SetLanguage` devuelve error y `Parse` lo propaga, con el lenguaje en el mensaje.
 - **La etiqueta v0.25.0 de go-tree-sitter ya no está en GitHub:** solo en el proxy de Go (proxy.golang.org). Se baja de ahí y la verifican `go.sum` y sum.golang.org. Con `GOPROXY=direct` no se encontraría. Si el proyecto publica una versión nueva, se sube en su propio PR, con esta medición repetida.

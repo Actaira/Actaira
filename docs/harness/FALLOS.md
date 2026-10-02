@@ -323,3 +323,29 @@ Cada fallo encontrado (test en rojo que no era esperado, bug, hallazgo crítico 
   - Rama `e1/paso-2a-parser`.
 - guardia: regla:.claude/rules/adr.md
 - lección: en un ADR, lo no medido se escribe como hipótesis, con lo que haría falta para medirlo.
+
+## F-0026 El ADR 0003 sacaba una cota general de un solo plazo medido
+- fecha: 2026-10-02
+- épica y paso: E1 / 1.2a, ronda adversarial 3
+- síntoma: el comentario de `Parse`, el ADR 0003 y el estado decían que el plazo del contexto acota el tiempo y la memoria de un parseo hostil. El revisor lo midió con el `Parse` del producto: con 50 ms se cumple, pero con 1 s un fichero de 1 MB tardó 2,07 s y llegó a 1.217 MiB, lo mismo que sin plazo. tree-sitter hace al final del fichero una recuperación de errores que no mira el plazo.
+- causa raíz: la medición de la ronda 2 probó un solo plazo, 50 ms, que salta antes de llegar al final del fichero, y el texto lo escribió como regla general. La corrección de F-0025 pedía citar la medición de cada cifra, pero no que la medición cubra todo el rango de lo que se afirma.
+- corrección:
+  - el ADR, el comentario de `Parse` y el estado dicen solo lo medido (sin plazo, 1 MB hostil en 2,2 s y 1.218 MiB; con 50 ms, 0,08 s y 54 MiB), y lo visto por la ronda 3 queda como hipótesis;
+  - el paso 1.4 fija un tamaño máximo por fichero antes de parsear, medido con `hostile` y con el test `TestFileOverTheParseLimitIsRecordedNotParsed` (ADR 0003 y la épica);
+  - la regla de los ADR pide medir una afirmación general en todo su rango.
+  - Por decisión de Marcos del 2026-10-02, sin mecanismo nuevo en este paso: la corrección de un hallazgo así es corregir el texto o medir.
+  - Rama `e1/paso-2a-parser`.
+- guardia: regla:.claude/rules/adr.md
+- lección: una afirmación general (lo que acota un límite, cómo escala algo) se mide en el rango que cubre. Con un solo punto medido, se escribe el punto.
+
+## F-0027 La comprobación del harness pedía una orden destructiva real
+- fecha: 2026-10-02
+- épica y paso: E1 / 1.2a (comprobación del harness al abrir la sesión)
+- síntoma: `CLAUDE.md` y el paso 0.1 de la E0 pedían comprobar el guard ejecutando de verdad `git -C . push origin main`. El 2026-10-02 el guard lo bloqueó como debía, pero desde ese momento el clasificador del modo automático denegó todas las órdenes de Bash y las ediciones bajo `.claude/`, con el motivo "Git Destructive", y el cierre del paso 1.2a quedó a medias. Sin el hook cargado, la misma orden habría empujado a `main` y solo la habría parado la protección del servidor.
+- causa raíz: la comprobación de que el harness está cargado se diseñó como una prueba en vivo del mismo daño que el guard evita. Si el hook falta, la prueba es la acción destructiva, y una sesión que la intenta parece hostil a cualquier otra capa de control. El test de L-007 no la veía: solo leía las órdenes que empiezan por `git push`, y esta empieza por `git -C`.
+- corrección:
+  - `CLAUDE.md`, el paso 0.1 de la E0 y la E3: los hooks se comprueban solo con sus tests (`scripts/harness/tests/`) y `make test-harness`, nunca con un push real a `main` ni con otra orden destructiva de prueba (decisión de Marcos del 2026-10-02).
+  - El test de L-007 lee también las órdenes `git <opciones> push`. Con el `CLAUDE.md` anterior sale en rojo (`git -C . push origin main: esperado [0], obtenido [2]`), y con el nuevo, en verde.
+  - Rama `e1/paso-2a-parser`.
+- guardia: test:scripts/harness/tests/guard-git_test.sh::test_orders_in_claude_md_and_skills_pass_the_guard
+- lección: L-014.

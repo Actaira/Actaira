@@ -25,7 +25,7 @@ En las tres rondas adversariales del paso 0.3, cada ronda encontró otra forma d
 5. **`check` en verde tiene que significar `make check` ejecutado** (F-0014, L-006). El servidor solo exige que `check` salga en verde, y lo que ejecuta `check` lo define el propio PR. Por eso `ci.yml` y los prerrequisitos de `check` y `gate` se comparan con su contenido exacto en `make check`, ningún otro workflow puede tener un job `check`, el check tiene que venir de GitHub Actions (app 15368) y nadie tiene excepción al PR obligatorio.
 6. **Todas las guardias locales del harness son redes contra errores accidentales,** no solo los hooks de git: `guard-git.sh`, `pre-push`, `commit-msg`, `check-skips.sh`, `check-weakeners.sh`, `check-pipes.sh`, `check-personal.sh`, `check-attribution.sh`, `secrets-scan.sh` y las que vengan.
    - En una revisión adversarial, un hallazgo que exige colocar a propósito un fichero, un enlace, una directiva o una orden que se ve en el diff del PR es como mucho bajo, va al backlog y no bloquea el paso.
-   - Alto o crítico, solo lo que puede pasar por accidente, rompe el producto, filtra datos o secretos, o engaña a un usuario de Actaira.
+   - Alto o crítico, solo lo que puede pasar por accidente, rompe el producto, filtra datos o secretos, o engaña a un usuario de Actaira o a quien decide con el ADR o las mediciones. La corrección de este último tipo es corregir el texto o medir, no construir mecanismo nuevo (decisión de Marcos del 2026-10-02, F-0026).
    - Lo construido a propósito lo para la revisión del diff, que es parte de la frontera junto con la protección de `main`.
    - En un paso de producto, la revisión se dedica al código del producto, y el harness solo se revisa si el paso lo cambia (L-013).
 

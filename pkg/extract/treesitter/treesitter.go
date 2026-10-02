@@ -57,9 +57,11 @@ type Tree struct {
 }
 
 // Parse parses src with the grammar of lang. Broken code is not an error: the
-// tree comes back with its ERROR and MISSING nodes (HasError). A hostile file
-// can take seconds and a GB of memory (ADR 0003), so the parse stops at the
-// deadline of ctx, and the error then wraps context.DeadlineExceeded. A
+// tree comes back with its ERROR and MISSING nodes (HasError). The deadline of
+// ctx is passed to tree-sitter, and a parse it stops returns an error that
+// wraps context.DeadlineExceeded. It bounds neither time nor memory: a hostile
+// file can take seconds and a GB (ADR 0003), and the final error recovery does
+// not check the deadline (F-0026), so callers bound the file size first. A
 // context canceled without a deadline is only checked before parsing starts:
 // go-tree-sitter v0.25.0 cannot stop a parse any other way without leaking
 // (F-0024).

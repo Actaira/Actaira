@@ -14,7 +14,7 @@ Referencias:
 - **Qué construir ahora:** `docs/epicas/`.
 - **Estado:** `docs/estado/`.
 - **Fallos y lecciones:** @docs/harness/LECCIONES.md
-- **El harness solo carga si Claude Code se abrió dentro de este repo** (`cd <repo> && claude`). En la CLI, si `/hooks` no lista PreToolUse, PostToolUse y Stop, para y avisa. En la extensión de VS Code, que no tiene `/hooks`, se comprueba por el comportamiento: el guard bloquea `git -C . push origin main`, un `.go` escrito con Write queda formateado y el hook de parada ejecuta `make check` al terminar el turno. Si algo de eso no pasa, para y avisa.
+- **El harness solo carga si Claude Code se abrió dentro de este repo** (`cd <repo> && claude`). En la CLI, si `/hooks` no lista PreToolUse, PostToolUse y Stop, para y avisa. Los hooks se comprueban **solo** con sus tests (`scripts/harness/tests/`, por ejemplo `guard-git_test.sh`, con entradas simuladas) y `make test-harness`. **Nunca** con un push real a `main` ni con ninguna otra orden destructiva de prueba (L-014). Si `make test-harness` falla, para y avisa.
 
 **Si algo choca:** este fichero manda sobre la épica, y la épica sobre el plan. La discrepancia se anota en `docs/estado/`.
 

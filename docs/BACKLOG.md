@@ -35,3 +35,8 @@
 - **Lo que la ronda 3 del paso 1.1 de la E1 dejó para después:**
   - hallazgo bajo 7, para el paso 1.5: con la tubería cerrada, Go sale por SIGPIPE (141), no con 3. Precisar el README o ignorar SIGPIPE y devolver 3;
   - hallazgo bajo 8, para el paso 1.2: el código con `//go:build darwin`, `windows` o una etiqueta propia no se compila ni se analiza en el check obligatorio. Lo cubre en parte el job de macOS; si hace falta, `GOOS=darwin golangci-lint run`.
+- **Lo que la ronda 3 del paso 1.2a de la E1 dejó para después** (decisión de Marcos del 2026-10-02, opción A):
+  - hallazgo medio 1, para el paso 1.4: la memoria de una serie de parseos con plazo es una sola ejecución (70 MiB). Con una goroutine que se aparca entre parseos, como hará un extractor, el revisor vio picos variables entre ejecuciones. Medirlo en `hostile` con repeticiones y decidir la mitigación (`runtime.LockOSThread` o `MALLOC_ARENA_MAX`) con ficheros hostiles;
+  - hallazgo medio 2, en la E3: `merge-pr.sh` con `--required` en un repo sin checks obligatorios espera hasta rendirse y no fusiona. Pasaría en `actaira-cloud`, privado y sin protección de rama. Falla cerrado. Distinguir "no hay checks" de "no hay obligatorios";
+  - hallazgo bajo 2, si algún día se soporta Windows: `SetTimeoutMicros` se desborda con plazos de más de 21 días. Acotar el plazo antes de pasarlo;
+  - hallazgo bajo 3: el resultado de la CI citado en el ADR 0003 es el de `154722a`, anterior a F-0024. Guardar con `evals/bench/ci-result.sh` el de la cabeza que se fusiona.
