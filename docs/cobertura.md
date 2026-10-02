@@ -145,7 +145,7 @@ Tests que valen para las dos partes, desde la E1:
   - El test de determinismo de la E1 ejecuta los extractores en orden barajado.
 - **Versión:** el bloque se versiona con el lockfile. `coverage.version` solo sube junto con `schema_version`, con su test de compatibilidad hacia atrás.
 
-Esta es la forma que tendría en la E1. Es orientativa: el esquema exacto lo fija el paso 1.3.
+Esta es la forma que tendría en la E1. Es orientativa: el esquema exacto lo fijó el paso 1.3 en `schemas/actaira.lock.v1.json`, donde, por ejemplo, cada ubicación es un objeto con `file`, `line` y `column`, y no una cadena.
 
 ```json
 "coverage": {
