@@ -1,0 +1,27 @@
+# E1 paso 1.2a: verificación de las APIs y servicios externos (verificador-apis, 2026-09-29)
+Resultado: 24 puntos, 0 contradichos, 3 sin confirmar (el texto del error con CGO_ENABLED=0, que se comprobó en local; el binario estático en Alpine, que se prueba en el paso 1.2b; y la versión de make en macOS, que no hace falta porque check-macos no ejecuta make).
+
+tree-sitter en Go
+1. go-tree-sitter v0.25.0 es la última versión (proxy.golang.org: 2025-02-02, commit adc13ffd8b2c0b01b878fda9f7c422ce0df5fad3). La etiqueta ya no está en GitHub (solo v0.24.0, v0.23.1 y v0.23.0): se baja del proxy de Go, verificada por go.sum y sum.golang.org.
+2. Exige cgo: tree_sitter.go hace import "C" e incluye la biblioteca C copiada en el repo.
+3. NewParser() *Parser; (*Parser).SetLanguage(*Language) error, que falla con una versión de ABI fuera de [MIN_COMPATIBLE_LANGUAGE_VERSION, LANGUAGE_VERSION]; (*Parser).Parse([]byte, *Tree) *Tree. https://pkg.go.dev/github.com/tree-sitter/go-tree-sitter
+4. Close es obligatorio en Parser, Tree, TreeCursor, Query, QueryCursor y LookaheadIterator: "Due to bugs with runtime.SetFinalizer and CGO, you must always call Close on an object that allocates memory from C" (README). Tree.Close tolera nil, pero no una segunda llamada sobre el mismo árbol.
+5. Parse devuelve nil (no error) cuando ts_parser_parse devuelve NULL: sin lenguaje, timeout, cancelación o callback de progreso (api.h de la 0.25).
+6-8. Gramáticas: tree-sitter-python v0.25.0 (2025-09-11), func Language() unsafe.Pointer, ABI 15, y su go.mod pide go-tree-sitter v0.24.0, así que el go.mod de Actaira fija v0.25.0; tree-sitter-typescript v0.23.2 (2024-11-11), LanguageTypescript() y LanguageTSX(), ABI 14. go-tree-sitter v0.25.0 acepta ABI 13 a 15.
+9. Solo hace falta un compilador de C: los bindings incluyen parser.c y scanner.c, que solo usan cabeceras de libc. La CI oficial de go-tree-sitter compila en ubuntu-latest, macos-latest y windows-latest sin instalar nada.
+10-11. Con CGO_ENABLED=0 los ficheros con import "C" quedan en IgnoredGoFiles (go/build). Texto comprobado en local: "build constraints exclude all Go files in .../tree-sitter-python@v0.25.0/bindings/go".
+12-13. Con cgo, cmd/link usa el enlazado externo y el binario depende de la libc del sistema; -linkmode external -extldflags "-static" existen (https://pkg.go.dev/cmd/link). El estático en Alpine queda por probar en el paso 1.2b. Apple no admite binarios estáticos en macOS.
+
+Runners (https://docs.github.com/en/actions/reference/runners/github-hosted-runners)
+14. ubuntu-24.04: x64, y hoy es ubuntu-latest.
+15. ubuntu-24.04-arm: disponible y gratis en repos públicos.
+16. ubuntu-26.04: fuera de preview desde el 2026-09-17 (x64 y arm64). ubuntu-latest pasa a 26.04 entre el 19 de octubre y el 19 de noviembre de 2026. https://github.blog/changelog/2026-09-17-ubuntu-26-generally-available-and-latest-migration/
+17-18. macos-latest es macOS 26 arm64; macos-15 es macOS 15 arm64; macos-14, deprecated.
+19. Compilador de C en macOS: Clang 21 (macOS 26) y Clang 17 (macOS 15), con las Command Line Tools.
+20. Go en macOS: no trae 1.27; hace falta actions/setup-go, cuyo manifiesto ya tiene 1.27.1 para darwin.
+21. make en macOS: sin confirmar; el de Apple es GNU make 3.81.
+22. bash en macOS: 3.2.57.
+
+actions/setup-go
+23. v7.0.0 (2026-07-16), SHA b7ad1dad31e06c5925ef5d2fc7ad053ef454303e, el que ya fija ci.yml.
+24. go-version-file: go.mod usa la directiva toolchain si existe y, si no, la go.

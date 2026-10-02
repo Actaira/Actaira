@@ -1,0 +1,5 @@
+# github.com/actaira/actaira/pkg/extract/treesitter [github.com/actaira/actaira/pkg/extract/treesitter.test]
+pkg/extract/treesitter/leak_linux_test.go:43:17: undefined: Parse
+pkg/extract/treesitter/leak_linux_test.go:43:23: undefined: Python
+pkg/extract/treesitter/treesitter_test.go:10:8: undefined: Language
+pkg/extract/treesitter/treesitter_test.go:14:14: undefined: Python

@@ -360,7 +360,8 @@ subst = {"<N>": "1", "<M>": "1", "<nombre>": "x", "<rama>": "e1/paso-1-x", "<pr>
 for f in files:
     for m in re.finditer(r"`([^`\n]+)`", open(f, encoding="utf-8").read()):
         c = m.group(1).strip()
-        if c.startswith(prefixes):
+        # F-0027: a push with global options first (git -C . push) is an order too.
+        if c.startswith(prefixes) or re.match(r"git\s.*\bpush\b", c):
             for k, v in subst.items():
                 c = c.replace(k, v)
             print(c)

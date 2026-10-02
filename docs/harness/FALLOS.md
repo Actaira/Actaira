@@ -279,3 +279,73 @@ Cada fallo encontrado (test en rojo que no era esperado, bug, hallazgo crítico 
 - corrección: `HARNESS_TOOLS` reúne las herramientas fijadas que usan los tests del harness, y `fallos`, `test-harness` y `tools` dependen de esa lista. Rama `e1/paso-1-estructura`.
 - guardia: test:scripts/harness/tests/makefile_test.sh::test_fallos_and_test_harness_fetch_every_harness_tool
 - lección: una herramienta nueva que usa un test del harness entra en `HARNESS_TOOLS`, no en un solo objetivo. Lo que solo pasa en local por lo que ya hay en `.tools/` lo ve la CI, que parte de un clon limpio. Por eso el PR no se fusiona hasta que `check` está en verde.
+
+## F-0023 merge-pr.sh esperaba a todos los checks, también a los que no son obligatorios
+- fecha: 2026-09-29
+- épica y paso: E1 / 1.2a, ronda adversarial 1
+- síntoma: `merge-pr.sh` fusionaba tras `gh pr checks <pr> --watch --fail-fast`, que espera a todos los checks del PR y sale con error al primero que falla. Con los jobs de `platforms.yml` (`check-macos`, `check-ubuntu-26`), que son informativos, un fallo en macOS habría bloqueado todos los PR, y la regla de la épica de seguir solo con Linux habría sido imposible de aplicar. Además, esos jobs no tenían tiempo máximo: uno colgado dejaba la espera parada hasta 6 horas.
+- causa raíz: `merge-pr.sh` se escribió cuando `ci.yml` tenía un único job, que era el obligatorio. Esperar a todos o solo al obligatorio daba igual, y nada lo distinguía.
+- corrección:
+  - `merge-pr.sh` espera solo a los checks obligatorios (`gh pr checks --required --watch --fail-fast`, https://cli.github.com/manual/gh_pr_checks);
+  - la espera de F-0019 también mira solo los obligatorios;
+  - los jobs de `platforms.yml` tienen `timeout-minutes: 30`, que limita el tiempo de ejecución, no el de cola. De un runner en cola protege `--required`.
+  - Un check no obligatorio que no está en verde se enseña como aviso antes de fusionar (ronda 2).
+  - Rama `e1/paso-2a-parser`.
+- guardia: test:scripts/harness/tests/merge-pr_test.sh::test_a_failing_check_that_is_not_required_does_not_block_the_merge
+- guardia: test:scripts/harness/tests/merge-pr_test.sh::test_waits_for_the_checks_of_a_new_pr
+- lección: un check que no es obligatorio informa, no bloquea. Si algo tiene que bloquear, se hace obligatorio en la protección de `main`.
+
+## F-0024 Cada parseo con plazo dejaba vivos para siempre el contexto y el callback
+- fecha: 2026-09-29
+- épica y paso: E1 / 1.2a, ronda adversarial 2
+- síntoma: tras 10.000 parseos con `context.WithTimeout`, el heap de Go conservaba 30.069 objetos más. El perfil de memoria los atribuye a `go-pointer.Save` y a `treesitter.Parse`, con el `timerCtx` del llamante dentro. En un proceso largo, como la nube o el runner, crecería sin límite.
+- causa raíz: la corrección de la ronda 1 pasó un `ParseOptions` con callback de progreso a `ParseWithOptions`. go-tree-sitter v0.25.0 lo guarda con `pointer.Save(options)` y nunca llama a `Unref` (`parser.go`, junto a `ts_parser_parse_with_options`). La API se usó siguiendo su documentación, sin medir qué retenía. Los tests de fugas miraban la memoria residente con un umbral de MB, y no el heap de Go.
+- corrección:
+  - el plazo del contexto se pasa con `SetTimeoutMicros`, y `ParseWithOptions` se llama sin opciones;
+  - `SetTimeoutMicros` está marcada como obsoleta en la 0.25 y desaparece en la 0.26, así que la línea lleva `//nolint:staticcheck // F-0024`;
+  - una cancelación sin plazo solo se mira antes de empezar;
+  - subir go-tree-sitter exige revisar esto (ADR 0003).
+  - Rama `e1/paso-2a-parser`.
+- guardia: test:pkg/extract/treesitter/treesitter_test.go::TestParsingWithADeadlineKeepsNothingOnTheGoHeap
+- lección: un test de fugas de una biblioteca con cgo mira las dos memorias. La de C, por la memoria residente; la de Go, por los objetos vivos del heap.
+
+## F-0025 El ADR 0003 afirmaba sin medir lo que el plazo hace con la memoria
+- fecha: 2026-09-29
+- épica y paso: E1 / 1.2a, ronda adversarial 2
+- síntoma: el ADR decía dos cosas.
+  - "El plazo corta el tiempo, pero no la memoria". El revisor midió un pico de 55 MB con plazo, frente a 1,2 GB sin él.
+  - "Parsear de uno en uno deja la memoria máxima en la de un fichero". Con 40 parseos cancelados seguidos, el pico llegó a 465 MB, por las arenas de glibc de cada hilo.
+- causa raíz: dos deducciones escritas como hechos en un ADR, que es donde se decide, sin la medición que CLAUDE.md exige ("Todo se mide", "Nunca inferir lo no observado").
+- corrección:
+  - `evals/bench/hostile` mide también el caso con plazo y una serie de ficheros con plazo, con y sin `MALLOC_ARENA_MAX=1`;
+  - el ADR y el estado citan esas cifras;
+  - una regla nueva exige que toda cifra de un ADR o del estado cite su medición.
+  - Rama `e1/paso-2a-parser`.
+- guardia: regla:.claude/rules/adr.md
+- lección: en un ADR, lo no medido se escribe como hipótesis, con lo que haría falta para medirlo.
+
+## F-0026 El ADR 0003 sacaba una cota general de un solo plazo medido
+- fecha: 2026-10-02
+- épica y paso: E1 / 1.2a, ronda adversarial 3
+- síntoma: el comentario de `Parse`, el ADR 0003 y el estado decían que el plazo del contexto acota el tiempo y la memoria de un parseo hostil. El revisor lo midió con el `Parse` del producto: con 50 ms se cumple, pero con 1 s un fichero de 1 MB tardó 2,07 s y llegó a 1.217 MiB, lo mismo que sin plazo. tree-sitter hace al final del fichero una recuperación de errores que no mira el plazo.
+- causa raíz: la medición de la ronda 2 probó un solo plazo, 50 ms, que salta antes de llegar al final del fichero, y el texto lo escribió como regla general. La corrección de F-0025 pedía citar la medición de cada cifra, pero no que la medición cubra todo el rango de lo que se afirma.
+- corrección:
+  - el ADR, el comentario de `Parse` y el estado dicen solo lo medido (sin plazo, 1 MB hostil en 2,2 s y 1.218 MiB; con 50 ms, 0,08 s y 54 MiB), y lo visto por la ronda 3 queda como hipótesis;
+  - el paso 1.4 fija un tamaño máximo por fichero antes de parsear, medido con `hostile` y con el test `TestFileOverTheParseLimitIsRecordedNotParsed` (ADR 0003 y la épica);
+  - la regla de los ADR pide medir una afirmación general en todo su rango.
+  - Por decisión de Marcos del 2026-10-02, sin mecanismo nuevo en este paso: la corrección de un hallazgo así es corregir el texto o medir.
+  - Rama `e1/paso-2a-parser`.
+- guardia: regla:.claude/rules/adr.md
+- lección: una afirmación general (lo que acota un límite, cómo escala algo) se mide en el rango que cubre. Con un solo punto medido, se escribe el punto.
+
+## F-0027 La comprobación del harness pedía una orden destructiva real
+- fecha: 2026-10-02
+- épica y paso: E1 / 1.2a (comprobación del harness al abrir la sesión)
+- síntoma: `CLAUDE.md` y el paso 0.1 de la E0 pedían comprobar el guard ejecutando de verdad `git -C . push origin main`. El 2026-10-02 el guard lo bloqueó como debía, pero desde ese momento el clasificador del modo automático denegó todas las órdenes de Bash y las ediciones bajo `.claude/`, con el motivo "Git Destructive", y el cierre del paso 1.2a quedó a medias. Sin el hook cargado, la misma orden habría empujado a `main` y solo la habría parado la protección del servidor.
+- causa raíz: la comprobación de que el harness está cargado se diseñó como una prueba en vivo del mismo daño que el guard evita. Si el hook falta, la prueba es la acción destructiva, y una sesión que la intenta parece hostil a cualquier otra capa de control. El test de L-007 no la veía: solo leía las órdenes que empiezan por `git push`, y esta empieza por `git -C`.
+- corrección:
+  - `CLAUDE.md`, el paso 0.1 de la E0 y la E3: los hooks se comprueban solo con sus tests (`scripts/harness/tests/`) y `make test-harness`, nunca con un push real a `main` ni con otra orden destructiva de prueba (decisión de Marcos del 2026-10-02).
+  - El test de L-007 lee también las órdenes `git <opciones> push`. Con el `CLAUDE.md` anterior sale en rojo (`git -C . push origin main: esperado [0], obtenido [2]`), y con el nuevo, en verde.
+  - Rama `e1/paso-2a-parser`.
+- guardia: test:scripts/harness/tests/guard-git_test.sh::test_orders_in_claude_md_and_skills_pass_the_guard
+- lección: L-014.

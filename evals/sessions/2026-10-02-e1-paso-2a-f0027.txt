@@ -1,0 +1,14 @@
+# E1 paso 1.2a: guardia de F-0027 (L-014)
+fecha: 2026-10-02T13:01:19Z
+commit base: 339cbf6 más los cambios sin commitear del cierre del paso
+entorno: Linux 6.6.87.2-microsoft-standard-WSL2, bash 5.2.21(1)-release
+comando: bash scripts/harness/tests/guard-git_test.sh test_orders_in_claude_md_and_skills_pass_the_guard
+
+== F-0027, sin la corrección (CLAUDE.md de 339cbf6, test ampliado)
+    orden de la documentación: git -C . push origin main: esperado [0], obtenido [2]
+--- FAIL: test_orders_in_claude_md_and_skills_pass_the_guard
+rc=1
+
+== F-0027, con la corrección (CLAUDE.md nuevo)
+--- PASS: test_orders_in_claude_md_and_skills_pass_the_guard
+rc=0

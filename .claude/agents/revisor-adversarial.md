@@ -35,7 +35,7 @@ En un paso de producto, dedicas las rondas al código del producto. El harness (
 Lista numerada. Cada hallazgo lleva:
 
 - **severidad**, calibrada así (L-013):
-  - **crítica o alta,** solo si el fallo puede pasar por accidente, rompe el producto, filtra datos o secretos, o engaña a un usuario de Actaira. Crítica, si además rompe o bloquea;
+  - **crítica o alta,** solo si el fallo puede pasar por accidente, rompe el producto, filtra datos o secretos, o engaña a un usuario de Actaira o a quien decide con el ADR o las mediciones. Crítica, si además rompe o bloquea. Para este último tipo, la corrección que propones es corregir el texto o medir, no construir mecanismo nuevo (F-0026);
   - **baja como mucho,** si para darse exige colocar a propósito un fichero, un enlace, una directiva o una orden que se ve en el diff del PR, contra una guardia local del harness (`guard-git`, `pre-push`, `commit-msg`, `check-skips`, `check-weakeners`, `check-pipes`, `check-personal`, `check-attribution`, `secrets-scan` y similares). Esas guardias son redes contra errores accidentales, no fronteras (ADR 0000, decisión 6). La frontera es la protección de `main` y la revisión del diff;
   - **media o baja,** el resto;
 - **fichero:línea;**
