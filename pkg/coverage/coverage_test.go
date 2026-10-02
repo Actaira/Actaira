@@ -368,3 +368,72 @@ func TestCoverageUnresolvedInsideASkippedDirectoryIsRejected(t *testing.T) {
 		t.Fatalf("a file that only shares a prefix with a skipped directory was rejected: %v", err)
 	}
 }
+
+// An edge joins things of the kinds its kind allows: one that does not is not
+// dropped in silence (L-009).
+func TestCoverageEdgeEndsHaveTheRightKind(t *testing.T) {
+	cases := map[string]func(*fixture){
+		"uses_mcp_server to a tool": func(f *fixture) {
+			f.in.Edges = append(f.in.Edges, model.Edge{From: f.agent, To: f.refund, Kind: model.UsesMCPServer, Source: model.Location{File: "support/agent.py", Line: 45}, Confidence: model.Declared})
+		},
+		"can_call to an MCP server": func(f *fixture) {
+			f.in.Edges = append(f.in.Edges, model.Edge{From: f.agent, To: f.stripe, Kind: model.CanCall, Source: model.Location{File: "support/agent.py", Line: 46}, Confidence: model.Declared})
+		},
+		"delegates_to from a tool": func(f *fixture) {
+			f.in.Edges = append(f.in.Edges, model.Edge{From: f.refund, To: f.agent, Kind: model.DelegatesTo, Source: model.Location{File: "support/agent.py", Line: 47}, Confidence: model.Declared})
+		},
+	}
+	for name, mutate := range cases {
+		t.Run(name, func(t *testing.T) {
+			f := newFixture()
+			mutate(&f)
+			if _, err := Compute(f.in); err == nil || !strings.Contains(err.Error(), "edge") {
+				t.Fatalf("Compute with %s: err = %v", name, err)
+			}
+		})
+	}
+}
+
+// Nothing read can be in a skipped part: an agent, a tool or an MCP server
+// whose file was skipped, or the entry Compute leaves for an unresolved tool
+// there, would be seen and unseen at once.
+func TestCoverageNothingReadIsInASkippedPart(t *testing.T) {
+	f := newFixture()
+	f.in.Skipped = []Skipped{{Path: "support/agent.py", Reason: "file_over_1mb"}}
+	if _, err := Compute(f.in); err == nil || !strings.Contains(err.Error(), "support/agent.py") {
+		t.Fatalf("Compute with the agent's file skipped: err = %v", err)
+	}
+	f = newFixture()
+	f.in.Skipped = []Skipped{{Path: ".mcp.json", Reason: "file_over_1mb"}}
+	if _, err := Compute(f.in); err == nil || !strings.Contains(err.Error(), ".mcp.json") {
+		t.Fatalf("Compute with an MCP server's file skipped: err = %v", err)
+	}
+}
+
+// A source is one per kind and name in the whole view of an agent: the agent's
+// MCP server "github" and another "github" in .mcp.json are one source, with
+// both locations, in M and in what was not seen (docs/cobertura.md).
+func TestCoverageSummaryCountsASourceOnce(t *testing.T) {
+	f := newFixture()
+	f.in.Edges = append(f.in.Edges, model.Edge{From: f.agent, To: f.orphanM, Kind: model.UsesMCPServer, Source: model.Location{File: "support/agent.py", Line: 48}, Confidence: model.Declared})
+	again := model.MCPServer{ID: model.NewID("mcp_server", "mcp-config", ".cursor/mcp.json", "github", 0), Name: "github", Transport: "http", URL: "https://api.example.invalid/mcp",
+		ToolsSource: "none", Source: model.Location{File: ".cursor/mcp.json", Line: 3, Column: 5}, Confidence: model.Declared}
+	f.in.MCPServers = append(f.in.MCPServers, again)
+	s, err := compute(t, f.in).Summary(f.agent)
+	if err != nil {
+		t.Fatalf("Summary: %v", err)
+	}
+	n := 0
+	for _, u := range s.Unseen {
+		if u.Kind == "source" && u.Name == "github" {
+			n++
+		}
+	}
+	if n != 1 {
+		t.Fatalf("github is %d times in what was not seen, want 1", n)
+	}
+	// The repo, stripe, STRIPE_API_KEY, github and GITHUB_TOKEN.
+	if s.Known != 5 {
+		t.Fatalf("known sources = %d, want 5", s.Known)
+	}
+}

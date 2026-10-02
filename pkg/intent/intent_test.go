@@ -228,3 +228,25 @@ func TestIntentDatesAreRealDays(t *testing.T) {
 	parseFails(t, strings.Replace(accepted, `"expires": "2027-04-01"`, `"expires": "2027-02-31"`, 1), "expires")
 	parseFails(t, strings.Replace(accepted, `"accepted_at": "2026-10-01"`, `"accepted_at": "2026-13-01"`, 1), "accepted_at")
 }
+
+// Two limits of the same kind on one capability would leave which one holds to
+// chance: the same accident as F-0030, two branches that each add one.
+func TestIntentRejectsTwoLimitsOfTheSameKind(t *testing.T) {
+	parseFails(t, strings.Replace(accepted, `{"capability": "money.refund", "per_operation": {"amount": 50000, "currency": "EUR"}},`,
+		`{"capability": "money.refund", "per_operation": {"amount": 50000, "currency": "EUR"}}, {"capability": "money.refund", "per_operation": {"amount": 99999999, "currency": "EUR"}},`, 1), "money.refund", "per_operation")
+	parseFails(t, strings.Replace(accepted, `{"capability": "money.refund", "per_period": {"period": "month", "amount": 200000, "currency": "EUR", "count": 100}}`,
+		`{"capability": "money.refund", "per_period": {"period": "month", "amount": 200000, "currency": "EUR", "count": 100}}, {"capability": "money.refund", "per_period": {"period": "month", "count": 5}}`, 1), "money.refund", "month")
+	// A day limit and a month limit on the same capability are two limits.
+	parse(t, strings.Replace(accepted, `{"capability": "money.refund", "per_period": {"period": "month", "amount": 200000, "currency": "EUR", "count": 100}}`,
+		`{"capability": "money.refund", "per_period": {"period": "month", "amount": 200000, "currency": "EUR", "count": 100}}, {"capability": "money.refund", "per_period": {"period": "day", "count": 5}}`, 1))
+}
+
+// A Manifest built in code goes through the same rules: a currency without an
+// amount would be dropped when written.
+func TestIntentValidateRejectsACurrencyWithoutAmount(t *testing.T) {
+	m := parse(t, accepted)
+	m.Contracts[0].Limits[1].PerPeriod.Amount = nil
+	if err := m.Validate(); err == nil || !strings.Contains(err.Error(), "currency") {
+		t.Fatalf("Validate with a currency and no amount: err = %v", err)
+	}
+}

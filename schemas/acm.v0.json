@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://actaira.com/schemas/acm.v0.json",
   "title": "Agent Capability Manifest, version 0 (draft)",
-  "description": "The capability contract of each agent (docs/spec/acm.md). Rules a schema cannot express (a capability in allow and deny, a limit only on an allowed capability, one contract per agent, member names once and exactly as written, integers written as digits, text in NFC) are checked by Actaira's reading of the manifest (pkg/intent).",
+  "description": "The capability contract of each agent (docs/spec/acm.md). Rules a schema cannot express (a capability in allow and deny, a limit only on an allowed capability, one contract per agent, member names once and exactly as written, integers written as digits, days that exist, text in NFC) are checked by Actaira's reading of the manifest (pkg/intent).",
   "type": "object",
   "additionalProperties": false,
   "required": ["acm_version", "contracts"],

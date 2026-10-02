@@ -46,3 +46,5 @@
 - **Lo que la ronda única del paso 1.2c de la E1 dejó para después en el plan** (los demás hallazgos están escritos en el paso de su épica que los implementa; resumen en `docs/estado/E1.md`):
   - hallazgo medio 8: el bloque C1 del plan sigue diciendo que C1 y C2 salen en un solo lanzamiento, y la sección 2 que la tabla comparada se publica "antes del lanzamiento". Con la v0.2.0 (`inspect` y el registro, sin diff) como primer lanzamiento público, alinear C1 y decir antes de qué lanzamiento sale la tabla;
   - hallazgo bajo 22: el bloque C1 dice que el rastreador solo captura servidores HTTP públicos, pero `inspect` usa las instantáneas de paquetes stdio que el paso 2.2 de la E2 ejecuta en un contenedor sin red. Alinear el plan con la E2.
+- **Lo que la ronda 2 del paso 1.3 de la E1 dejó para después:**
+  - límite conocido de F-0034: un token escrito dentro de la ruta de la URL de un MCP (`https://host/mcp/<token>`) no se puede reconocer. El paso 1.4 quita usuario, query y fragmento; para la ruta, decidir con datos del corpus si se guarda solo el origen más un hash de la URL completa.

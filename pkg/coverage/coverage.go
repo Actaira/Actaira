@@ -146,47 +146,50 @@ type Input struct {
 // entry falls in a skipped part (unseen and unresolved never mix).
 func Compute(in Input) (Coverage, error) {
 	known := map[model.ID]string{}
-	add := func(id model.ID, what string) error {
+	add := func(id model.ID, kind, name string, src model.Location) error {
 		if prev, ok := known[id]; ok {
-			return fmt.Errorf("coverage: id %s is both %s and %s; two things cannot share an id (F-0032)", id, prev, what)
+			return fmt.Errorf("coverage: id %s is both a %s and a %s %s; two things cannot share an id (F-0032)", id, prev, kind, name)
 		}
-		known[id] = what
+		known[id] = kind
+		for _, k := range in.Skipped {
+			if src.File != "" && under(src.File, k.Path) {
+				return fmt.Errorf("coverage: %s %s was read in %s, which is skipped; seen and unseen never mix", kind, name, src.File)
+			}
+		}
 		return nil
 	}
 	agents := map[model.ID]bool{}
 	for _, a := range in.Agents {
-		if err := add(a.ID, "agent "+a.Name); err != nil {
+		if err := add(a.ID, "agent", a.Name, a.Source); err != nil {
 			return Coverage{}, err
 		}
 		agents[a.ID] = true
 	}
 	tools := map[model.ID]model.Tool{}
 	for _, t := range in.Tools {
-		if err := add(t.ID, "tool "+t.Name); err != nil {
+		if err := add(t.ID, "tool", t.Name, t.Source); err != nil {
 			return Coverage{}, err
 		}
 		tools[t.ID] = t
 	}
 	servers := map[model.ID]model.MCPServer{}
 	for _, s := range in.MCPServers {
-		if err := add(s.ID, "MCP server "+s.Name); err != nil {
+		if err := add(s.ID, "mcp_server", s.Name, s.Source); err != nil {
 			return Coverage{}, err
 		}
 		servers[s.ID] = s
 	}
 	secrets := map[model.ID]model.SecretRef{}
 	for _, s := range in.SecretRefs {
-		if err := add(s.ID, "variable "+s.Name); err != nil {
+		if err := add(s.ID, "env_ref", s.Name, model.Location{}); err != nil {
 			return Coverage{}, err
 		}
 		secrets[s.ID] = s
 	}
 	out := map[model.ID][]model.Edge{}
 	for _, e := range in.Edges {
-		for _, end := range []model.ID{e.From, e.To} {
-			if _, ok := known[end]; !ok {
-				return Coverage{}, fmt.Errorf("coverage: edge %s at %s points to %s, which is not in the input", e.Kind, e.Source, end)
-			}
+		if err := CheckEdge(e, known); err != nil {
+			return Coverage{}, fmt.Errorf("coverage: %w", err)
 		}
 		out[e.From] = append(out[e.From], e)
 	}
@@ -297,6 +300,47 @@ func Compute(in Input) (Coverage, error) {
 	return c, nil
 }
 
+// edgeEnds lists, for each edge kind, the kinds its two ends can have.
+var edgeEnds = map[model.EdgeKind]struct{ from, to []string }{
+	model.CanCall:       {[]string{"agent"}, []string{"tool"}},
+	model.DelegatesTo:   {[]string{"agent"}, []string{"agent"}},
+	model.UsesMCPServer: {[]string{"agent"}, []string{"mcp_server"}},
+	model.ReferencesEnv: {[]string{"agent", "tool", "mcp_server"}, []string{"env_ref"}},
+}
+
+// CheckEdge fails if e joins things that are not in kinds (id to "agent",
+// "tool", "mcp_server" or "env_ref"), or of kinds its kind does not allow: an
+// edge it cannot understand is never dropped in silence (L-009).
+func CheckEdge(e model.Edge, kinds map[model.ID]string) error {
+	ends, ok := edgeEnds[e.Kind]
+	if !ok {
+		return fmt.Errorf("edge %q at %s: not one of the closed list", e.Kind, e.Source)
+	}
+	for _, end := range []struct {
+		id      model.ID
+		allowed []string
+		side    string
+	}{{e.From, ends.from, "from"}, {e.To, ends.to, "to"}} {
+		kind, ok := kinds[end.id]
+		if !ok {
+			return fmt.Errorf("edge %s at %s: %s %s is not in the model", e.Kind, e.Source, end.side, end.id)
+		}
+		if !contains(end.allowed, kind) {
+			return fmt.Errorf("edge %s at %s: %s %s is a %s, not a %s", e.Kind, e.Source, end.side, end.id, kind, strings.Join(end.allowed, " or "))
+		}
+	}
+	return nil
+}
+
+func contains(list []string, s string) bool {
+	for _, x := range list {
+		if x == s {
+			return true
+		}
+	}
+	return false
+}
+
 // under reports whether file is path or inside the directory path.
 func under(file, path string) bool {
 	return file == path || strings.HasPrefix(file, strings.TrimSuffix(path, "/")+"/")
@@ -396,7 +440,11 @@ type Summary struct {
 func (c Coverage) Summary(agent model.ID) (Summary, error) {
 	for _, a := range c.Agents {
 		if a.ID == agent {
-			return summarize(append(append([]Source{}, a.Sources...), c.Repo.Sources...), c.Repo.Skipped,
+			var all []Source
+			for _, s := range append(append([]Source{}, a.Sources...), c.Repo.Sources...) {
+				all = addSource(all, s)
+			}
+			return summarize(all, c.Repo.Skipped,
 				append(append([]Entry{}, a.Unresolved...), c.Repo.Unresolved...)), nil
 		}
 	}

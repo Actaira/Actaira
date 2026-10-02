@@ -6,8 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
+	"path"
 	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/actaira/actaira/pkg/coverage"
 	"github.com/actaira/actaira/pkg/intent"
@@ -97,6 +100,27 @@ func value(l Lockfile) (map[string]any, error) {
 		if err := unique(x.ID, fmt.Sprintf("secret_refs[%d]", i)); err != nil {
 			return nil, err
 		}
+	}
+	kinds := map[model.ID]string{}
+	for _, a := range l.Agents {
+		kinds[a.ID] = "agent"
+	}
+	for _, t := range l.Tools {
+		kinds[t.ID] = "tool"
+	}
+	for _, x := range l.MCPServers {
+		kinds[x.ID] = "mcp_server"
+	}
+	for _, x := range l.SecretRefs {
+		kinds[x.ID] = "env_ref"
+	}
+	for i, e := range l.Edges {
+		if err := coverage.CheckEdge(e, kinds); err != nil {
+			return nil, fmt.Errorf("lock: edges[%d]: %w", i, err)
+		}
+	}
+	if err := checkCoverageAgainstModel(l); err != nil {
+		return nil, fmt.Errorf("lock: coverage: %w", err)
 	}
 	for i, a := range l.Agents {
 		v, err := agentValue(a)
@@ -209,9 +233,22 @@ func checkConfidence(c model.Confidence) error {
 	return nil
 }
 
+// checkPath requires a path relative to the repository root, with "/", and
+// clean: an absolute path would put the user's directory in a committed file
+// and change between machines.
+func checkPath(p string) error {
+	if p == "" || p == "." || path.IsAbs(p) || strings.Contains(p, "\\") || path.Clean(p) != p || p == ".." || strings.HasPrefix(p, "../") {
+		return fmt.Errorf("path %q is not relative to the repository root, with / and clean", p)
+	}
+	return nil
+}
+
 func locationValue(l model.Location) (map[string]any, error) {
 	if l.File == "" {
 		return nil, errors.New("location without a file")
+	}
+	if err := checkPath(l.File); err != nil {
+		return nil, err
 	}
 	if l.Line < 0 || l.Column < 0 || (l.Line == 0 && l.Column != 0) {
 		return nil, fmt.Errorf("location %s: bad line or column", l)
@@ -307,6 +344,18 @@ func serverValue(s model.MCPServer) (map[string]any, error) {
 		return nil, fmt.Errorf("source: %w", err)
 	}
 	v := map[string]any{"id": string(s.ID), "name": s.Name, "transport": s.Transport, "pinned": s.Pinned, "tools_source": s.ToolsSource, "source": src, "confidence": string(s.Confidence)}
+	// F-0034: what the repository writes next to a server may carry a secret.
+	// The command is the executable alone, and the URL keeps scheme, host and
+	// path. The error never repeats the value.
+	if strings.ContainsAny(s.Command, " \t\n") {
+		return nil, errors.New("command: only the executable, without arguments, which may carry a secret (F-0034)")
+	}
+	if s.URL != "" {
+		u, err := url.Parse(s.URL)
+		if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" || u.User != nil || u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || u.Opaque != "" {
+			return nil, errors.New("url: only http or https with host and path, without user, query or fragment, which may carry a secret (F-0034)")
+		}
+	}
 	if s.Command != "" {
 		v["command"] = s.Command
 	}
@@ -418,6 +467,9 @@ func coverageValue(c coverage.Coverage) (map[string]any, error) {
 		if s.Path == "" || s.Reason == "" {
 			return nil, fmt.Errorf("repo: skipped %q without a path or a reason", s.Path)
 		}
+		if err := checkPath(s.Path); err != nil {
+			return nil, fmt.Errorf("repo: skipped: %w", err)
+		}
 		skipped = append(skipped, map[string]any{"path": s.Path, "reason": s.Reason})
 	}
 	return map[string]any{
@@ -463,6 +515,64 @@ func sourcesValue(sources []coverage.Source) ([]any, error) {
 		out = append(out, v)
 	}
 	return sorted(out), nil
+}
+
+// checkCoverageAgainstModel ties the coverage block to the model: one block
+// per agent of the lockfile and none for anything else, with detected and
+// resolved as the tools each agent can call say, and unresolved as many as its
+// entries.
+func checkCoverageAgainstModel(l Lockfile) error {
+	tools := map[model.ID]model.Tool{}
+	for _, t := range l.Tools {
+		tools[t.ID] = t
+	}
+	calls := map[model.ID]map[model.ID]bool{}
+	for _, e := range l.Edges {
+		if e.Kind != model.CanCall {
+			continue
+		}
+		if calls[e.From] == nil {
+			calls[e.From] = map[model.ID]bool{}
+		}
+		calls[e.From][e.To] = true
+	}
+	blocks := map[model.ID]coverage.Agent{}
+	for _, b := range l.Coverage.Agents {
+		if _, ok := blocks[b.ID]; ok {
+			return fmt.Errorf("agent %s has two blocks", b.ID)
+		}
+		blocks[b.ID] = b
+	}
+	agents := map[model.ID]bool{}
+	for _, a := range l.Agents {
+		agents[a.ID] = true
+		b, ok := blocks[a.ID]
+		if !ok {
+			return fmt.Errorf("agent %s has no block", a.ID)
+		}
+		resolved := 0
+		for id := range calls[a.ID] {
+			if tools[id].Resolved() {
+				resolved++
+			}
+		}
+		want := map[coverage.AxisName]int{
+			coverage.Detected:       len(calls[a.ID]),
+			coverage.Resolved:       resolved,
+			coverage.UnresolvedAxis: len(b.Unresolved),
+		}
+		for _, x := range b.Axes {
+			if n, ok := want[x.Name]; ok && x.Value != nil && *x.Value != n {
+				return fmt.Errorf("agent %s: axis %s is %d, and the model says %d", a.ID, x.Name, *x.Value, n)
+			}
+		}
+	}
+	for id := range blocks {
+		if !agents[id] {
+			return fmt.Errorf("block of %s, which is not an agent of the lockfile", id)
+		}
+	}
+	return nil
 }
 
 // checkAxes requires the seven axes once each: detected, resolved and

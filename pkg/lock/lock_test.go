@@ -2,6 +2,8 @@ package lock
 
 import (
 	"bytes"
+	"encoding/json/jsontext"
+	jsonv2 "encoding/json/v2"
 	"math/rand/v2"
 	"os"
 	"strings"
@@ -82,8 +84,10 @@ func sampleParts() parts {
 		intent: `{"acm_version": 0, "contracts": [{"agent": "` + string(support) + `", "status": "accepted",
 	  "accepted_by": "@ana", "accepted_at": "2026-10-01", "owner": "@ana", "expires": "2027-04-01",
 	  "allow": ["money.refund", "customer.read"], "deny": ["customer.delete"],
-	  "limits": [{"capability": "money.refund", "per_operation": {"amount": 50000, "currency": "EUR"}}],
-	  "egress": ["api.stripe.com"]}]}`,
+	  "limits": [{"capability": "money.refund", "per_operation": {"amount": 50000, "currency": "EUR"}},
+	             {"capability": "money.refund", "per_period": {"period": "month", "amount": 200000, "currency": "EUR", "count": 100}}],
+	  "egress": ["api.stripe.com"]},
+	  {"agent": "` + string(billing) + `", "status": "draft", "confidence": "inferred", "owner": "@ana", "expires": "2026-12-31"}]}`,
 	}
 }
 
@@ -225,17 +229,37 @@ func TestLockRejectsUnknownFields(t *testing.T) {
 	}
 }
 
-// ADR 0004: the intent block is the canonical copy of actaira.intent.json, and
-// the lockfile keeps coming out the same.
+// ADR 0004: the intent block is the canonical copy of actaira.intent.json,
+// checked against a reading of the source that does not go through the intent
+// package: decoded as plain JSON, with the lists a contract may leave out
+// filled in, and canonicalized by the standard library (JCS). The sample has an
+// accepted contract with both kinds of limit and a draft.
 func TestLockKeepsTheIntentBlock(t *testing.T) {
-	l := sample(t)
+	p := sampleParts()
+	l := build(t, p)
 	b := encode(t, l)
-	want, err := Marshal(l.Intent.Value())
+	var src map[string]any
+	if err := jsonv2.Unmarshal([]byte(p.intent), &src); err != nil {
+		t.Fatalf("reading the source as plain JSON: %v", err)
+	}
+	for _, c := range src["contracts"].([]any) {
+		contract := c.(map[string]any)
+		for _, list := range []string{"allow", "deny", "limits", "egress"} {
+			if _, ok := contract[list]; !ok {
+				contract[list] = []any{}
+			}
+		}
+	}
+	plain, err := jsonv2.Marshal(src)
 	if err != nil {
-		t.Fatalf("Marshal of the manifest: %v", err)
+		t.Fatalf("writing the source back: %v", err)
+	}
+	want := jsontext.Value(plain)
+	if err := want.Canonicalize(); err != nil {
+		t.Fatalf("Canonicalize: %v", err)
 	}
 	if !bytes.Contains(b, append([]byte(`"intent":`), want...)) {
-		t.Fatalf("the intent block is not the canonical copy of the manifest:\n%s", b)
+		t.Fatalf("the intent block is not the canonical copy of the source:\nwant %s\nin   %s", want, b)
 	}
 	back, err := Decode(b)
 	if err != nil {
@@ -377,5 +401,103 @@ func TestLockAnotherSchemaVersionIsReportedFirst(t *testing.T) {
 	data = bytes.Replace(data, []byte(`"schema_version":1`), []byte(`"schema_version":2`), 1)
 	if _, err := Decode(data); err == nil || !strings.Contains(err.Error(), "schema_version 2") {
 		t.Fatalf("Decode of a v2 lockfile with a new field: err = %v, want the version", err)
+	}
+}
+
+// F-0034: a URL keeps scheme, host and path, never a user, a query or a
+// fragment, and a command is the executable alone. The error never repeats
+// the value, which may be the secret.
+func TestLockNeverCarriesURLCredentialsOrCommandArguments(t *testing.T) {
+	const sentinel = "TEST_SENTINEL_NOT_A_KEY_1234"
+	cases := map[string]func(*model.MCPServer){
+		"user and password": func(s *model.MCPServer) { s.URL = "https://user:" + sentinel + "@mcp.example.invalid/x" },
+		"query":             func(s *model.MCPServer) { s.URL = "https://mcp.example.invalid/x?api_key=" + sentinel },
+		"fragment":          func(s *model.MCPServer) { s.URL = "https://mcp.example.invalid/x#" + sentinel },
+		"other scheme":      func(s *model.MCPServer) { s.URL = "ftp://mcp.example.invalid/" + sentinel },
+		"command arguments": func(s *model.MCPServer) { s.Command = "npx -y @stripe/mcp --api-key=" + sentinel },
+	}
+	for name, mutate := range cases {
+		t.Run(name, func(t *testing.T) {
+			l := sample(t)
+			mutate(&l.MCPServers[1])
+			_, err := Encode(l)
+			if err == nil {
+				t.Fatal("Encode accepted it")
+			}
+			if strings.Contains(err.Error(), sentinel) {
+				t.Fatalf("the error repeats the secret: %v", err)
+			}
+		})
+	}
+	l := sample(t)
+	l.MCPServers[1].URL = "https://mcp.example.invalid:8443/github/mcp"
+	if _, err := Encode(l); err != nil {
+		t.Fatalf("Encode of a clean URL with port and path: %v", err)
+	}
+}
+
+// The coverage block belongs to the agents of the lockfile: one block per
+// agent, none for anything else, and counters that match the model.
+func TestLockTiesCoverageToTheModel(t *testing.T) {
+	cases := map[string]func(*Lockfile){
+		"block missing":     func(l *Lockfile) { l.Coverage.Agents = l.Coverage.Agents[1:] },
+		"block twice":       func(l *Lockfile) { l.Coverage.Agents = append(l.Coverage.Agents, l.Coverage.Agents[0]) },
+		"block of no agent": func(l *Lockfile) { l.Coverage.Agents[0].ID = "fedcba9876543210" },
+		"detected out of model": func(l *Lockfile) {
+			setAxis(l, coverage.Detected, coverage.Axis{Name: coverage.Detected, Value: intp(99)})
+		},
+		"resolved out of model": func(l *Lockfile) {
+			setAxis(l, coverage.Resolved, coverage.Axis{Name: coverage.Resolved, Value: intp(2)})
+		},
+	}
+	for name, mutate := range cases {
+		t.Run(name, func(t *testing.T) {
+			l := sample(t)
+			mutate(&l)
+			if _, err := Encode(l); err == nil || !strings.Contains(err.Error(), "coverage") {
+				t.Fatalf("Encode with a coverage block with %s: err = %v", name, err)
+			}
+		})
+	}
+}
+
+// An edge joins things of the lockfile, of the kinds its kind allows.
+func TestLockEdgesJoinThingsOfTheRightKind(t *testing.T) {
+	cases := map[string]func(*Lockfile){
+		"end not in the lockfile":      func(l *Lockfile) { l.Edges[0].To = "fedcba9876543210" },
+		"can_call to an MCP server":    func(l *Lockfile) { l.Edges[0].To = l.MCPServers[0].ID },
+		"uses_mcp_server to a tool":    func(l *Lockfile) { l.Edges[3].To = l.Tools[0].ID },
+		"delegates_to a tool":          func(l *Lockfile) { l.Edges[2].To = l.Tools[0].ID },
+		"references_env to an agent":   func(l *Lockfile) { l.Edges[4].To = l.Agents[1].ID },
+		"references_env from a secret": func(l *Lockfile) { l.Edges[4].From = l.SecretRefs[1].ID },
+	}
+	for name, mutate := range cases {
+		t.Run(name, func(t *testing.T) {
+			l := sample(t)
+			mutate(&l)
+			if _, err := Encode(l); err == nil || !strings.Contains(err.Error(), "edges[") {
+				t.Fatalf("Encode with an edge with %s: err = %v", name, err)
+			}
+		})
+	}
+}
+
+// Paths are relative to the repository root, with "/", and clean: an absolute
+// path would put the user's directory in a committed file and change between
+// machines.
+func TestLockPathsAreRelativeAndClean(t *testing.T) {
+	for _, bad := range []string{"/home/someone/repo/support/agent.py", `support\agent.py`, "../outside.py", "./support/agent.py", "support//agent.py", "support/", "."} {
+		t.Run(bad, func(t *testing.T) {
+			l := sample(t)
+			l.Agents[0].Source.File = bad
+			if _, err := Encode(l); err == nil || !strings.Contains(err.Error(), "path") {
+				t.Fatalf("Encode with the source path %q: err = %v", bad, err)
+			}
+			l = sample(t)
+			l.Coverage.Repo.Skipped[0].Path = bad
+			if _, err := Encode(l); err == nil || !strings.Contains(err.Error(), "path") {
+				t.Fatalf("Encode with the skipped path %q: err = %v", bad, err)
+			}
+		})
 	}
 }

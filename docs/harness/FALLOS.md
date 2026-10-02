@@ -410,3 +410,12 @@ Cada fallo encontrado (test en rojo que no era esperado, bug, hallazgo crítico 
 - corrección: el test y la ejecución real barajan todas las listas del modelo y las entradas de `coverage.Compute`, y recalculan la cobertura en cada vuelta. Las mutaciones que quitan cada ordenación salen en rojo. El estado dice lo que se mide. Rama `e1/paso-3-modelo`.
 - guardia: test:pkg/lock/lock_test.go::TestLockIsTheSameWhateverTheOrderOfItsInputs
 - lección: una prueba de determinismo baraja todo lo que se ordena, y cada ordenación tiene una mutación que lo demuestra.
+
+## F-0034 El lockfile admitía una URL de MCP con su credencial dentro
+- fecha: 2026-10-02
+- épica y paso: E1 / 1.3, ronda adversarial 2 (alto 1)
+- síntoma: `MCPServer.URL` y `Command` se escribían tal cual en `actaira.lock`. Una URL de un MCP alojado con el token en la query (`?api_key=…`) o en el usuario (`https://usuario:clave@…`), o un comando con sus argumentos, acabaría en un fichero que se commitea y se sube a la nube. Con los extractores del paso 1.4, pasaría con un `.mcp.json` normal.
+- causa raíz: la regla "el valor nunca se lee ni se guarda" se escribió para las variables de entorno, y no se miró qué otros campos del modelo copian texto que puede llevar un secreto.
+- corrección: `Encode` rechaza una URL que no sea `http` o `https`, que lleve usuario, query o fragmento, y un `command` con espacios (solo el ejecutable; el paquete y su versión van aparte), sin repetir el valor en el error. El JSON Schema del lockfile lo dice con sus patrones, y el paso 1.4 de la E1 lleva el test obligatorio `TestMCPServerURLKeepsNoCredentials`, con un centinela. Rama `e1/paso-3-modelo`.
+- guardia: test:pkg/lock/lock_test.go::TestLockNeverCarriesURLCredentialsOrCommandArguments
+- lección: cada campo del modelo que copia texto del repo se revisa como posible portador de un secreto, no solo los que se llaman "secreto".

@@ -123,6 +123,7 @@ Tests que valen para las dos partes, desde la E1:
   - lo saltado;
   - una entrada `unresolved` fuera de cualquier agente.
 - Tiene fuentes, `unresolved` y `skipped`.
+- En el resumen de un agente, una fuente es una por tipo y nombre entre su bloque y el del repo: el servidor MCP `github` que usa el agente y otro `github` de `.mcp.json` cuentan una vez en M y salen una vez en lo no visto, con las ubicaciones de los dos (ronda 2 del paso 1.3, `TestCoverageSummaryCountsASourceOnce`).
 - Sale en la vista de todos los agentes del repo, porque puede ser de cualquiera. Si no hay ningún agente, sale solo.
 
 ## El campo `coverage` del plan

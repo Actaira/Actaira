@@ -263,10 +263,20 @@ func contract(rc rawContract) (Contract, error) {
 			}
 		}
 	}
+	kinds := map[string]bool{}
 	for i, rl := range rc.Limits {
 		l, err := limit(rl)
 		if err != nil {
 			return Contract{}, fmt.Errorf("limits[%d]: %w", i, err)
+		}
+		// One limit of each kind per capability: per operation, and per period
+		// for each period. Two would leave which one holds to chance.
+		for _, kind := range limitKinds(l) {
+			key := l.Capability + " " + kind
+			if kinds[key] {
+				return Contract{}, fmt.Errorf("limits[%d]: %q has two %s limits; write one", i, l.Capability, kind)
+			}
+			kinds[key] = true
 		}
 		// A limit on a capability that is not allowed would leave the real one
 		// without a limit (a typo) or limit what is denied anyway.
@@ -341,6 +351,19 @@ func limit(rl rawLimit) (Limit, error) {
 	return l, nil
 }
 
+// limitKinds returns the kinds of bound a limit sets: "per_operation" and
+// "per_period <period>".
+func limitKinds(l Limit) []string {
+	var out []string
+	if l.PerOperation != nil {
+		out = append(out, "per_operation")
+	}
+	if l.PerPeriod != nil {
+		out = append(out, "per_period "+l.PerPeriod.Period)
+	}
+	return out
+}
+
 // maxInt is the largest integer actaira.lock can hold (ADR 0002, rule 3).
 const maxInt = 1<<53 - 1
 
@@ -370,6 +393,14 @@ func nfcAll(in []string) []string {
 // Validate checks a Manifest built in code against the same rules as Parse:
 // actaira.lock never carries a contract that Parse would reject.
 func (m Manifest) Validate() error {
+	// Value leaves out a currency without an amount; it must not vanish.
+	for i, c := range m.Contracts {
+		for j, l := range c.Limits {
+			if l.PerPeriod != nil && l.PerPeriod.Amount == nil && l.PerPeriod.Currency != "" {
+				return fmt.Errorf("intent: contracts[%d]: limits[%d]: per_period.currency without an amount", i, j)
+			}
+		}
+	}
 	data, err := jsonv2.Marshal(m.Value())
 	if err != nil {
 		return fmt.Errorf("intent: %w", err)

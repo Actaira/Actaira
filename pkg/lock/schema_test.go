@@ -104,6 +104,9 @@ func TestACMSchemaAndGoAgree(t *testing.T) {
 		{"duplicate key", strings.Replace(valid, `"deny": ["customer.delete"],`, `"deny": ["customer.delete"], "deny": [],`, 1), true, false, "a JSON Schema validator reads the decoded value, where the last duplicate key wins (F-0030)"},
 		{"invalid utf-8", strings.Replace(valid, `"owner": "@ana"`, "\"owner\": \"@an\xff\"", 1), true, false, "the validator replaces invalid UTF-8 before validating; actaira rejects it (ADR 0002, rule 4)"},
 		{"limit on a capability not allowed", strings.Replace(valid, `{"capability": "money.refund", "per_operation"`, `{"capability": "money.refnd", "per_operation"`, 1), true, false, "a schema cannot compare two lists"},
+		{"day that does not exist", strings.Replace(valid, `"expires": "2027-04-01"`, `"expires": "2027-02-31"`, 1), true, false, "the schema only checks the form of a day; actaira checks that it exists"},
+		{"acm_version written 0.0", strings.Replace(valid, `"acm_version": 0`, `"acm_version": 0.0`, 1), true, false, "JSON Schema reads 0.0 as 0; actaira wants the digits of ADR 0002"},
+		{"two per_operation limits", strings.Replace(valid, `{"capability": "money.refund", "per_operation": {"amount": 50000, "currency": "EUR"}},`, `{"capability": "money.refund", "per_operation": {"amount": 50000, "currency": "EUR"}}, {"capability": "money.refund", "per_operation": {"amount": 1, "currency": "EUR"}},`, 1), true, false, "a schema cannot compare a field across items"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -153,6 +156,10 @@ func TestLockSchemaAndGoAgree(t *testing.T) {
 		{"effective with a value", strings.Replace(s, `{"axis":"effective","no_source":"not_from_repo"}`, `{"axis":"effective","value":0}`, 1), false, false, ""},
 		{"detected twice", strings.Replace(s, `{"axis":"detected","value":2},`, `{"axis":"detected","value":2},{"axis":"detected","value":2},`, 1), false, false, ""},
 		{"negative value", strings.Replace(s, `{"axis":"detected","value":2}`, `{"axis":"detected","value":-2}`, 1), false, false, ""},
+		{"url with a query", strings.Replace(s, `"url":"https://api.example.invalid/mcp"`, `"url":"https://api.example.invalid/mcp?api_key=TEST_SENTINEL_NOT_A_KEY"`, 1), false, false, ""},
+		{"url with a user", strings.Replace(s, `"url":"https://api.example.invalid/mcp"`, `"url":"https://u:p@api.example.invalid/mcp"`, 1), false, false, ""},
+		{"command with arguments", strings.Replace(s, `"command":"npx"`, `"command":"npx -y @stripe/mcp"`, 1), false, false, ""},
+		{"absolute path", strings.Replace(s, `"path":"support/prompts.py"`, `"path":"/home/someone/support/prompts.py"`, 1), true, false, "the schema cannot express a clean relative path; pkg/lock checks it"},
 		{"pretty printed", pretty.String(), true, false, "the schema cannot express the canonical form of ADR 0002"},
 	}
 	for _, c := range cases {

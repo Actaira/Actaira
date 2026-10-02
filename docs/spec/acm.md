@@ -5,7 +5,7 @@
 ## 1. Terms
 
 - **Capability:** an action on a resource, written `<resource>.<action>`, for example `customer.read` or `money.refund`. Both parts are lowercase ASCII letters, digits and `_`, starting with a letter. The vocabulary of resources and actions comes from a knowledge base (for Actaira, `actaira-kb`); version 0 only fixes the form.
-- **Agent:** identified by the stable `id` that the lockfile gives it (Actaira: a hash of framework, relative file, name and the ordinal among the definitions with that name in the file).
+- **Agent:** identified by the stable `id` that the lockfile gives it. In Actaira, the first 16 lowercase hex characters of the SHA-256 of five parts: the kind (`agent`), the framework, the file relative to the repository root with `/`, the name, and the ordinal among the definitions of that kind, framework, file and name in the order of the file, starting at 0 and written in decimal. Each part is put in Unicode NFC and preceded by its length in bytes as an unsigned 64-bit big-endian integer.
 - **Potential capability:** what a knowledge base says a tool could do. Not what a credential allows (effective) nor what was seen at runtime (observed).
 
 ## 2. Document
@@ -38,7 +38,7 @@
 1. `allow` is the complete list of what the agent may do. A potential capability outside `allow` breaks the contract.
 2. `deny` forbids explicitly and wins over `allow`. A capability in both lists is invalid.
 3. No wildcards in capabilities in version 0.
-4. Amounts are integers in the minor unit of their currency (ISO 4217): 50000 with `EUR` is 500 euros. A decimal is invalid.
+4. Amounts are integers in the minor unit of their currency: 50000 with `EUR` is 500 euros. A decimal is invalid. Version 0 checks only the form of the currency code (three capital letters), not that it is in ISO 4217.
 5. `period` is one of `day`, `week` or `month`, in UTC.
 6. A limit only names a capability that is in `allow`: a limit on anything else (a typo, a denied capability) is invalid.
 7. A limit only bounds what it names. Where a capability has no limit, the maximum exposure is "no limit", never a number.
