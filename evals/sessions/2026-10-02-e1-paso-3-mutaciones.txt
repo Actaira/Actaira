@@ -1,8 +1,8 @@
-# E1 paso 1.3: pruebas por mutación (tras la ronda 1 de la pasada adversarial)
-fecha: 2026-10-02T15:18:01Z
+# E1 paso 1.3: pruebas por mutación (tras la ronda 2 de la pasada adversarial)
+fecha: 2026-10-02T15:43:57Z
 comando: python3 evals/sessions/2026-10-02-e1-paso-3-mutate.py
 
-copia de 37ef98e325f15c9e07d75de3e28d66b08830dd31 en un directorio temporal; el repo no se toca
+copia de 38352d6e6f7cd946c515adb14403150819123260 en un directorio temporal; el repo no se toca
 
 ### canonical: claves por bytes y no por UTF-16
 fichero: pkg/lock/canonical.go; test: ./pkg/lock::TestCanonicalVectors
@@ -18,7 +18,7 @@ con la mutacion (debe ser rojo): exit 1
     --- PASS: TestCanonicalVectors/line_separators_as_they_are (0.00s)
     --- PASS: TestCanonicalVectors/delete_and_non-ascii_as_they_are (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/lock	0.004s
+FAIL	github.com/actaira/actaira/pkg/lock	0.005s
 FAIL
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.004s
@@ -72,7 +72,7 @@ SS: TestCanonicalRejectsWhatIsOutsideTheSubset/invalid_utf-8 (0.00s)
     --- PASS: TestCanonicalRejectsWhatIsOutsideTheSubset/reference_weird_key (0.00s)
     --- PASS: TestCanonicalRejectsWhatIsOutsideTheSubset/unsupported_type (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/lock	0.004s
+FAIL	github.com/actaira/actaira/pkg/lock	0.005s
 FAIL
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.004s
@@ -115,7 +115,7 @@ FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.004s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.004s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.005s
 resultado: OK
 
 ### model: id sin separar sus partes
@@ -124,10 +124,10 @@ con la mutacion (debe ser rojo): exit 1
     model_test.go:35: "ab"+"c" and "a"+"bc" give the same id
 --- FAIL: TestIDSeparatesItsParts (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/model	0.002s
+FAIL	github.com/actaira/actaira/pkg/model	0.001s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/model	0.001s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/model	0.002s
 resultado: OK
 
 ### model: resuelta con un solo hash
@@ -148,10 +148,10 @@ con la mutacion (debe ser rojo): exit 1
     coverage_test.go:108: detected = 4, want 2 (refund is referenced twice and counts once)
 --- FAIL: TestCoverageDetectedCountsEachToolOnce (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/coverage	0.001s
+FAIL	github.com/actaira/actaira/pkg/coverage	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.001s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.002s
 resultado: OK
 
 ### coverage: una tool sin resolver no deja entrada
@@ -160,10 +160,10 @@ con la mutacion (debe ser rojo): exit 1
     coverage_test.go:125: no unresolved entry at support/agent.py:20:1 for the unresolved tool; entries: []
 --- FAIL: TestCoverageResolvedNeedsTheWholeDefinition (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/coverage	0.001s
+FAIL	github.com/actaira/actaira/pkg/coverage	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.001s
 resultado: OK
 
 ### coverage: un eje sin fuente vale 0
@@ -172,7 +172,7 @@ con la mutacion (debe ser rojo): exit 1
     coverage_test.go:147: axis effective has value 0, want no value
 --- FAIL: TestCoverageAxisWithoutSourceIsNotZero (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/coverage	0.001s
+FAIL	github.com/actaira/actaira/pkg/coverage	0.002s
 FAIL
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.002s
@@ -184,10 +184,10 @@ con la mutacion (debe ser rojo): exit 1
     coverage_test.go:215: Compute with an unresolved entry in a skipped file: err = <nil>, want an error naming the file
 --- FAIL: TestCoverageUnseenAndUnresolvedNeverMix (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/coverage	0.002s
+FAIL	github.com/actaira/actaira/pkg/coverage	0.001s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.001s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.002s
 resultado: OK
 
 ### coverage: el resumen olvida el bloque del repo
@@ -196,10 +196,10 @@ con la mutacion (debe ser rojo): exit 1
     coverage_test.go:168: summary = 0 of 2 known sources observed, want 1 of 5
 --- FAIL: TestCoverageSourcesCountObservedOfKnown (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/coverage	0.002s
+FAIL	github.com/actaira/actaira/pkg/coverage	0.001s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.001s
 resultado: OK
 
 ### coverage: las declaraciones sin resolver no salen
@@ -208,10 +208,10 @@ con la mutacion (debe ser rojo): exit 1
     coverage_test.go:229: unresolved source declarations = [], want [support/agent.py:50:5]
 --- FAIL: TestCoverageUnresolvedSourceDeclarationsAppearInTheSummary (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/coverage	0.001s
+FAIL	github.com/actaira/actaira/pkg/coverage	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.001s
 resultado: OK
 
 ### coverage: lo saltado no es no visto
@@ -223,7 +223,7 @@ FAIL
 FAIL	github.com/actaira/actaira/pkg/coverage	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.001s
 resultado: OK
 
 ### coverage: sin agentes no hay bloque del repo
@@ -265,7 +265,7 @@ resultado: OK
 ### lock: lee otra versión del esquema
 fichero: pkg/lock/lockfile.go; test: ./pkg/lock::TestLockRejectsAnotherSchemaVersion
 con la mutacion (debe ser rojo): exit 1
-    lock_test.go:217: Decode of schema_version 2: err = lock: not in the canonical form that actaira lock writes, want an error naming schema_version
+    lock_test.go:221: Decode of schema_version 2: err = lock: not in the canonical form that actaira lock writes, want an error naming schema_version
 --- FAIL: TestLockRejectsAnotherSchemaVersion (0.00s)
 FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.004s
@@ -277,10 +277,10 @@ resultado: OK
 ### lock: acepta campos desconocidos
 fichero: pkg/lock/lockfile.go; test: ./pkg/lock::TestLockRejectsUnknownFields
 con la mutacion (debe ser rojo): exit 1
-    lock_test.go:224: Decode with an unknown field: err = lock: not in the canonical form that actaira lock writes, want an error naming it
+    lock_test.go:228: Decode with an unknown field: err = lock: not in the canonical form that actaira lock writes, want an error naming it
 --- FAIL: TestLockRejectsUnknownFields (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/lock	0.004s
+FAIL	github.com/actaira/actaira/pkg/lock	0.005s
 FAIL
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.005s
@@ -301,19 +301,19 @@ resultado: OK
 ### lock: guarda un efecto
 fichero: pkg/lock/lockfile.go; test: ./pkg/lock::TestLockRejectsWhatTheModelDoesNotAllow
 con la mutacion (debe ser rojo): exit 1
-    lock_test.go:271: Encode accepted a lockfile with a bad effect
+    lock_test.go:295: Encode accepted a lockfile with a bad effect
 --- FAIL: TestLockRejectsWhatTheModelDoesNotAllow (0.00s)
-    --- FAIL: TestLockRejectsWhatTheModelDoesNotAllow/effect (0.00s)
-    --- PASS: TestLockRejectsWhatTheModelDoesNotAllow/empty_id (0.00s)
-    --- PASS: TestLockRejectsWhatTheModelDoesNotAllow/source_file (0.00s)
     --- PASS: TestLockRejectsWhatTheModelDoesNotAllow/confidence (0.00s)
     --- PASS: TestLockRejectsWhatTheModelDoesNotAllow/transport (0.00s)
     --- PASS: TestLockRejectsWhatTheModelDoesNotAllow/edge_kind (0.00s)
+    --- FAIL: TestLockRejectsWhatTheModelDoesNotAllow/effect (0.00s)
+    --- PASS: TestLockRejectsWhatTheModelDoesNotAllow/empty_id (0.00s)
+    --- PASS: TestLockRejectsWhatTheModelDoesNotAllow/source_file (0.00s)
 FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.005s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.005s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.004s
 resultado: OK
 
 ### intent: no caduca
@@ -325,7 +325,7 @@ FAIL
 FAIL	github.com/actaira/actaira/pkg/intent	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/intent	0.001s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/intent	0.002s
 resultado: OK
 
 ### intent: la misma capacidad en allow y deny
@@ -397,7 +397,7 @@ FAIL
 FAIL	github.com/actaira/actaira/pkg/intent	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/intent	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/intent	0.001s
 resultado: OK
 
 ### intent: no normaliza a NFC
@@ -439,41 +439,42 @@ resultado: OK
 ### esquema ACM: un contrato aceptado con confianza
 fichero: schemas/acm.v0.json; test: ./pkg/lock::TestACMSchemaAndGoAgree
 con la mutacion (debe ser rojo): exit 1
-SS: TestACMSchemaAndGoAgree/capability_allowed_and_denied (0.00s)
-    --- PASS: TestACMSchemaAndGoAgree/two_contracts_for_one_agent (0.00s)
-    --- PASS: TestACMSchemaAndGoAgree/not_nfc_owner (0.00s)
-    --- PASS: TestACMSchemaAndGoAgree/null_list (0.00s)
+S: TestACMSchemaAndGoAgree/null_list (0.00s)
     --- PASS: TestACMSchemaAndGoAgree/empty_confidence (0.00s)
     --- PASS: TestACMSchemaAndGoAgree/amount_as_a_string (0.00s)
     --- PASS: TestACMSchemaAndGoAgree/miscased_key (0.00s)
     --- PASS: TestACMSchemaAndGoAgree/duplicate_key (0.00s)
     --- PASS: TestACMSchemaAndGoAgree/invalid_utf-8 (0.00s)
     --- PASS: TestACMSchemaAndGoAgree/limit_on_a_capability_not_allowed (0.00s)
+    --- PASS: TestACMSchemaAndGoAgree/day_that_does_not_exist (0.00s)
+    --- PASS: TestACMSchemaAndGoAgree/acm_version_written_0.0 (0.00s)
+    --- PASS: TestACMSchemaAndGoAgree/two_per_operation_limits (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/lock	0.010s
+FAIL	github.com/actaira/actaira/pkg/lock	0.011s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.010s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.011s
 resultado: OK
 
 ### esquema del lockfile: guarda un efecto
 fichero: schemas/actaira.lock.v1.json; test: ./pkg/lock::TestLockSchemaAndGoAgree
 con la mutacion (debe ser rojo): exit 1
- FAIL: TestLockSchemaAndGoAgree/stored_effect (0.00s)
-    --- PASS: TestLockSchemaAndGoAgree/axis_with_value_and_no_source (0.00s)
-    --- PASS: TestLockSchemaAndGoAgree/not_observed_without_reason (0.00s)
-    --- PASS: TestLockSchemaAndGoAgree/bad_capability_in_intent (0.00s)
+y_in_intent (0.00s)
     --- PASS: TestLockSchemaAndGoAgree/bad_id (0.00s)
     --- PASS: TestLockSchemaAndGoAgree/no_axes (0.00s)
     --- PASS: TestLockSchemaAndGoAgree/effective_with_a_value (0.00s)
     --- PASS: TestLockSchemaAndGoAgree/detected_twice (0.00s)
     --- PASS: TestLockSchemaAndGoAgree/negative_value (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/url_with_a_query (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/url_with_a_user (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/command_with_arguments (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/absolute_path (0.00s)
     --- PASS: TestLockSchemaAndGoAgree/pretty_printed (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/lock	0.014s
+FAIL	github.com/actaira/actaira/pkg/lock	0.017s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.014s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.017s
 resultado: OK
 
 ### F-0030: claves repetidas, gana la última
@@ -651,7 +652,7 @@ con la mutacion (debe ser rojo): exit 1
     model_test.go:45: two definitions with the same name get the same id
 --- FAIL: TestIDDependsOnTheOrdinal (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/model	0.021s
+FAIL	github.com/actaira/actaira/pkg/model	0.001s
 FAIL
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/model	0.001s
@@ -678,7 +679,7 @@ FAIL
 FAIL	github.com/actaira/actaira/pkg/coverage	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.001s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.002s
 resultado: OK
 
 ### coverage: una arista a nada
@@ -687,7 +688,7 @@ con la mutacion (debe ser rojo): exit 1
     coverage_test.go:301: Compute with an edge to nothing: err = <nil>, want an error naming 2ea77849ad7f4480
 --- FAIL: TestCoverageRejectsAnEdgeToNothing (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/coverage	0.001s
+FAIL	github.com/actaira/actaira/pkg/coverage	0.002s
 FAIL
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.001s
@@ -699,10 +700,10 @@ con la mutacion (debe ser rojo): exit 1
     coverage_test.go:318: the unattached unresolved tool left no entry in the repo block: []
 --- FAIL: TestCoverageUnattachedUnresolvedToolGoesToTheRepoBlock (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/coverage	0.001s
+FAIL	github.com/actaira/actaira/pkg/coverage	0.002s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.001s
 resultado: OK
 
 ### coverage: fuentes sin agrupar
@@ -711,10 +712,10 @@ con la mutacion (debe ser rojo): exit 1
     coverage_test.go:334: github has 1 locations, want 2
 --- FAIL: TestCoverageGroupsSourcesByKindAndName (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/coverage	0.002s
+FAIL	github.com/actaira/actaira/pkg/coverage	0.001s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.002s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.001s
 resultado: OK
 
 ### coverage: entradas repetidas
@@ -744,19 +745,19 @@ resultado: OK
 ### F-0031: sin salto de línea final
 fichero: pkg/lock/lockfile.go; test: ./pkg/lock::TestLockFileEndsWithOneNewline
 con la mutacion (debe ser rojo): exit 1
-    lock_test.go:282: the lockfile does not end with exactly one newline: "}]}"
+    lock_test.go:306: the lockfile does not end with exactly one newline: "}]}"
 --- FAIL: TestLockFileEndsWithOneNewline (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/lock	0.004s
+FAIL	github.com/actaira/actaira/pkg/lock	0.005s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.008s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.007s
 resultado: OK
 
 ### F-0031: no acepta CRLF
 fichero: pkg/lock/lockfile.go; test: ./pkg/lock::TestLockFileEndsWithOneNewline
 con la mutacion (debe ser rojo): exit 1
-    lock_test.go:287: Decode with CRLF at the end: lock: not in the canonical form that actaira lock writes
+    lock_test.go:311: Decode with CRLF at the end: lock: not in the canonical form that actaira lock writes
 --- FAIL: TestLockFileEndsWithOneNewline (0.00s)
 FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.005s
@@ -768,7 +769,7 @@ resultado: OK
 ### F-0032: Encode admite ids repetidos
 fichero: pkg/lock/lockfile.go; test: ./pkg/lock::TestLockRejectsTwoThingsWithOneID
 con la mutacion (debe ser rojo): exit 1
-    lock_test.go:302: Encode with a repeated tool id: err = <nil>, want an error naming it
+    lock_test.go:326: Encode with a repeated tool id: err = <nil>, want an error naming it
 --- FAIL: TestLockRejectsTwoThingsWithOneID (0.00s)
 FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.004s
@@ -780,19 +781,18 @@ resultado: OK
 ### lock: ejes sin comprobar
 fichero: pkg/lock/lockfile.go; test: ./pkg/lock::TestLockRejectsBadAxes
 con la mutacion (debe ser rojo): exit 1
-go:335: Encode with no axes: err = <nil>
-    lock_test.go:335: Encode with axis twice: err = <nil>
-    lock_test.go:335: Encode with effective with value: err = <nil>
-    lock_test.go:335: Encode with detected without value: err = <nil>
-    lock_test.go:335: Encode with negative value: err = <nil>
+    lock_test.go:359: Encode with no axes: err = <nil>
+    lock_test.go:359: Encode with axis twice: err = <nil>
+    lock_test.go:359: Encode with effective with value: err = <nil>
+    lock_test.go:359: Encode with detected without value: err = <nil>
 --- FAIL: TestLockRejectsBadAxes (0.00s)
     --- FAIL: TestLockRejectsBadAxes/no_axes (0.00s)
     --- FAIL: TestLockRejectsBadAxes/axis_twice (0.00s)
     --- FAIL: TestLockRejectsBadAxes/effective_with_value (0.00s)
     --- FAIL: TestLockRejectsBadAxes/detected_without_value (0.00s)
-    --- FAIL: TestLockRejectsBadAxes/negative_value (0.00s)
+    --- PASS: TestLockRejectsBadAxes/negative_value (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/lock	0.006s
+FAIL	github.com/actaira/actaira/pkg/lock	0.005s
 FAIL
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.004s
@@ -801,7 +801,7 @@ resultado: OK
 ### lock: un contrato huérfano entra
 fichero: pkg/lock/lockfile.go; test: ./pkg/lock::TestLockRejectsAnOrphanOrInvalidContract
 con la mutacion (debe ser rojo): exit 1
-    lock_test.go:357: Encode with an orphan contract: err = <nil>
+    lock_test.go:381: Encode with an orphan contract: err = <nil>
 --- FAIL: TestLockRejectsAnOrphanOrInvalidContract (0.00s)
 FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.004s
@@ -813,33 +813,262 @@ resultado: OK
 ### lock: un contrato inválido entra
 fichero: pkg/lock/lockfile.go; test: ./pkg/lock::TestLockRejectsAnOrphanOrInvalidContract
 con la mutacion (debe ser rojo): exit 1
-    lock_test.go:362: Encode with a capability in allow and deny: err = <nil>
+    lock_test.go:386: Encode with a capability in allow and deny: err = <nil>
 --- FAIL: TestLockRejectsAnOrphanOrInvalidContract (0.00s)
 FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.004s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.004s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.005s
 resultado: OK
 
 ### esquema del lockfile: effective con valor
 fichero: schemas/actaira.lock.v1.json; test: ./pkg/lock::TestLockSchemaAndGoAgree
 con la mutacion (debe ser rojo): exit 1
- PASS: TestLockSchemaAndGoAgree/stored_effect (0.00s)
-    --- PASS: TestLockSchemaAndGoAgree/axis_with_value_and_no_source (0.00s)
-    --- PASS: TestLockSchemaAndGoAgree/not_observed_without_reason (0.00s)
-    --- PASS: TestLockSchemaAndGoAgree/bad_capability_in_intent (0.00s)
+y_in_intent (0.00s)
     --- PASS: TestLockSchemaAndGoAgree/bad_id (0.00s)
     --- PASS: TestLockSchemaAndGoAgree/no_axes (0.00s)
     --- FAIL: TestLockSchemaAndGoAgree/effective_with_a_value (0.00s)
     --- PASS: TestLockSchemaAndGoAgree/detected_twice (0.00s)
     --- PASS: TestLockSchemaAndGoAgree/negative_value (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/url_with_a_query (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/url_with_a_user (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/command_with_arguments (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/absolute_path (0.00s)
     --- PASS: TestLockSchemaAndGoAgree/pretty_printed (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/lock	0.014s
+FAIL	github.com/actaira/actaira/pkg/lock	0.018s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.015s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.017s
+resultado: OK
+
+### F-0034: una URL con usuario o query
+fichero: pkg/lock/lockfile.go; test: ./pkg/lock::TestLockNeverCarriesURLCredentialsOrCommandArguments
+con la mutacion (debe ser rojo): exit 1
+    lock_test.go:425: Encode accepted it
+    lock_test.go:425: Encode accepted it
+--- FAIL: TestLockNeverCarriesURLCredentialsOrCommandArguments (0.00s)
+    --- FAIL: TestLockNeverCarriesURLCredentialsOrCommandArguments/user_and_password (0.00s)
+    --- FAIL: TestLockNeverCarriesURLCredentialsOrCommandArguments/query (0.00s)
+    --- PASS: TestLockNeverCarriesURLCredentialsOrCommandArguments/fragment (0.00s)
+    --- PASS: TestLockNeverCarriesURLCredentialsOrCommandArguments/other_scheme (0.00s)
+    --- PASS: TestLockNeverCarriesURLCredentialsOrCommandArguments/command_arguments (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/lock	0.005s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.004s
+resultado: OK
+
+### F-0034: un comando con argumentos
+fichero: pkg/lock/lockfile.go; test: ./pkg/lock::TestLockNeverCarriesURLCredentialsOrCommandArguments
+con la mutacion (debe ser rojo): exit 1
+    lock_test.go:425: Encode accepted it
+--- FAIL: TestLockNeverCarriesURLCredentialsOrCommandArguments (0.00s)
+    --- FAIL: TestLockNeverCarriesURLCredentialsOrCommandArguments/command_arguments (0.00s)
+    --- PASS: TestLockNeverCarriesURLCredentialsOrCommandArguments/user_and_password (0.00s)
+    --- PASS: TestLockNeverCarriesURLCredentialsOrCommandArguments/query (0.00s)
+    --- PASS: TestLockNeverCarriesURLCredentialsOrCommandArguments/fragment (0.00s)
+    --- PASS: TestLockNeverCarriesURLCredentialsOrCommandArguments/other_scheme (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/lock	0.005s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.005s
+resultado: OK
+
+### lock: un agente sin bloque de cobertura
+fichero: pkg/lock/lockfile.go; test: ./pkg/lock::TestLockTiesCoverageToTheModel
+con la mutacion (debe ser rojo): exit 1
+    lock_test.go:458: Encode with a coverage block with block missing: err = <nil>
+--- FAIL: TestLockTiesCoverageToTheModel (0.00s)
+    --- FAIL: TestLockTiesCoverageToTheModel/block_missing (0.00s)
+    --- PASS: TestLockTiesCoverageToTheModel/block_twice (0.00s)
+    --- PASS: TestLockTiesCoverageToTheModel/block_of_no_agent (0.00s)
+    --- PASS: TestLockTiesCoverageToTheModel/detected_out_of_model (0.00s)
+    --- PASS: TestLockTiesCoverageToTheModel/resolved_out_of_model (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/lock	0.005s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.004s
+resultado: OK
+
+### lock: contadores que no cuadran con el modelo
+fichero: pkg/lock/lockfile.go; test: ./pkg/lock::TestLockTiesCoverageToTheModel
+con la mutacion (debe ser rojo): exit 1
+    lock_test.go:458: Encode with a coverage block with detected out of model: err = <nil>
+    lock_test.go:458: Encode with a coverage block with resolved out of model: err = <nil>
+--- FAIL: TestLockTiesCoverageToTheModel (0.00s)
+    --- FAIL: TestLockTiesCoverageToTheModel/detected_out_of_model (0.00s)
+    --- FAIL: TestLockTiesCoverageToTheModel/resolved_out_of_model (0.00s)
+    --- PASS: TestLockTiesCoverageToTheModel/block_missing (0.00s)
+    --- PASS: TestLockTiesCoverageToTheModel/block_twice (0.00s)
+    --- PASS: TestLockTiesCoverageToTheModel/block_of_no_agent (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/lock	0.005s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.004s
+resultado: OK
+
+### lock: aristas sin comprobar
+fichero: pkg/lock/lockfile.go; test: ./pkg/lock::TestLockEdgesJoinThingsOfTheRightKind
+con la mutacion (debe ser rojo): exit 1
+t.go:479: Encode with an edge with references_env to an agent: err = <nil>
+--- FAIL: TestLockEdgesJoinThingsOfTheRightKind (0.00s)
+    --- FAIL: TestLockEdgesJoinThingsOfTheRightKind/references_env_from_a_secret (0.00s)
+    --- FAIL: TestLockEdgesJoinThingsOfTheRightKind/end_not_in_the_lockfile (0.00s)
+    --- FAIL: TestLockEdgesJoinThingsOfTheRightKind/can_call_to_an_MCP_server (0.00s)
+    --- FAIL: TestLockEdgesJoinThingsOfTheRightKind/uses_mcp_server_to_a_tool (0.00s)
+    --- FAIL: TestLockEdgesJoinThingsOfTheRightKind/delegates_to_a_tool (0.00s)
+    --- FAIL: TestLockEdgesJoinThingsOfTheRightKind/references_env_to_an_agent (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/lock	0.006s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.004s
+resultado: OK
+
+### coverage: una arista entre tipos que no tocan
+fichero: pkg/coverage/coverage.go; test: ./pkg/coverage::TestCoverageEdgeEndsHaveTheRightKind
+con la mutacion (debe ser rojo): exit 1
+    coverage_test.go:391: Compute with uses_mcp_server to a tool: err = <nil>
+    coverage_test.go:391: Compute with can_call to an MCP server: err = <nil>
+    coverage_test.go:391: Compute with delegates_to from a tool: err = <nil>
+--- FAIL: TestCoverageEdgeEndsHaveTheRightKind (0.00s)
+    --- FAIL: TestCoverageEdgeEndsHaveTheRightKind/uses_mcp_server_to_a_tool (0.00s)
+    --- FAIL: TestCoverageEdgeEndsHaveTheRightKind/can_call_to_an_MCP_server (0.00s)
+    --- FAIL: TestCoverageEdgeEndsHaveTheRightKind/delegates_to_from_a_tool (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/coverage	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.002s
+resultado: OK
+
+### lock: rutas sin limpiar
+fichero: pkg/lock/lockfile.go; test: ./pkg/lock::TestLockPathsAreRelativeAndClean
+con la mutacion (debe ser rojo): exit 1
+ "support/": err = <nil>
+    lock_test.go:494: Encode with the source path ".": err = <nil>
+--- FAIL: TestLockPathsAreRelativeAndClean (0.00s)
+    --- FAIL: TestLockPathsAreRelativeAndClean//home/someone/repo/support/agent.py (0.00s)
+    --- FAIL: TestLockPathsAreRelativeAndClean/support\agent.py (0.00s)
+    --- FAIL: TestLockPathsAreRelativeAndClean/../outside.py (0.00s)
+    --- FAIL: TestLockPathsAreRelativeAndClean/./support/agent.py (0.00s)
+    --- FAIL: TestLockPathsAreRelativeAndClean/support//agent.py (0.00s)
+    --- FAIL: TestLockPathsAreRelativeAndClean/support/ (0.00s)
+    --- FAIL: TestLockPathsAreRelativeAndClean/. (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/lock	0.008s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.006s
+resultado: OK
+
+### coverage: lo leído en una parte saltada
+fichero: pkg/coverage/coverage.go; test: ./pkg/coverage::TestCoverageNothingReadIsInASkippedPart
+con la mutacion (debe ser rojo): exit 1
+    coverage_test.go:404: Compute with the agent's file skipped: err = <nil>
+--- FAIL: TestCoverageNothingReadIsInASkippedPart (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/coverage	0.001s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.001s
+resultado: OK
+
+### coverage: el resumen cuenta dos veces una fuente
+fichero: pkg/coverage/coverage.go; test: ./pkg/coverage::TestCoverageSummaryCountsASourceOnce
+con la mutacion (debe ser rojo): exit 1
+    coverage_test.go:433: github is 2 times in what was not seen, want 1
+--- FAIL: TestCoverageSummaryCountsASourceOnce (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/coverage	0.001s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/coverage	0.002s
+resultado: OK
+
+### intent: dos límites del mismo tipo
+fichero: pkg/intent/intent.go; test: ./pkg/intent::TestIntentRejectsTwoLimitsOfTheSameKind
+con la mutacion (debe ser rojo): exit 1
+": "2027-04-01",
+              "allow": ["customer.read", "money.refund"],
+              "deny": ["customer.delete"],
+              "limits": [
+                {"capability": "money.refund", "per_operation": {"amount": 50000, "currency": "EUR"}}, {"capability": "money.refund", "per_operation": {"amount": 99999999, "currency": "EUR"}},
+                {"capability": "money.refund", "per_period": {"period": "month", "amount": 200000, "currency": "EUR", "count": 100}}
+              ],
+              "egress": ["api.stripe.com", "*.zendesk.com"]
+            }
+          ]
+        }
+--- FAIL: TestIntentRejectsTwoLimitsOfTheSameKind (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/intent	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/intent	0.002s
+resultado: OK
+
+### intent: Validate pierde una moneda sin importe
+fichero: pkg/intent/intent.go; test: ./pkg/intent::TestIntentValidateRejectsACurrencyWithoutAmount
+con la mutacion (debe ser rojo): exit 1
+    intent_test.go:250: Validate with a currency and no amount: err = <nil>
+--- FAIL: TestIntentValidateRejectsACurrencyWithoutAmount (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/intent	0.002s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/intent	0.002s
+resultado: OK
+
+### intent: la copia pierde el count
+fichero: pkg/intent/intent.go; test: ./pkg/lock::TestLockKeepsTheIntentBlock
+con la mutacion (debe ser rojo): exit 1
+":"unknown","framework":"openai-agents-python","id":"cb379a7a4401cfd9","name":"refund","schema_hash":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","source":{"column":1,"file":"support/agent.py","line":10}},{"confidence":"unresolved","effect":"unknown","framework":"openai-agents-python","id":"303d1ff87cb1bf95","name":"lookup","source":{"column":1,"file":"support/agent.py","line":20}},{"confidence":"unresolved","effect":"unknown","framework":"openai-agents-python","id":"907f7990b0c3e63a","name":"invoice","source":{"column":1,"file":"support/agent.py","line":25}}]}
+--- FAIL: TestLockKeepsTheIntentBlock (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/lock	0.005s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.004s
+resultado: OK
+
+### intent: la copia pierde la confianza del borrador
+fichero: pkg/intent/intent.go; test: ./pkg/lock::TestLockKeepsTheIntentBlock
+con la mutacion (debe ser rojo): exit 1
+    lock_test.go:240: Encode: lock: intent: contracts[1]: status: a draft carries confidence inferred and no accepted_by or accepted_at
+--- FAIL: TestLockKeepsTheIntentBlock (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/lock	0.004s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.005s
+resultado: OK
+
+### esquema del lockfile: URL con query
+fichero: schemas/actaira.lock.v1.json; test: ./pkg/lock::TestLockSchemaAndGoAgree
+con la mutacion (debe ser rojo): exit 1
+y_in_intent (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/bad_id (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/no_axes (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/effective_with_a_value (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/detected_twice (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/negative_value (0.00s)
+    --- FAIL: TestLockSchemaAndGoAgree/url_with_a_query (0.00s)
+    --- FAIL: TestLockSchemaAndGoAgree/url_with_a_user (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/command_with_arguments (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/absolute_path (0.00s)
+    --- PASS: TestLockSchemaAndGoAgree/pretty_printed (0.00s)
+FAIL
+FAIL	github.com/actaira/actaira/pkg/lock	0.018s
+FAIL
+restaurado byte a byte: True
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.017s
 resultado: OK
 
 ### F-0033: tools sin ordenar
@@ -851,7 +1080,7 @@ FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.004s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.017s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.019s
 resultado: OK
 
 ### F-0033: mcp_servers sin ordenar
@@ -863,7 +1092,7 @@ FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.004s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.017s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.018s
 resultado: OK
 
 ### F-0033: skills sin ordenar
@@ -875,7 +1104,7 @@ FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.004s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.017s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.018s
 resultado: OK
 
 ### F-0033: secret_refs sin ordenar
@@ -887,7 +1116,7 @@ FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.004s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.019s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.018s
 resultado: OK
 
 ### F-0033: edges sin ordenar
@@ -899,7 +1128,7 @@ FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.004s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.018s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.019s
 resultado: OK
 
 ### F-0033: ubicaciones sin ordenar
@@ -908,7 +1137,7 @@ con la mutacion (debe ser rojo): exit 1
 ework":"openai-agents-python","id":"cb379a7a4401cfd9","name":"refund","schema_hash":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","source":{"column":1,"file":"support/agent.py","line":10}},{"confidence":"unresolved","effect":"unknown","framework":"openai-agents-python","id":"303d1ff87cb1bf95","name":"lookup","source":{"column":1,"file":"support/agent.py","line":20}},{"confidence":"unresolved","effect":"unknown","framework":"openai-agents-python","id":"907f7990b0c3e63a","name":"invoice","source":{"column":1,"file":"support/agent.py","line":25}}]}
 --- FAIL: TestLockIsTheSameWhateverTheOrderOfItsInputs (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/lock	0.005s
+FAIL	github.com/actaira/actaira/pkg/lock	0.004s
 FAIL
 restaurado byte a byte: True
 con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.018s
@@ -923,7 +1152,7 @@ FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.004s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.017s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.019s
 resultado: OK
 
 ### F-0033: agentes de coverage sin ordenar
@@ -935,7 +1164,7 @@ FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.005s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.018s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.019s
 resultado: OK
 
 ### F-0033: ejes sin ordenar
@@ -947,7 +1176,7 @@ FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.004s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.017s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.019s
 resultado: OK
 
 ### F-0033: skipped sin ordenar
@@ -959,7 +1188,7 @@ FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.004s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.017s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.029s
 resultado: OK
 
 ### F-0033: fuentes sin ordenar
@@ -980,10 +1209,10 @@ con la mutacion (debe ser rojo): exit 1
 ework":"openai-agents-python","id":"cb379a7a4401cfd9","name":"refund","schema_hash":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","source":{"column":1,"file":"support/agent.py","line":10}},{"confidence":"unresolved","effect":"unknown","framework":"openai-agents-python","id":"303d1ff87cb1bf95","name":"lookup","source":{"column":1,"file":"support/agent.py","line":20}},{"confidence":"unresolved","effect":"unknown","framework":"openai-agents-python","id":"907f7990b0c3e63a","name":"invoice","source":{"column":1,"file":"support/agent.py","line":25}}]}
 --- FAIL: TestLockIsTheSameWhateverTheOrderOfItsInputs (0.00s)
 FAIL
-FAIL	github.com/actaira/actaira/pkg/lock	0.004s
+FAIL	github.com/actaira/actaira/pkg/lock	0.005s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.017s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.018s
 resultado: OK
 
 ### F-0033: entradas unresolved sin ordenar
@@ -995,7 +1224,7 @@ FAIL
 FAIL	github.com/actaira/actaira/pkg/lock	0.004s
 FAIL
 restaurado byte a byte: True
-con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.018s
+con la correccion (debe ser verde): exit 0: ok  	github.com/actaira/actaira/pkg/lock	0.019s
 resultado: OK
 
 repo en uso sin cambios
