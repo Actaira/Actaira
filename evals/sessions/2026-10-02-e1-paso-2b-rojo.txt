@@ -1,0 +1,17 @@
+# E1 paso 1.2b: tests de release en rojo antes de construir
+fecha: 2026-10-02T13:49:23Z
+commit: 4c944aa más release_test.sh sin commitear
+comando: bash scripts/harness/tests/release_test.sh
+
+--- FAIL: test_build_fails_when_the_binary_is_not_static
+--- FAIL: test_build_fails_when_the_binary_prints_another_version
+--- FAIL: test_build_images_are_pinned_by_digest
+--- FAIL: test_build_passes_with_a_static_binary_that_prints_its_version
+--- FAIL: test_build_rejects_an_unknown_architecture
+--- FAIL: test_dry_run_signs_with_an_ephemeral_key_and_no_transparency_log
+--- FAIL: test_only_the_publish_job_can_write_or_ask_for_oidc
+--- FAIL: test_publish_checks_main_and_publishes_a_draft_last
+--- FAIL: test_publish_runs_only_on_a_version_tag
+--- FAIL: test_publish_verifies_the_exact_workflow_identity
+--- FAIL: test_release_has_exactly_the_three_release_jobs
+--- FAIL: test_version_ldflag_of_the_script_sets_the_version
