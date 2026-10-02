@@ -12,7 +12,11 @@
 # Exit 0 if every check passes, 1 with the reason if one fails, 2 on usage.
 set -euo pipefail
 
-# Images by index digest (verificador-apis, E1 step 1.2b).
+# Images by index digest (verificador-apis, E1 step 1.2b):
+#   https://github.com/docker-library/repo-info/blob/master/repos/golang/remote/1.27.1-alpine.md
+#   https://github.com/docker-library/repo-info/blob/master/repos/alpine/remote/3.24.md
+#   https://hub.docker.com/_/ubuntu (20.04, frozen since 2025-04-09: an old glibc on purpose)
+# The tag of GOLANG_IMAGE is the go line of go.mod (release_test.sh).
 GOLANG_IMAGE="golang:1.27.1-alpine@sha256:8a5910f31396cd4d89662f56c68b3ae31d374308270a1c3bd96672ee5ed43414"
 ALPINE_IMAGE="alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6"
 UBUNTU_IMAGE="ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214"
@@ -49,7 +53,7 @@ docker run --rm --platform "$platform" \
   -e BIN="$bin" -e LDFLAGS="-s -w -X $VERSION_VAR=$version -linkmode external -extldflags -static" \
   -e OWNER="$(id -u):$(id -g)" \
   "$GOLANG_IMAGE" \
-  sh -euc 'apk add --no-cache gcc musl-dev > /dev/null && go build -trimpath -buildvcs=false -ldflags "$LDFLAGS" -o "/out/$BIN" ./cmd/actaira && chown "$OWNER" "/out/$BIN"'
+  sh -euc 'apk add --no-cache gcc musl-dev > /dev/null && apk info -v gcc musl-dev && go build -trimpath -buildvcs=false -ldflags "$LDFLAGS" -o "/out/$BIN" ./cmd/actaira && chown "$OWNER" "/out/$BIN"'
 
 info="$(file "$out/$bin")"
 case "$info" in

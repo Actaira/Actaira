@@ -122,7 +122,8 @@ test_version_ldflag_of_the_script_sets_the_version() {
   local var out
   var="$(sed -n 's/^VERSION_VAR="\(.*\)"$/\1/p' "$BUILD")"
   [ -n "$var" ] || fail "el script no declara VERSION_VAR"
-  (cd "$REPO_DIR" && go build -o "$T/actaira" -ldflags "-X $var=v9.9.9-test" ./cmd/actaira)
+  # GOTOOLCHAIN=local: the test never downloads a Go toolchain.
+  (cd "$REPO_DIR" && GOTOOLCHAIN=local go build -o "$T/actaira" -ldflags "-X $var=v9.9.9-test" ./cmd/actaira)
   out="$("$T/actaira" version)"
   assert_eq "$out" "actaira v9.9.9-test" "salida de actaira version"
 }
@@ -206,6 +207,156 @@ test_publish_checks_main_and_publishes_a_draft_last() {
   assert_contains "$block" "--draft --verify-tag" "borrador sobre una etiqueta que ya existe"
   assert_contains "$block" "gh release edit" "publicación al final"
   assert_contains "$block" "--draft=false" "publicación al final"
+}
+
+# The whole workflow, compared exactly (L-006), as ci_test.sh does with ci.yml:
+# round 1 of step 1.2b found changes the shape tests let through (release-build
+# without the script, arm64 on an amd64 runner, a dryrun version on a tag,
+# publish on workflow_dispatch, signing before the main check, a dry run that
+# never verifies the good signature). A deliberate change updates this test in
+# the same PR, where the diff shows it.
+test_release_workflow_is_exactly_the_reviewed_one() {
+  [ -f "$RELEASE" ] || fail "no existe $RELEASE"
+  local expected
+  expected="$(cat <<'EOF'
+name: release
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+permissions:
+  contents: read
+jobs:
+  release-build:
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and check the static binary
+        env:
+          ARCH: ${{ matrix.arch }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [ "$REF_TYPE" = tag ]; then version="$REF_NAME"; else version="dryrun-${SHA:0:12}"; fi
+          scripts/release/build-static.sh "$ARCH" "$version" dist
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: actaira-linux-${{ matrix.arch }}
+          path: dist/actaira-linux-${{ matrix.arch }}
+          if-no-files-found: error
+  release-dry-run:
+    if: github.event_name != 'push'
+    needs: release-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: "v3.1.3"
+      - name: Sign and verify with an ephemeral key, without network
+        working-directory: dist
+        run: |
+          sha256sum actaira-linux-amd64 actaira-linux-arm64 > checksums.txt
+          cosign_bin="$(command -v cosign)"
+          sudo unshare -n env COSIGN_PASSWORD= "$cosign_bin" generate-key-pair
+          sudo unshare -n env COSIGN_PASSWORD= "$cosign_bin" sign-blob --yes --key cosign.key --use-signing-config=false --tlog-upload=false --bundle checksums.txt.sigstore.json checksums.txt
+          sudo unshare -n "$cosign_bin" verify-blob --key cosign.pub --insecure-ignore-tlog=true --bundle checksums.txt.sigstore.json checksums.txt
+          sha256sum -c checksums.txt
+          cp checksums.txt tampered.txt
+          printf 'x' >> tampered.txt
+          rc=0
+          out="$(sudo unshare -n "$cosign_bin" verify-blob --key cosign.pub --insecure-ignore-tlog=true --bundle checksums.txt.sigstore.json tampered.txt 2>&1)" || rc=$?
+          printf '%s\n' "$out"
+          if [ "$rc" -eq 0 ]; then
+            echo "release-dry-run: the signature verifies a changed file" >&2
+            exit 1
+          fi
+          case "$out" in
+            *"could not verify message"*) ;;
+            *)
+              echo "release-dry-run: verification of a changed file failed for another reason" >&2
+              exit 1
+              ;;
+          esac
+  release-publish:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: release-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: The tag must be on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: "v3.1.3"
+      - name: Sign checksums.txt with the identity of this workflow and verify it
+        working-directory: dist
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          sha256sum actaira-linux-amd64 actaira-linux-arm64 > checksums.txt
+          cosign sign-blob --yes --bundle checksums.txt.sigstore.json checksums.txt
+          cosign verify-blob --bundle checksums.txt.sigstore.json --certificate-identity "https://github.com/Actaira/Actaira/.github/workflows/release.yml@refs/tags/${VERSION}" --certificate-oidc-issuer https://token.actions.githubusercontent.com checksums.txt
+      - name: Publish the release, as a draft until its assets are up
+        working-directory: dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          gh release create "$VERSION" --repo "$REPO" --draft --verify-tag --title "$VERSION" --notes "Static Linux binaries of actaira $VERSION. Verify checksums.txt with cosign (docs/epicas/E1.md, step 1.2), then sha256sum -c checksums.txt."
+          gh release upload "$VERSION" --repo "$REPO" actaira-linux-amd64 actaira-linux-arm64 checksums.txt checksums.txt.sigstore.json
+          gh release edit "$VERSION" --repo "$REPO" --draft=false
+EOF
+)"
+  assert_eq "$(grep -vE '^[[:space:]]*(#|$)' "$RELEASE")" "$expected" \
+    "release.yml no es el revisado: un cambio en lo que compila, firma o publica tiene que verse en este test"
+}
+
+# The image builds with the Go of go.mod: with GOTOOLCHAIN=local, a go line
+# newer than the image fails the release build, and check (setup-go with
+# go-version-file) would not see it (round 1 of step 1.2b).
+test_golang_image_is_the_go_of_go_mod() {
+  [ -f "$BUILD" ] || fail "no existe $BUILD"
+  local want toolchain image
+  want="$(sed -n 's/^go \([0-9.]*\)$/\1/p' "$REPO_DIR/go.mod")"
+  [ -n "$want" ] || fail "go.mod sin línea go"
+  toolchain="$(sed -n 's/^toolchain go\([0-9.]*\)$/\1/p' "$REPO_DIR/go.mod")"
+  if [ -n "$toolchain" ]; then want="$toolchain"; fi
+  image="$(sed -n 's/^GOLANG_IMAGE="golang:\([0-9.]*\)-alpine@.*$/\1/p' "$BUILD")"
+  assert_eq "$image" "$want" "versión de Go de GOLANG_IMAGE frente a go.mod"
 }
 
 run_tests "$@"

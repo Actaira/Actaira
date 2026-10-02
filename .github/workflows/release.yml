@@ -9,10 +9,26 @@
 #     signature with the identity of this workflow, which leaves a public and
 #     permanent entry in Sigstore: the first one is v0.1.0, tagged only with
 #     Marcos's approval.
-# None of them is the required check (the job `check` of ci.yml, ADR 0000).
+# None of them is the required check (the job `check` of ci.yml, ADR 0000), so
+# merge-pr.sh does not wait for them: look at them before merging.
 # Actions pinned by commit SHA with their release in a comment
-# (scripts/harness/tests/ci_test.sh); the shape of this file is fixed by
-# scripts/harness/tests/release_test.sh.
+# (scripts/harness/tests/ci_test.sh); the content of this file is fixed by
+# scripts/harness/tests/release_test.sh (L-006).
+# Official documentation, checked by verificador-apis (E1 step 1.2b):
+#   - cosign v3.1.3 sign-blob and verify-blob:
+#     https://github.com/sigstore/cosign/blob/v3.1.3/doc/cosign_sign-blob.md
+#     https://github.com/sigstore/cosign/blob/v3.1.3/doc/cosign_verify-blob.md
+#   - --tlog-upload=false needs --use-signing-config=false (LoadTrustedMaterialAndSigningConfig):
+#     https://github.com/sigstore/cosign/blob/v3.1.3/cmd/cosign/cli/signcommon/common.go
+#   - every Fulcio certificate goes to a public CT log, hence the ephemeral key:
+#     https://docs.sigstore.dev/about/security/
+#   - the signing identity is https://github.com/ + job_workflow_ref:
+#     https://github.com/sigstore/fulcio/blob/main/docs/oidc.md and
+#     https://docs.github.com/en/actions/reference/security/oidc
+#   - runners, artifacts and releases:
+#     https://docs.github.com/en/actions/reference/runners/github-hosted-runners
+#     https://github.com/actions/upload-artifact and https://github.com/actions/download-artifact
+#     https://cli.github.com/manual/gh_release_create
 name: release
 
 on:
