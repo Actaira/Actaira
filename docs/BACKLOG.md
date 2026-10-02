@@ -40,3 +40,6 @@
   - hallazgo medio 2, en la E3: `merge-pr.sh` con `--required` en un repo sin checks obligatorios espera hasta rendirse y no fusiona. Pasaría en `actaira-cloud`, privado y sin protección de rama. Falla cerrado. Distinguir "no hay checks" de "no hay obligatorios";
   - hallazgo bajo 2, si algún día se soporta Windows: `SetTimeoutMicros` se desborda con plazos de más de 21 días. Acotar el plazo antes de pasarlo;
   - hallazgo bajo 3: el resultado de la CI citado en el ADR 0003 es el de `154722a`, anterior a F-0024. Guardar con `evals/bench/ci-result.sh` el de la cabeza que se fusiona.
+- **Lo que la ronda única del paso 1.2c de la E1 dejó para después en el plan** (los demás hallazgos están escritos en el paso de su épica que los implementa; resumen en `docs/estado/E1.md`):
+  - hallazgo medio 8: el bloque C1 del plan sigue diciendo que C1 y C2 salen en un solo lanzamiento, y la sección 2 que la tabla comparada se publica "antes del lanzamiento". Con la v0.2.0 (`inspect` y el registro, sin diff) como primer lanzamiento público, alinear C1 y decir antes de qué lanzamiento sale la tabla;
+  - hallazgo bajo 22: el bloque C1 dice que el rastreador solo captura servidores HTTP públicos, pero `inspect` usa las instantáneas de paquetes stdio que el paso 2.2 de la E2 ejecuta en un contenedor sin red. Alinear el plan con la E2.

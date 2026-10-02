@@ -1,0 +1,12 @@
+# E1 paso 1.2c: guardias de F-0028 y F-0029 (reglas), quitadas una a una
+fecha: 2026-10-02T13:38:36Z
+base: clon de 19926d8 con los cambios de la ronda única aplicados
+comando: make fallos en el clon, sin la regla y con ella
+
+== sin .claude/rules/producto.md: make fallos rc=2
+F-0028: no existe .claude/rules/producto.md
+== sin .claude/rules/cobertura.md: make fallos rc=2
+F-0017: no existe .claude/rules/cobertura.md
+F-0018: no existe .claude/rules/cobertura.md
+F-0029: no existe .claude/rules/cobertura.md
+== con las dos reglas: make fallos rc=0

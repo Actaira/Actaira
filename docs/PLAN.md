@@ -106,7 +106,7 @@ La observabilidad dice qué hizo el agente ayer. Nadie dice, de forma sencilla, 
 
 1. **El contrato lo escribe y lo firma una persona.** `actaira intent init` puede proponer un borrador a partir del lockfile actual, marcado `inferred`, que no vale hasta que alguien lo acepta. En el repo, la firma es la aceptación registrada (quién y cuándo), que protege la revisión del PR; la firma criptográfica llega con el pasaporte firmado de la E7.
 2. **La exposición máxima solo se calcula con límites escritos** en el contrato o en la política. Si falta un límite, sale "sin límite", nunca un número inventado.
-3. **Sin contrato, el agente sale "sin contrato",** no como error. Un contrato pasada su caducidad se enseña como caducado y deja de valer, igual que una aceptación pasada su fecha.
+3. **Sin contrato, el agente sale "sin contrato",** no como error. Un contrato pasada su caducidad se enseña como caducado; qué pasa entonces con lo que prohibía lo decide el paso 1.3 de la E1.
 4. **Actaira sigue sin ejecutar código del repo analizado.** Los tests de ataque los genera Actaira, con tools simuladas, y los ejecuta el cliente en su propia CI si quiere (opt-in). Su resultado entra como evidencia en la E7.
 
 **Reparto por épica:**
@@ -491,7 +491,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 - **Base de conocimiento de capacidades abierta:** traduce tools conocidas a acciones con efecto. Por ejemplo, `stripe.refunds.create` pasa a ser `money.refund`, escritura irreversible. Empieza por las 50 tools más frecuentes del corpus; lo que no está sale como `effect: unknown`.
 - **`actaira inspect` y el registro público de servidores MCP, el primer lanzamiento público (v0.2.0):** el gancho del desarrollador, "¿qué hace este MCP?".
   - `actaira inspect <npm:paquete@versión | pypi:paquete==versión | https://url-remota | ruta a una config MCP>` dice qué hace cada tool (efecto, recurso, etiquetas de flujo, flujos tóxicos, anotaciones que mienten y procedencia), con su causa y su fuente, sin instalar ni ejecutar nada en la máquina del usuario.
-  - El registro es una web estática generada desde `actaira-kb` con los mismos datos: lo declarado frente a lo detectado y el historial por versión, sin puntuaciones.
+  - El registro es una web estática generada desde `actaira-kb` con los mismos datos: lo declarado por cada servidor frente a lo potencial según la base de conocimiento, sin mezclarlos, y el historial por versión, sin puntuaciones.
 - **`actaira diff`** entre la base y la cabeza del PR:
   - capacidades nuevas, perdidas y cambiadas;
   - tools cuyo hash de esquema o descripción cambió;
@@ -798,7 +798,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 - **Alta y primera pantalla:** alta con GitHub, conexión de repos con la GitHub App y la Action que sube el lockfile, y primera pantalla con valor en menos de 10 minutos; desde la fase 3, runner con un comando.
 - **Consola de flota:** cambios de capacidad, políticas violadas, evidencia caducada, dependencias MCP desconocidas y permisos excesivos.
 - **Ficha de agente** con el porqué, el blast radius y los botones revocar, pedir aprobación y aceptar cambio.
-- **Modo builder multicliente, lo primero:** subinquilinos por cliente, con un **contrato por cliente** y un **pasaporte por agente v1** (capacidades potenciales, contrato y cobertura, con la marca del builder, un enlace verificable y un badge). Después, políticas y evidencia propias y una página de estado de evidencia con la marca del builder.
+- **Modo builder multicliente, lo primero:** subinquilinos por cliente, con un **contrato por cliente** y un **pasaporte por agente v1** (capacidades potenciales, contrato y cobertura, con la marca del builder, un enlace verificable y un badge sin estado; nunca dice que el agente "cumple", F-0029). Después, políticas y evidencia propias y una página de estado de evidencia con la marca del builder.
 - **Máquina del tiempo** sobre el historial de lockfiles: qué podía hacer cada agente en un commit o una fecha.
 - **Aviso por MCP:** cuando el rastreador ve que una versión nueva de un servidor MCP añade una capacidad irreversible, avisa a cada inquilino que lo usa, con los datos de ese inquilino y sin cruzarlos con los de otro.
 - **IA incluida por defecto** (las siete piezas) con un modelo alojado en la UE y cuota por plan. Se puede usar clave propia o apagarla por inquilino. El proveedor del modelo figura como subencargado en el DPA, con retención cero donde el proveedor la ofrezca.
@@ -910,7 +910,7 @@ Son objetivos hasta que un eval los produce; se guardan con fecha y commit.
 |---|---|---|
 | **Open source** | CLI, Action, lockfile con el contrato (`intent`, en formato ACM), `inspect`, diff y check contra el contrato, alcanzabilidad, flujos tóxicos, blast radius potencial, SARIF, JSON estable, AI-BOM, `verify`; y el registro público de servidores MCP | 0 |
 | **Prueba (nube, fase 2)** | 7 días de la plataforma, con topes duros de uso (ver abajo); después pasa a solo lectura y vuelve al open source | 0 |
-| **Builder (desde la fase 2, el primer plan de pago)** | Subinquilinos por cliente, contrato por cliente y pasaporte por agente v1 (capacidades potenciales, contrato y cobertura, con la marca del builder, enlace verificable y badge), más todo lo de Team. Desde la fase 3 mejora con capacidades efectivas; desde la 5, pasaporte firmado y página de estado de evidencia | Suscripción, en `config/pricing.yaml`. Referencia 2.0: base de 500 a 1.500 EUR al mes más importe por agente activo |
+| **Builder (desde la fase 2, el primer plan de pago)** | Subinquilinos por cliente, contrato por cliente y pasaporte por agente v1 (capacidades potenciales, contrato y cobertura, con la marca del builder, enlace verificable y badge sin estado), más todo lo de Team. Desde la fase 3 mejora con capacidades efectivas; desde la 5, pasaporte firmado y página de estado de evidencia | Suscripción, en `config/pricing.yaml`. Referencia 2.0: base de 500 a 1.500 EUR al mes más importe por agente activo |
 | **Team (desde la fase 2, el segundo plan)** | Flota, historial y diff de capacidades, máquina del tiempo, alertas, IA incluida, cuota de acciones; desde la fase 3, capacidades efectivas; desde la 4, control | Suscripción, en `config/pricing.yaml`. Referencia 2.0: 299 EUR al mes |
 | **Enterprise (backlog hasta que haya equipo)** | BYOC, SCIM, retención larga, capa de cumplimiento completa; además, detrás de la atestación SOC 2 o ISO 27001 | Anual, cuando se abra |
 
@@ -992,7 +992,7 @@ La plataforma self-serve se sirve desde el dominio que ya tienes, con subdominio
 |---|---|---|---|
 | `actaira.com` | Web pública: qué hace, demo, precios, blog, el estudio | Página estática en Cloudflare Pages (sustituye al servidor de Hetzner) | 0 |
 | `docs.actaira.com` | Documentación de la CLI, la Action y la plataforma | Estática, generada desde el repo | 0 |
-| Registro público de servidores MCP | Web estática generada desde `actaira-kb`: qué hace cada tool, lo declarado frente a lo detectado y el historial por versión, sin puntuaciones | GitHub Pages de `actaira-kb`; un dominio propio solo si Marcos lo pide | 0 |
+| Registro público de servidores MCP | Web estática generada desde `actaira-kb`: qué hace cada tool, lo declarado por el servidor frente a lo potencial según la base de conocimiento y el historial por versión, sin puntuaciones | GitHub Pages de `actaira-kb`; un dominio propio solo si Marcos lo pide | 0 |
 | `app.actaira.com` | Actaira Cloud: alta con GitHub, flota, diff, alertas, contrato por cliente y pasaporte, cobro | Azure Container Apps en la UE, con escala a cero (ADR 16) | Casi 0 sin usuarios; cubierto al principio por créditos de Microsoft for Startups |
 | `status.actaira.com` | Página de estado con el SLO | Servicio gratuito o estática | 0 |
 | `github.com/actaira` | Núcleo abierto | GitHub | 0 |
