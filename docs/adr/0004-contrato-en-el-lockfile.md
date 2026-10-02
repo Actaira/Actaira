@@ -33,6 +33,13 @@ Además, la ronda única del paso 1.2c dejó aquí cinco preguntas (altos 3 y 4,
 5. **Errores:** un `actaira.intent.json` inválido (esquema, un decimal, una capacidad mal formada) es un error de la entrada, no interno: `lock` sale con el código 2 y el motivo, e `intent validate` con el 1 (bajo 21). Las cadenas se normalizan a NFC al leerlas, como el resto de datos del lockfile (ADR 0002, regla 4).
 6. **Versión:** el bloque lleva `acm_version`. El esquema v1 del lockfile acepta el ACM 0; aceptar otro es un cambio del esquema, con su test de compatibilidad hacia atrás (bajo 21).
 
+## Límites conocidos (ronda 3 del paso 1.3; decisión de Marcos del 2026-10-03, opción B)
+
+Se corrigen en el paso 1.4 de la E1, que es donde un extractor los haría reales, con sus tests escritos en ese paso:
+
+1. **El `id` solo es estable mientras la definición sea la única de su tipo, framework, fichero y nombre.** Con dos agentes iguales en esas cuatro partes, el ordinal decide el `id`: añadir, quitar o reordenar uno mueve el contrato a otro agente sin error de huérfano, porque los dos `id` siguen en el lockfile. Hasta que haya una regla que lo impida, el punto 4 ("lo que no puede pasar en silencio") no cubre este caso.
+2. **El nombre y la versión del paquete de un servidor MCP no se comprueban.** Un especificador privado con credencial (`git+https://usuario:token@…`, una URL de tarball con `?token=…`) llegaría al lockfile. Es la fuga de F-0034 en un campo que su corrección no miró.
+
 ## Opciones
 
 | Opción | A favor | En contra |

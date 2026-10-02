@@ -5,7 +5,7 @@
 ## 1. Terms
 
 - **Capability:** an action on a resource, written `<resource>.<action>`, for example `customer.read` or `money.refund`. Both parts are lowercase ASCII letters, digits and `_`, starting with a letter. The vocabulary of resources and actions comes from a knowledge base (for Actaira, `actaira-kb`); version 0 only fixes the form.
-- **Agent:** identified by the stable `id` that the lockfile gives it. In Actaira, the first 16 lowercase hex characters of the SHA-256 of five parts: the kind (`agent`), the framework, the file relative to the repository root with `/`, the name, and the ordinal among the definitions of that kind, framework, file and name in the order of the file, starting at 0 and written in decimal. Each part is put in Unicode NFC and preceded by its length in bytes as an unsigned 64-bit big-endian integer.
+- **Agent:** identified by the `id` that the lockfile gives it. The `id` is stable only while the definition is the only one of its kind, framework, file and name: with two such definitions, adding, removing or reordering one changes which `id` each gets (a known limit of version 0). In Actaira, the first 16 lowercase hex characters of the SHA-256 of five parts: the kind (`agent`), the framework, the file relative to the repository root with `/`, the name, and the ordinal among the definitions of that kind, framework, file and name in the order of the file, starting at 0 and written in decimal. Each part is put in Unicode NFC and preceded by its length in bytes as an unsigned 64-bit big-endian integer.
 - **Potential capability:** what a knowledge base says a tool could do. Not what a credential allows (effective) nor what was seen at runtime (observed).
 
 ## 2. Document

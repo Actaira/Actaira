@@ -48,3 +48,11 @@
   - hallazgo bajo 22: el bloque C1 dice que el rastreador solo captura servidores HTTP públicos, pero `inspect` usa las instantáneas de paquetes stdio que el paso 2.2 de la E2 ejecuta en un contenedor sin red. Alinear el plan con la E2.
 - **Lo que la ronda 2 del paso 1.3 de la E1 dejó para después:**
   - límite conocido de F-0034: un token escrito dentro de la ruta de la URL de un MCP (`https://host/mcp/<token>`) no se puede reconocer. El paso 1.4 quita usuario, query y fragmento; para la ruta, decidir con datos del corpus si se guarda solo el origen más un hash de la URL completa.
+- **Lo que la ronda 3 del paso 1.3 de la E1 dejó para después** (decisión de Marcos del 2026-10-03, opción B; los dos altos y el medio 4 están en el paso 1.4 de la épica):
+  - hallazgo medio 3, en el paso 1.4: Go y el esquema difieren en cinco URL y comandos (`HTTPS://` en mayúsculas, un `#` vacío, un espacio en la ruta, `\r` o `\f` en el comando). Exigir el prefijo literal `http://` o `https://`, rechazar `#` y cualquier espacio de Unicode, y añadir los casos al test diferencial;
+  - hallazgo bajo 5: el eje `unresolved` atado al modelo no tiene un test que lo vea en rojo;
+  - hallazgo bajo 6: separadores raros (`\v`, U+00A0) en el comando, que solo pone un extractor a propósito;
+  - hallazgo bajo 7, en el paso 1.6: `Compute` es cuadrático en las entradas de un bloque (40.000 entradas, 1,2 s). Medirlo con el corpus;
+  - hallazgo bajo 8, en el paso 1.5: `lock --check` compara sin el salto final, y con CRLF daría "desalineado". Escribirlo en el paso y probarlo;
+  - hallazgo bajo 9: tres tests de `docs/cobertura.md` no están escritos en el paso que los construye;
+  - hallazgo bajo 10: `docs/cobertura.md` dice "Todavía no hay nada construido".
