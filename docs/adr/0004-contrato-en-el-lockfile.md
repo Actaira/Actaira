@@ -49,7 +49,8 @@ El contrato es lo que una persona firma y otra revisa. Tiene que leerse en el di
 
 - Un fichero más en el repo del usuario, solo si escribe un contrato.
 - El esquema del ACM y su validación, en un paquete de `pkg/` (`pkg/intent`), que también usará `actaira-cloud`.
-- La validación en Go repite lo que dice el JSON Schema. Un test valida los mismos ficheros con los dos y exige el mismo resultado (L-012), con una biblioteca de JSON Schema que solo usan los tests.
+- La validación en Go repite lo que dice el JSON Schema y añade lo que un esquema no puede expresar. Un test valida los mismos ficheros con los dos y exige el mismo resultado, salvo las diferencias escritas una a una en el test con su motivo (L-012), con una biblioteca de JSON Schema que solo usan los tests.
+- `actaira.intent.json` se lee con `encoding/json/v2` de Go 1.27, que rechaza claves repetidas o con otras mayúsculas, UTF-8 inválido y números que no son enteros escritos con dígitos (F-0030).
 
 ## Latencia
 

@@ -3,6 +3,7 @@ package intent
 import (
 	"strings"
 	"testing"
+	"time"
 )
 
 const agentA = "0123456789abcdef"
@@ -30,6 +31,26 @@ const accepted = `{
   ]
 }`
 
+// day is a UTC calendar day.
+func day(t *testing.T, s string) time.Time {
+	t.Helper()
+	d, err := time.Parse(time.DateOnly, s)
+	if err != nil {
+		t.Fatalf("bad test day %q: %v", s, err)
+	}
+	return d
+}
+
+// state is StateOf that fails the test on error.
+func state(t *testing.T, m Manifest, agent, today string) State {
+	t.Helper()
+	st, err := m.StateOf(agent, day(t, today))
+	if err != nil {
+		t.Fatalf("StateOf(%s, %s): %v", agent, today, err)
+	}
+	return st
+}
+
 func parse(t *testing.T, src string) Manifest {
 	t.Helper()
 	m, err := Parse([]byte(src))
@@ -55,11 +76,11 @@ func parseFails(t *testing.T, src string, want ...string) {
 
 func TestAgentWithoutIntentIsNoContractNotAnError(t *testing.T) {
 	m := parse(t, accepted)
-	if got := m.StateOf(agentB, "2026-10-02"); got != NoContract {
+	if got := state(t, m, agentB, "2026-10-02"); got != NoContract {
 		t.Fatalf("StateOf(agent without contract) = %q, want %q", got, NoContract)
 	}
 	var none Manifest
-	if got := none.StateOf(agentA, "2026-10-02"); got != NoContract {
+	if got := state(t, none, agentA, "2026-10-02"); got != NoContract {
 		t.Fatalf("StateOf with no manifest at all = %q, want %q", got, NoContract)
 	}
 	if err := m.Check(map[string]bool{agentA: true, agentB: true}); err != nil {
@@ -69,13 +90,13 @@ func TestAgentWithoutIntentIsNoContractNotAnError(t *testing.T) {
 
 func TestDraftOrExpiredIntentDoesNotCount(t *testing.T) {
 	m := parse(t, accepted)
-	if got := m.StateOf(agentA, "2026-10-02"); got != InForce || !got.Binds() {
+	if got := state(t, m, agentA, "2026-10-02"); got != InForce || !got.Binds() {
 		t.Fatalf("accepted contract before its expiry: state %q, binds %v", got, got.Binds())
 	}
-	if got := m.StateOf(agentA, "2027-04-01"); got != InForce {
+	if got := state(t, m, agentA, "2027-04-01"); got != InForce {
 		t.Fatalf("on its expiry day the contract is %q, want %q", got, InForce)
 	}
-	if got := m.StateOf(agentA, "2027-04-02"); got != Expired || got.Binds() {
+	if got := state(t, m, agentA, "2027-04-02"); got != Expired || got.Binds() {
 		t.Fatalf("after its expiry: state %q, binds %v; want %q and false", got, got.Binds(), Expired)
 	}
 	draft := strings.Replace(accepted, `"status": "accepted",
@@ -83,7 +104,7 @@ func TestDraftOrExpiredIntentDoesNotCount(t *testing.T) {
       "accepted_at": "2026-10-01",`, `"status": "draft",
       "confidence": "inferred",`, 1)
 	d := parse(t, draft)
-	if got := d.StateOf(agentA, "2026-10-02"); got != Draft || got.Binds() {
+	if got := state(t, d, agentA, "2026-10-02"); got != Draft || got.Binds() {
 		t.Fatalf("draft: state %q, binds %v; want %q and false", got, got.Binds(), Draft)
 	}
 }
@@ -163,4 +184,47 @@ func TestIntentStringsAreReadAsNFC(t *testing.T) {
 	if got := m.Contracts[0].Owner; got != "@aná" {
 		t.Fatalf("owner = %q, want it in NFC %q", got, "@aná")
 	}
+}
+
+// F-0030: a repeated or miscased key is an error, never the last one that wins.
+func TestIntentRejectsDuplicateOrMiscasedKeys(t *testing.T) {
+	parseFails(t, strings.Replace(accepted, `"deny": ["customer.delete"],`, `"deny": ["customer.delete"], "deny": [],`, 1), "deny")
+	parseFails(t, strings.Replace(accepted, `"deny": ["customer.delete"],`, `"Deny": ["customer.delete"],`, 1), "Deny")
+	parseFails(t, strings.Replace(accepted, `"expires": "2027-04-01",`, `"expires": "2027-04-01", "expires": "2099-12-31",`, 1), "expires")
+	parseFails(t, strings.Replace(accepted, `"egress":`, `"limits": [], "egress":`, 1), "limits")
+	parseFails(t, strings.Replace(accepted, `"acm_version": 0,`, `"acm_version": 0, "acm_version": 0,`, 1), "acm_version")
+}
+
+// What the JSON Schema rejects, the Go reading rejects too: null, empty
+// optional fields, numbers written as strings and invalid UTF-8.
+func TestIntentRejectsNullEmptyQuotedNumbersAndBadUTF8(t *testing.T) {
+	parseFails(t, strings.Replace(accepted, `"deny": ["customer.delete"]`, `"deny": null`, 1), "null")
+	parseFails(t, strings.Replace(accepted, `"status": "accepted",`, `"status": "accepted", "confidence": "",`, 1), "confidence")
+	parseFails(t, strings.Replace(accepted, `"amount": 50000`, `"amount": "50000"`, 1), "amount")
+	parseFails(t, strings.Replace(accepted, `"owner": "@ana"`, "\"owner\": \"@an\xff\"", 1), "UTF-8")
+}
+
+// A limit on a capability that is not allowed (a typo, or one that is denied)
+// would leave the real one without its limit: it is an error.
+func TestIntentLimitNeedsAnAllowedCapability(t *testing.T) {
+	parseFails(t, strings.Replace(accepted, `{"capability": "money.refund", "per_operation"`, `{"capability": "money.refnd", "per_operation"`, 1), "money.refnd", "allow")
+	parseFails(t, strings.Replace(accepted, `{"capability": "money.refund", "per_operation"`, `{"capability": "customer.delete", "per_operation"`, 1), "customer.delete")
+}
+
+// Without a real day, an expired contract could look in force: StateOf needs one.
+func TestIntentStateNeedsADay(t *testing.T) {
+	m := parse(t, accepted)
+	if _, err := m.StateOf(agentA, time.Time{}); err == nil {
+		t.Fatal("StateOf with the zero time gave a state")
+	}
+	// The day is the UTC one: 23:30 on 1 April 2027 in UTC-2 is already 2 April in UTC.
+	late := time.Date(2027, 4, 1, 23, 30, 0, 0, time.FixedZone("UTC-2", -2*3600))
+	if got, err := m.StateOf(agentA, late); err != nil || got != Expired {
+		t.Fatalf("StateOf at %s = %q, %v; want %q (2 April in UTC)", late, got, err, Expired)
+	}
+}
+
+func TestIntentDatesAreRealDays(t *testing.T) {
+	parseFails(t, strings.Replace(accepted, `"expires": "2027-04-01"`, `"expires": "2027-02-31"`, 1), "expires")
+	parseFails(t, strings.Replace(accepted, `"accepted_at": "2026-10-01"`, `"accepted_at": "2026-13-01"`, 1), "accepted_at")
 }

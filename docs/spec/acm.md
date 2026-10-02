@@ -1,11 +1,11 @@
 # Agent Capability Manifest (ACM), draft v0
 
-**Status: draft.** Version 0 of an open format for the capability contract of an AI agent: what the agent must be able to do, declared once in its repository and used in pull requests, for credentials, at runtime and before third parties. It is published by the Actaira project (Apache-2.0) and changes without notice while it is version 0. The JSON Schema is `schemas/acm.v0.json`; `actaira intent validate` checks a manifest against it and against the rules below that a schema cannot express.
+**Status: draft.** Version 0 of an open format for the capability contract of an AI agent: what the agent must be able to do, declared once in its repository and used in pull requests, for credentials, at runtime and before third parties. It is published by the Actaira project (Apache-2.0) and changes without notice while it is version 0. The JSON Schema is `schemas/acm.v0.json`. Actaira's reading of a manifest (`pkg/intent`, and from E1 step 1.5 the command `actaira intent validate`) applies the same rules and those below that a schema cannot express.
 
 ## 1. Terms
 
 - **Capability:** an action on a resource, written `<resource>.<action>`, for example `customer.read` or `money.refund`. Both parts are lowercase ASCII letters, digits and `_`, starting with a letter. The vocabulary of resources and actions comes from a knowledge base (for Actaira, `actaira-kb`); version 0 only fixes the form.
-- **Agent:** identified by the stable `id` that the lockfile gives it (Actaira: a hash of framework, relative file and name).
+- **Agent:** identified by the stable `id` that the lockfile gives it (Actaira: a hash of framework, relative file, name and the ordinal among the definitions with that name in the file).
 - **Potential capability:** what a knowledge base says a tool could do. Not what a credential allows (effective) nor what was seen at runtime (observed).
 
 ## 2. Document
@@ -40,18 +40,20 @@
 3. No wildcards in capabilities in version 0.
 4. Amounts are integers in the minor unit of their currency (ISO 4217): 50000 with `EUR` is 500 euros. A decimal is invalid.
 5. `period` is one of `day`, `week` or `month`, in UTC.
-6. A limit only bounds what it names. Where a capability has no limit, the maximum exposure is "no limit", never a number.
-7. `egress` lists host names; `*.` matches one or more labels before the rest. No scheme, path or port.
-8. `status` is `draft` or `accepted`. A draft (for example, proposed by a tool from the current code) carries `"confidence": "inferred"` and binds nothing until a person accepts it, setting `accepted_by` and `accepted_at`.
-9. After `expires`, the contract is shown as expired and binds nothing; tools must show that, not drop it silently.
-10. An agent with no contract is "no contract", not an error.
-11. Text is UTF-8 in Unicode NFC.
+6. A limit only names a capability that is in `allow`: a limit on anything else (a typo, a denied capability) is invalid.
+7. A limit only bounds what it names. Where a capability has no limit, the maximum exposure is "no limit", never a number.
+8. `egress` lists host names; `*.` matches one or more labels before the rest. No scheme, path or port.
+9. `status` is `draft` or `accepted`. A draft (for example, proposed by a tool from the current code) carries `"confidence": "inferred"` and binds nothing until a person accepts it, setting `accepted_by` and `accepted_at`.
+10. `expires` and `accepted_at` are real calendar days, `YYYY-MM-DD`, in UTC. After `expires`, the contract is shown as expired and binds nothing; tools must show that, not drop it silently.
+11. An agent with no contract is "no contract", not an error.
+12. Text is valid UTF-8, read as Unicode NFC.
+13. A member name appears once and exactly as written here (no other capitals), `null` is never a value, and an optional field is either absent or not empty. Numbers are integers written with digits: `50000`, not `5e4` nor `50000.0`.
 
 ## 4. How Actaira uses it
 
 - The manifest lives in `actaira.intent.json` at the root of the repository, with whitespace, so a pull request shows each change.
-- `actaira lock` validates it and copies its canonical form into the `intent` block of `actaira.lock`; the block is never the source (ADR 0004).
-- An invalid manifest is an input error: `actaira lock` exits with 2 and `actaira intent validate` with 1, both with the reason.
+- From E1 step 1.5, `actaira lock` validates it and copies its canonical form into the `intent` block of `actaira.lock`; the block is never the source (ADR 0004).
+- An invalid manifest is an input error: from step 1.5, `actaira lock` exits with 2 and `actaira intent validate` with 1, both with the reason.
 - A contract whose agent is not in the lockfile (its file moved or was renamed) is invalid, with the agent `id` in the message.
 - `actaira.lock` schema version 1 accepts `acm_version` 0. Accepting another version is a change of the lockfile schema.
 

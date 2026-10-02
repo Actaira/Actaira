@@ -12,64 +12,106 @@ import (
 	"github.com/actaira/actaira/pkg/model"
 )
 
-// sample is a lockfile with one of everything: two agents with a handoff,
-// tools (one unresolved), an MCP server, a skill, a secret reference, the
-// coverage computed from them and a contract.
-func sample(t *testing.T) Lockfile {
-	t.Helper()
+// parts is what a lockfile is built from: the model, the rest of the input of
+// coverage.Compute and the contract. Every list has at least two elements, so
+// that a missing sort shows up when they are shuffled (F-0033).
+type parts struct {
+	agents     []model.Agent
+	tools      []model.Tool
+	servers    []model.MCPServer
+	skills     []model.Skill
+	secrets    []model.SecretRef
+	edges      []model.Edge
+	extractors []string
+	unresolved []coverage.Finding
+	skipped    []coverage.Skipped
+	intent     string
+}
+
+func sampleParts() parts {
 	const fw, file = "openai-agents-python", "support/agent.py"
 	at := func(line, col int) model.Location { return model.Location{File: file, Line: line, Column: col} }
-	support := model.NewID("agent", fw, file, "support")
-	billing := model.NewID("agent", fw, file, "billing")
-	refund := model.NewID("tool", fw, file, "refund")
-	lookup := model.NewID("tool", fw, file, "lookup")
-	stripe := model.NewID("mcp_server", fw, file, "stripe")
-	key := model.NewID("env_ref", "", "", "STRIPE_API_KEY")
-	skill := model.NewID("skill", "agent-skills", "skills/triage/SKILL.md", "triage")
-	l := Lockfile{
-		SchemaVersion: SchemaVersion,
-		Agents: []model.Agent{
+	support := model.NewID("agent", fw, file, "support", 0)
+	billing := model.NewID("agent", fw, file, "billing", 0)
+	refund := model.NewID("tool", fw, file, "refund", 0)
+	lookup := model.NewID("tool", fw, file, "lookup", 0)
+	invoice := model.NewID("tool", fw, file, "invoice", 0)
+	stripe := model.NewID("mcp_server", fw, file, "stripe", 0)
+	github := model.NewID("mcp_server", "mcp-config", ".mcp.json", "github", 0)
+	key := model.NewID("env_ref", "", "", "STRIPE_API_KEY", 0)
+	token := model.NewID("env_ref", "", "", "GITHUB_TOKEN", 0)
+	triage := model.NewID("skill", "agent-skills", "skills/triage/SKILL.md", "triage", 0)
+	review := model.NewID("skill", "agent-skills", "skills/review/SKILL.md", "review", 0)
+	return parts{
+		agents: []model.Agent{
 			{ID: support, Name: "support", Framework: fw, Source: at(40, 1), Model: &model.Model{Name: "gpt-5"}, Prompt: &model.PromptRef{Hash: "sha256:" + strings.Repeat("a", 64)}, Confidence: model.Declared},
 			{ID: billing, Name: "billing", Framework: fw, Source: at(60, 1), Confidence: model.Declared},
 		},
-		Tools: []model.Tool{
+		tools: []model.Tool{
 			{ID: refund, Name: "refund", Framework: fw, Source: at(10, 1), SchemaHash: "sha256:" + strings.Repeat("b", 64), DescriptionHash: "sha256:" + strings.Repeat("c", 64), Effect: model.EffectUnknown, Confidence: model.Declared},
 			{ID: lookup, Name: "lookup", Framework: fw, Source: at(20, 1), Effect: model.EffectUnknown, Confidence: model.Unresolved},
+			{ID: invoice, Name: "invoice", Framework: fw, Source: at(25, 1), Effect: model.EffectUnknown, Confidence: model.Unresolved},
 		},
-		MCPServers: []model.MCPServer{
+		servers: []model.MCPServer{
 			{ID: stripe, Name: "stripe", Transport: model.TransportStdio, Command: "npx", Package: &model.Package{Ecosystem: "npm", Name: "@stripe/mcp", Version: "0.2.4"}, Pinned: true, ToolsSource: model.ToolsSourceNone, Source: at(15, 5), Confidence: model.Declared},
+			{ID: github, Name: "github", Transport: model.TransportHTTP, URL: "https://api.example.invalid/mcp", ToolsSource: model.ToolsSourceNone, Source: model.Location{File: ".mcp.json", Line: 3, Column: 5}, Confidence: model.Declared},
 		},
-		Skills: []model.Skill{
-			{ID: skill, Name: "triage", Source: model.Location{File: "skills/triage/SKILL.md", Line: 1}, AllowedTools: []string{"Read", "Grep"}, Confidence: model.Declared},
+		skills: []model.Skill{
+			{ID: triage, Name: "triage", Source: model.Location{File: "skills/triage/SKILL.md", Line: 1}, AllowedTools: []string{"Read", "Grep"}, Confidence: model.Declared},
+			{ID: review, Name: "review", Source: model.Location{File: "skills/review/SKILL.md", Line: 1}, AllowedTools: []string{"Bash", "Edit"}, Confidence: model.Declared},
 		},
-		SecretRefs: []model.SecretRef{{ID: key, Name: "STRIPE_API_KEY", Locations: []model.Location{at(8, 12), at(9, 3)}}},
-		Edges: []model.Edge{
+		secrets: []model.SecretRef{
+			{ID: key, Name: "STRIPE_API_KEY", Locations: []model.Location{at(8, 12), at(9, 3)}},
+			{ID: token, Name: "GITHUB_TOKEN", Locations: []model.Location{{File: ".mcp.json", Line: 6, Column: 9}, {File: ".mcp.json", Line: 7, Column: 9}}},
+		},
+		edges: []model.Edge{
 			{From: support, To: refund, Kind: model.CanCall, Source: at(41, 9), Confidence: model.Declared},
 			{From: support, To: lookup, Kind: model.CanCall, Source: at(41, 17), Confidence: model.Declared},
 			{From: support, To: billing, Kind: model.DelegatesTo, Source: at(42, 9), Confidence: model.Declared},
 			{From: support, To: stripe, Kind: model.UsesMCPServer, Source: at(43, 9), Confidence: model.Declared},
 			{From: refund, To: key, Kind: model.ReferencesEnv, Source: at(8, 12), Confidence: model.Declared},
+			{From: github, To: token, Kind: model.ReferencesEnv, Source: model.Location{File: ".mcp.json", Line: 6, Column: 9}, Confidence: model.Declared},
 		},
+		extractors: []string{"openai-agents-python/1", "mcp-config/1"},
+		unresolved: []coverage.Finding{
+			{Agent: support, Entry: coverage.Entry{Location: at(30, 11), Kind: "tool_list", Reason: "list_built_at_runtime"}},
+			{Agent: support, Entry: coverage.Entry{Location: at(22, 9), Kind: "tool_schema", Reason: "schema_built_at_runtime"}},
+			{Entry: coverage.Entry{Location: model.Location{File: "support/extra.py", Line: 2, Column: 1}, Kind: coverage.SourceDeclaration, Reason: "params_built_at_runtime"}},
+		},
+		skipped: []coverage.Skipped{{Path: "support/prompts.py", Reason: "file_over_1mb"}, {Path: "vendor/sub", Reason: "submodule"}},
+		intent: `{"acm_version": 0, "contracts": [{"agent": "` + string(support) + `", "status": "accepted",
+	  "accepted_by": "@ana", "accepted_at": "2026-10-01", "owner": "@ana", "expires": "2027-04-01",
+	  "allow": ["money.refund", "customer.read"], "deny": ["customer.delete"],
+	  "limits": [{"capability": "money.refund", "per_operation": {"amount": 50000, "currency": "EUR"}}],
+	  "egress": ["api.stripe.com"]}]}`,
 	}
+}
+
+// build makes the lockfile of p, computing its coverage.
+func build(t *testing.T, p parts) Lockfile {
+	t.Helper()
 	cov, err := coverage.Compute(coverage.Input{
-		Extractors: []string{"openai-agents-python/1"},
-		Agents:     l.Agents, Tools: l.Tools, MCPServers: l.MCPServers, SecretRefs: l.SecretRefs, Edges: l.Edges,
-		Skipped: []coverage.Skipped{{Path: "support/prompts.py", Reason: "file_over_1mb"}},
+		Extractors: p.extractors, Agents: p.agents, Tools: p.tools, MCPServers: p.servers,
+		SecretRefs: p.secrets, Edges: p.edges, Unresolved: p.unresolved, Skipped: p.skipped,
 	})
 	if err != nil {
 		t.Fatalf("coverage.Compute: %v", err)
 	}
-	l.Coverage = cov
-	m, err := intent.Parse([]byte(`{"acm_version": 0, "contracts": [{"agent": "` + string(support) + `", "status": "accepted",
-	  "accepted_by": "@ana", "accepted_at": "2026-10-01", "owner": "@ana", "expires": "2027-04-01",
-	  "allow": ["money.refund", "customer.read"], "deny": ["customer.delete"],
-	  "limits": [{"capability": "money.refund", "per_operation": {"amount": 50000, "currency": "EUR"}}],
-	  "egress": ["api.stripe.com"]}]}`))
+	m, err := intent.Parse([]byte(p.intent))
 	if err != nil {
 		t.Fatalf("intent.Parse: %v", err)
 	}
-	l.Intent = &m
-	return l
+	return Lockfile{SchemaVersion: SchemaVersion, Agents: p.agents, Tools: p.tools, MCPServers: p.servers,
+		Skills: p.skills, SecretRefs: p.secrets, Edges: p.edges, Coverage: cov, Intent: &m}
+}
+
+// sample is a lockfile with two of everything: two agents with a handoff,
+// tools (two unresolved, one of them called by no agent), MCP servers (one
+// used by no agent), skills, secret references, unresolved entries, skipped
+// parts, the coverage computed from them and a contract.
+func sample(t *testing.T) Lockfile {
+	t.Helper()
+	return build(t, sampleParts())
 }
 
 func encode(t *testing.T, l Lockfile) []byte {
@@ -81,31 +123,44 @@ func encode(t *testing.T, l Lockfile) []byte {
 	return b
 }
 
-// shuffled returns a copy of l with every list in a random order.
-func shuffled(l Lockfile, r *rand.Rand) Lockfile {
-	s := l
-	s.Agents = append([]model.Agent(nil), l.Agents...)
-	s.Tools = append([]model.Tool(nil), l.Tools...)
-	s.Edges = append([]model.Edge(nil), l.Edges...)
-	s.SecretRefs = []model.SecretRef{l.SecretRefs[0]}
-	s.SecretRefs[0].Locations = append([]model.Location(nil), l.SecretRefs[0].Locations...)
-	r.Shuffle(len(s.Agents), func(i, j int) { s.Agents[i], s.Agents[j] = s.Agents[j], s.Agents[i] })
-	r.Shuffle(len(s.Tools), func(i, j int) { s.Tools[i], s.Tools[j] = s.Tools[j], s.Tools[i] })
-	r.Shuffle(len(s.Edges), func(i, j int) { s.Edges[i], s.Edges[j] = s.Edges[j], s.Edges[i] })
-	locs := s.SecretRefs[0].Locations
-	r.Shuffle(len(locs), func(i, j int) { locs[i], locs[j] = locs[j], locs[i] })
+func shuffle[T any](r *rand.Rand, in []T) []T {
+	out := append([]T(nil), in...)
+	r.Shuffle(len(out), func(i, j int) { out[i], out[j] = out[j], out[i] })
+	return out
+}
+
+// shuffledParts returns a copy of p with every list, nested ones included, in
+// a random order.
+func shuffledParts(p parts, r *rand.Rand) parts {
+	s := p
+	s.agents = shuffle(r, p.agents)
+	s.tools = shuffle(r, p.tools)
+	s.servers = shuffle(r, p.servers)
+	s.skills = shuffle(r, p.skills)
+	for i := range s.skills {
+		s.skills[i].AllowedTools = shuffle(r, s.skills[i].AllowedTools)
+	}
+	s.secrets = shuffle(r, p.secrets)
+	for i := range s.secrets {
+		s.secrets[i].Locations = shuffle(r, s.secrets[i].Locations)
+	}
+	s.edges = shuffle(r, p.edges)
+	s.extractors = shuffle(r, p.extractors)
+	s.unresolved = shuffle(r, p.unresolved)
+	s.skipped = shuffle(r, p.skipped)
 	return s
 }
 
-// The same model gives the same bytes whatever the order of its lists
+// F-0033: the same model gives the same bytes whatever the order of every
+// list, with the coverage computed again from the shuffled input each time
 // (docs/cobertura.md, total order; E1 step 1.3).
 func TestLockIsTheSameWhateverTheOrderOfItsInputs(t *testing.T) {
-	l := sample(t)
-	want := encode(t, l)
+	p := sampleParts()
+	want := encode(t, build(t, p))
 	r := rand.New(rand.NewPCG(1, 2))
-	for i := 0; i < 20; i++ {
-		if got := encode(t, shuffled(l, r)); !bytes.Equal(got, want) {
-			t.Fatalf("run %d: the lockfile depends on the order of its inputs", i)
+	for i := 0; i < 50; i++ {
+		if got := encode(t, build(t, shuffledParts(p, r))); !bytes.Equal(got, want) {
+			t.Fatalf("run %d: the lockfile depends on the order of its inputs:\nwant %s\ngot  %s", i, want, got)
 		}
 	}
 }
@@ -190,5 +245,111 @@ func TestLockRejectsWhatTheModelDoesNotAllow(t *testing.T) {
 				t.Fatalf("Encode accepted a lockfile with a bad %s", name)
 			}
 		})
+	}
+}
+
+// F-0031: the file is the canonical JSON and one newline; reading accepts the
+// newline a tool adds or a CRLF checkout gives, and nothing else.
+func TestLockFileEndsWithOneNewline(t *testing.T) {
+	b := encode(t, sample(t))
+	if !bytes.HasSuffix(b, []byte("}\n")) || bytes.HasSuffix(b, []byte("\n\n")) {
+		t.Fatalf("the lockfile does not end with exactly one newline: %q", b[len(b)-3:])
+	}
+	body := bytes.TrimSuffix(b, []byte("\n"))
+	for name, data := range map[string][]byte{"LF": b, "CRLF": append(append([]byte{}, body...), '\r', '\n'), "none": body} {
+		if _, err := Decode(data); err != nil {
+			t.Fatalf("Decode with %s at the end: %v", name, err)
+		}
+	}
+	for name, data := range map[string][]byte{"two LF": append(append([]byte{}, b...), '\n'), "space": append(append([]byte{}, body...), ' ', '\n'), "leading LF": append([]byte{'\n'}, b...)} {
+		if _, err := Decode(data); err == nil {
+			t.Fatalf("Decode accepted %s", name)
+		}
+	}
+}
+
+// F-0032: two things with one id make every reference to it ambiguous.
+func TestLockRejectsTwoThingsWithOneID(t *testing.T) {
+	l := sample(t)
+	l.Tools = append(l.Tools, l.Tools[0])
+	if _, err := Encode(l); err == nil || !strings.Contains(err.Error(), string(l.Tools[0].ID)) {
+		t.Fatalf("Encode with a repeated tool id: err = %v, want an error naming it", err)
+	}
+	l = sample(t)
+	l.Agents[1].ID = l.Agents[0].ID
+	if _, err := Encode(l); err == nil || !strings.Contains(err.Error(), string(l.Agents[0].ID)) {
+		t.Fatalf("Encode with a repeated agent id: err = %v, want an error naming it", err)
+	}
+}
+
+// The seven axes once each: the three of the repo with a value of 0 or more,
+// the four that are never written in actaira.lock with no_source
+// (docs/cobertura.md).
+func TestLockRejectsBadAxes(t *testing.T) {
+	cases := map[string]func(*Lockfile){
+		"no axes": func(l *Lockfile) { l.Coverage.Agents[0].Axes = nil },
+		"axis twice": func(l *Lockfile) {
+			l.Coverage.Agents[0].Axes = append(l.Coverage.Agents[0].Axes, l.Coverage.Agents[0].Axes[0])
+		},
+		"effective with value": func(l *Lockfile) {
+			setAxis(l, coverage.Effective, coverage.Axis{Name: coverage.Effective, Value: intp(0)})
+		},
+		"detected without value": func(l *Lockfile) {
+			setAxis(l, coverage.Detected, coverage.Axis{Name: coverage.Detected, NoSource: coverage.NotFromRepo})
+		},
+		"negative value": func(l *Lockfile) {
+			setAxis(l, coverage.Detected, coverage.Axis{Name: coverage.Detected, Value: intp(-1)})
+		},
+	}
+	for name, mutate := range cases {
+		t.Run(name, func(t *testing.T) {
+			l := sample(t)
+			mutate(&l)
+			if _, err := Encode(l); err == nil || !strings.Contains(err.Error(), "ax") {
+				t.Fatalf("Encode with %s: err = %v", name, err)
+			}
+		})
+	}
+}
+
+func intp(n int) *int { return &n }
+
+func setAxis(l *Lockfile, name coverage.AxisName, x coverage.Axis) {
+	for i, a := range l.Coverage.Agents[0].Axes {
+		if a.Name == name {
+			l.Coverage.Agents[0].Axes[i] = x
+		}
+	}
+}
+
+// ADR 0004: the lockfile never carries an invalid contract nor one whose agent
+// is gone, in either direction.
+func TestLockRejectsAnOrphanOrInvalidContract(t *testing.T) {
+	l := sample(t)
+	l.Intent.Contracts[0].Agent = "fedcba9876543210"
+	if _, err := Encode(l); err == nil || !strings.Contains(err.Error(), "fedcba9876543210") {
+		t.Fatalf("Encode with an orphan contract: err = %v", err)
+	}
+	l = sample(t)
+	l.Intent.Contracts[0].Allow = append(l.Intent.Contracts[0].Allow, "customer.delete")
+	if _, err := Encode(l); err == nil || !strings.Contains(err.Error(), "customer.delete") {
+		t.Fatalf("Encode with a capability in allow and deny: err = %v", err)
+	}
+	b := encode(t, sample(t))
+	orphan := bytes.Replace(b, []byte(`"contracts":[{"accepted_at":"2026-10-01","accepted_by":"@ana","agent":"`+string(sample(t).Agents[0].ID)), []byte(`"contracts":[{"accepted_at":"2026-10-01","accepted_by":"@ana","agent":"fedcba9876543210`), 1)
+	if bytes.Equal(orphan, b) {
+		t.Fatal("the orphan mutation did not change the lockfile")
+	}
+	if _, err := Decode(orphan); err == nil || !strings.Contains(err.Error(), "fedcba9876543210") {
+		t.Fatalf("Decode with an orphan contract: err = %v", err)
+	}
+}
+
+// A lockfile of a newer version says its version, not an unknown field.
+func TestLockAnotherSchemaVersionIsReportedFirst(t *testing.T) {
+	data := bytes.Replace(encode(t, sample(t)), []byte(`{"agents":`), []byte(`{"agents_v2":[],"agents":`), 1)
+	data = bytes.Replace(data, []byte(`"schema_version":1`), []byte(`"schema_version":2`), 1)
+	if _, err := Decode(data); err == nil || !strings.Contains(err.Error(), "schema_version 2") {
+		t.Fatalf("Decode of a v2 lockfile with a new field: err = %v, want the version", err)
 	}
 }

@@ -22,14 +22,14 @@ type fixture struct {
 func newFixture() fixture {
 	const fw, file = "openai-agents-python", "support/agent.py"
 	f := fixture{
-		agent:   model.NewID("agent", fw, file, "support"),
-		refund:  model.NewID("tool", fw, file, "refund"),
-		lookup:  model.NewID("tool", fw, file, "lookup"),
-		stripe:  model.NewID("mcp_server", fw, file, "stripe"),
-		orphanM: model.NewID("mcp_server", "mcp-config", ".mcp.json", "github"),
+		agent:   model.NewID("agent", fw, file, "support", 0),
+		refund:  model.NewID("tool", fw, file, "refund", 0),
+		lookup:  model.NewID("tool", fw, file, "lookup", 0),
+		stripe:  model.NewID("mcp_server", fw, file, "stripe", 0),
+		orphanM: model.NewID("mcp_server", "mcp-config", ".mcp.json", "github", 0),
 	}
-	key := model.NewID("env_ref", "", "", "STRIPE_API_KEY")
-	other := model.NewID("env_ref", "", "", "GITHUB_TOKEN")
+	key := model.NewID("env_ref", "", "", "STRIPE_API_KEY", 0)
+	other := model.NewID("env_ref", "", "", "GITHUB_TOKEN", 0)
 	at := func(line int) model.Location { return model.Location{File: file, Line: line, Column: 1} }
 	f.in = Input{
 		Extractors: []string{"openai-agents-python/1"},
@@ -272,9 +272,99 @@ func TestCoverageUnattributedSourcesGoToTheRepoBlock(t *testing.T) {
 
 func TestCoverageRejectsAFindingOfAnUnknownAgent(t *testing.T) {
 	f := newFixture()
-	ghost := model.NewID("agent", "x", "x.py", "ghost")
+	ghost := model.NewID("agent", "x", "x.py", "ghost", 0)
 	f.in.Unresolved = []Finding{{Agent: ghost, Entry: Entry{Location: model.Location{File: "x.py", Line: 1}, Kind: "tool_list", Reason: "r"}}}
 	if _, err := Compute(f.in); err == nil || !strings.Contains(err.Error(), string(ghost)) {
 		t.Fatalf("err = %v, want an error naming %s", err, ghost)
+	}
+}
+
+// F-0032: two tools with one id would make the counters depend on the order of
+// the input. Compute refuses them, naming the id.
+func TestCoverageRejectsTwoToolsWithOneID(t *testing.T) {
+	f := newFixture()
+	dup := f.in.Tools[1]
+	dup.SchemaHash, dup.DescriptionHash = "", ""
+	f.in.Tools = append(f.in.Tools, dup)
+	if _, err := Compute(f.in); err == nil || !strings.Contains(err.Error(), string(dup.ID)) {
+		t.Fatalf("Compute with two tools of one id: err = %v, want an error naming %s", err, dup.ID)
+	}
+}
+
+// An edge to something that is not in the model is not dropped in silence:
+// the counters would give a number without having seen it (L-009).
+func TestCoverageRejectsAnEdgeToNothing(t *testing.T) {
+	f := newFixture()
+	ghost := model.NewID("tool", "openai-agents-python", "support/agent.py", "ghost", 0)
+	f.in.Edges = append(f.in.Edges, model.Edge{From: f.agent, To: ghost, Kind: model.CanCall, Source: model.Location{File: "support/agent.py", Line: 44}, Confidence: model.Declared})
+	if _, err := Compute(f.in); err == nil || !strings.Contains(err.Error(), string(ghost)) {
+		t.Fatalf("Compute with an edge to nothing: err = %v, want an error naming %s", err, ghost)
+	}
+}
+
+// A tool that no agent calls and that is not resolved leaves its entry in the
+// repo block (docs/cobertura.md).
+func TestCoverageUnattachedUnresolvedToolGoesToTheRepoBlock(t *testing.T) {
+	f := newFixture()
+	loose := model.Tool{ID: model.NewID("tool", "openai-agents-python", "support/helpers.py", "loose", 0), Name: "loose", Framework: "openai-agents-python",
+		Source: model.Location{File: "support/helpers.py", Line: 3, Column: 1}, Effect: "unknown", Confidence: model.Unresolved}
+	f.in.Tools = append(f.in.Tools, loose)
+	c := compute(t, f.in)
+	for _, e := range c.Repo.Unresolved {
+		if e.Location == loose.Source {
+			return
+		}
+	}
+	t.Fatalf("the unattached unresolved tool left no entry in the repo block: %+v", c.Repo.Unresolved)
+}
+
+// A source is identified by its kind and its name, with all its locations: the
+// same MCP server in .mcp.json and .cursor/mcp.json is one source (docs/cobertura.md).
+func TestCoverageGroupsSourcesByKindAndName(t *testing.T) {
+	f := newFixture()
+	again := model.MCPServer{ID: model.NewID("mcp_server", "mcp-config", ".cursor/mcp.json", "github", 0), Name: "github", Transport: "http", URL: "https://api.example.invalid/mcp",
+		ToolsSource: "none", Source: model.Location{File: ".cursor/mcp.json", Line: 3, Column: 5}, Confidence: model.Declared}
+	f.in.MCPServers = append(f.in.MCPServers, again)
+	c := compute(t, f.in)
+	n := 0
+	for _, s := range c.Repo.Sources {
+		if s.Kind == SourceMCPServer && s.Name == "github" {
+			n++
+			if len(s.Locations) != 2 {
+				t.Fatalf("github has %d locations, want 2", len(s.Locations))
+			}
+		}
+	}
+	if n != 1 {
+		t.Fatalf("github is %d sources, want 1", n)
+	}
+	if s, _ := c.Summary(f.agent); s.Known != 5 {
+		t.Fatalf("known sources = %d, want 5", s.Known)
+	}
+}
+
+// The same finding twice (two extractors that read the same file) is one
+// location (docs/cobertura.md: entries count places).
+func TestCoverageCountsEachUnresolvedLocationOnce(t *testing.T) {
+	f := newFixture()
+	e := Entry{Location: model.Location{File: "support/agent.py", Line: 30, Column: 11}, Kind: "tool_list", Reason: "list_built_at_runtime"}
+	f.in.Unresolved = []Finding{{Agent: f.agent, Entry: e}, {Agent: f.agent, Entry: e}}
+	a := agentOf(t, compute(t, f.in), f.agent)
+	if got := value(t, a, UnresolvedAxis); got != 2 {
+		t.Fatalf("unresolved = %d, want 2 (the repeated finding and the unresolved tool)", got)
+	}
+}
+
+// A skipped directory (a submodule, a depth limit) covers everything under it.
+func TestCoverageUnresolvedInsideASkippedDirectoryIsRejected(t *testing.T) {
+	f := newFixture()
+	f.in.Skipped = []Skipped{{Path: "vendor/sub", Reason: "submodule"}}
+	f.in.Unresolved = []Finding{{Entry: Entry{Location: model.Location{File: "vendor/sub/x.py", Line: 1}, Kind: "file", Reason: "not_decodable"}}}
+	if _, err := Compute(f.in); err == nil || !strings.Contains(err.Error(), "vendor/sub") {
+		t.Fatalf("Compute with an entry inside a skipped directory: err = %v", err)
+	}
+	f.in.Unresolved = []Finding{{Entry: Entry{Location: model.Location{File: "vendor/subway.py", Line: 1}, Kind: "file", Reason: "not_decodable"}}}
+	if _, err := Compute(f.in); err != nil {
+		t.Fatalf("a file that only shares a prefix with a skipped directory was rejected: %v", err)
 	}
 }

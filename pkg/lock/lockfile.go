@@ -40,16 +40,23 @@ var (
 	hashRE = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 )
 
-// Encode writes l in the canonical JSON of ADR 0002. It fails, naming the
-// field, if l breaks the model: an id, a confidence, a transport or an edge
-// kind outside its closed list, a location without a file, a source that is
-// not observed and has no reason, and so on.
+// Encode writes the file actaira.lock: the canonical JSON of ADR 0002 and one
+// newline (F-0031). It fails, naming the field, if l breaks the model: an id
+// outside its form or shared by two things, a confidence, a transport or an
+// edge kind outside its closed list, a location without a file, a source that
+// is not observed and has no reason, axes that are not the seven of
+// docs/cobertura.md, or a contract that Parse would reject or whose agent is
+// not in the lockfile (ADR 0004).
 func Encode(l Lockfile) ([]byte, error) {
 	v, err := value(l)
 	if err != nil {
 		return nil, err
 	}
-	return Marshal(v)
+	b, err := Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	return append(b, '\n'), nil
 }
 
 func value(l Lockfile) (map[string]any, error) {
@@ -57,6 +64,40 @@ func value(l Lockfile) (map[string]any, error) {
 		return nil, fmt.Errorf("lock: schema_version %d; this version writes %d", l.SchemaVersion, SchemaVersion)
 	}
 	agents, tools, servers, skills, secrets, edges := []any{}, []any{}, []any{}, []any{}, []any{}, []any{}
+	// Two things never share an id (F-0032).
+	ids := map[model.ID]string{}
+	unique := func(id model.ID, what string) error {
+		if prev, ok := ids[id]; ok {
+			return fmt.Errorf("lock: id %s is both %s and %s; two things cannot share an id (F-0032)", id, prev, what)
+		}
+		ids[id] = what
+		return nil
+	}
+	for i, a := range l.Agents {
+		if err := unique(a.ID, fmt.Sprintf("agents[%d]", i)); err != nil {
+			return nil, err
+		}
+	}
+	for i, t := range l.Tools {
+		if err := unique(t.ID, fmt.Sprintf("tools[%d]", i)); err != nil {
+			return nil, err
+		}
+	}
+	for i, x := range l.MCPServers {
+		if err := unique(x.ID, fmt.Sprintf("mcp_servers[%d]", i)); err != nil {
+			return nil, err
+		}
+	}
+	for i, x := range l.Skills {
+		if err := unique(x.ID, fmt.Sprintf("skills[%d]", i)); err != nil {
+			return nil, err
+		}
+	}
+	for i, x := range l.SecretRefs {
+		if err := unique(x.ID, fmt.Sprintf("secret_refs[%d]", i)); err != nil {
+			return nil, err
+		}
+	}
 	for i, a := range l.Agents {
 		v, err := agentValue(a)
 		if err != nil {
@@ -114,6 +155,16 @@ func value(l Lockfile) (map[string]any, error) {
 		"coverage":       cov,
 	}
 	if l.Intent != nil {
+		if err := l.Intent.Validate(); err != nil {
+			return nil, fmt.Errorf("lock: %w", err)
+		}
+		agentIDs := map[string]bool{}
+		for _, a := range l.Agents {
+			agentIDs[string(a.ID)] = true
+		}
+		if err := l.Intent.Check(agentIDs); err != nil {
+			return nil, fmt.Errorf("lock: %w", err)
+		}
 		out["intent"] = l.Intent.Value()
 	}
 	return out, nil
@@ -337,6 +388,9 @@ func coverageValue(c coverage.Coverage) (map[string]any, error) {
 		if err != nil {
 			return nil, fmt.Errorf("agents[%d]: %w", i, err)
 		}
+		if err := checkAxes(a.Axes); err != nil {
+			return nil, fmt.Errorf("agents[%d]: %w", i, err)
+		}
 		axes := []any{}
 		for _, x := range a.Axes {
 			v, err := axisValue(x)
@@ -411,6 +465,37 @@ func sourcesValue(sources []coverage.Source) ([]any, error) {
 	return sorted(out), nil
 }
 
+// checkAxes requires the seven axes once each: detected, resolved and
+// unresolved with a value of 0 or more, and the four that are never written in
+// actaira.lock with no_source (docs/cobertura.md).
+func checkAxes(axes []coverage.Axis) error {
+	want := map[coverage.AxisName]bool{
+		coverage.Detected: true, coverage.Resolved: true, coverage.UnresolvedAxis: true,
+		coverage.Effective: false, coverage.EffectiveUnused: false, coverage.Mediated: false, coverage.Governed: false,
+	}
+	seen := map[coverage.AxisName]bool{}
+	for _, x := range axes {
+		withValue, ok := want[x.Name]
+		if !ok {
+			return fmt.Errorf("axis %q is not one of the closed list", x.Name)
+		}
+		if seen[x.Name] {
+			return fmt.Errorf("axis %s appears twice", x.Name)
+		}
+		seen[x.Name] = true
+		if withValue && (x.Value == nil || *x.Value < 0) {
+			return fmt.Errorf("axis %s needs a value of 0 or more", x.Name)
+		}
+		if !withValue && x.Value != nil {
+			return fmt.Errorf("axis %s is never computed from the repository and carries no_source, not a value", x.Name)
+		}
+	}
+	if len(seen) != len(want) {
+		return fmt.Errorf("axes: %d of the 7, all are required and none is left out", len(seen))
+	}
+	return nil
+}
+
 func axisValue(x coverage.Axis) (map[string]any, error) {
 	switch x.Name {
 	case coverage.Detected, coverage.Resolved, coverage.UnresolvedAxis,
@@ -445,10 +530,32 @@ func entriesValue(entries []coverage.Entry) ([]any, error) {
 	return sorted(out), nil
 }
 
-// Decode reads actaira.lock. Another schema_version, an unknown field, a value
-// outside the model or bytes that Encode would not write are errors.
+// Decode reads actaira.lock. The file may end with one newline, LF or CRLF
+// (the one a tool adds or a CRLF checkout gives), or with none (F-0031).
+// Another schema_version (said first), an unknown field, a value outside the
+// model, a contract whose agent is not in the lockfile or bytes that Encode
+// would not write are errors.
 func Decode(data []byte) (Lockfile, error) {
-	dec := json.NewDecoder(bytes.NewReader(data))
+	body := data
+	if bytes.HasSuffix(body, []byte("\r\n")) {
+		body = body[:len(body)-2]
+	} else if bytes.HasSuffix(body, []byte("\n")) {
+		body = body[:len(body)-1]
+	}
+	var version struct {
+		SchemaVersion *int `json:"schema_version"`
+	}
+	if err := json.Unmarshal(body, &version); err != nil {
+		return Lockfile{}, fmt.Errorf("lock: %w", err)
+	}
+	if version.SchemaVersion == nil || *version.SchemaVersion != SchemaVersion {
+		got := "none"
+		if version.SchemaVersion != nil {
+			got = fmt.Sprint(*version.SchemaVersion)
+		}
+		return Lockfile{}, fmt.Errorf("lock: schema_version %s; this version reads %d", got, SchemaVersion)
+	}
+	dec := json.NewDecoder(bytes.NewReader(body))
 	dec.DisallowUnknownFields()
 	var raw rawLock
 	if err := dec.Decode(&raw); err != nil {
@@ -456,13 +563,6 @@ func Decode(data []byte) (Lockfile, error) {
 	}
 	if _, err := dec.Token(); !errors.Is(err, io.EOF) {
 		return Lockfile{}, errors.New("lock: data after the lockfile")
-	}
-	if raw.SchemaVersion == nil || *raw.SchemaVersion != SchemaVersion {
-		got := "none"
-		if raw.SchemaVersion != nil {
-			got = fmt.Sprint(*raw.SchemaVersion)
-		}
-		return Lockfile{}, fmt.Errorf("lock: schema_version %s; this version reads %d", got, SchemaVersion)
 	}
 	l := Lockfile{SchemaVersion: SchemaVersion}
 	for _, a := range raw.Agents {
@@ -491,12 +591,12 @@ func Decode(data []byte) (Lockfile, error) {
 		}
 		l.Intent = &m
 	}
-	// What Decode accepts is exactly what Encode writes.
+	// What Decode accepts is exactly what Encode writes, newline aside.
 	again, err := Encode(l)
 	if err != nil {
 		return Lockfile{}, err
 	}
-	if !bytes.Equal(again, data) {
+	if !bytes.Equal(bytes.TrimSuffix(again, []byte("\n")), body) {
 		return Lockfile{}, errors.New("lock: not in the canonical form that actaira lock writes")
 	}
 	return l, nil

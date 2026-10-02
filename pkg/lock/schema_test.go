@@ -97,6 +97,13 @@ func TestACMSchemaAndGoAgree(t *testing.T) {
 		{"capability allowed and denied", strings.Replace(valid, `"deny": ["customer.delete"]`, `"deny": ["customer.delete", "money.refund"]`, 1), true, false, "a schema cannot compare two lists"},
 		{"two contracts for one agent", strings.Replace(valid, `}]}`, `}, {"agent": "0123456789abcdef", "status": "draft", "confidence": "inferred", "owner": "@b", "expires": "2027-01-01"}]}`, 1), true, false, "a schema cannot compare a field across items"},
 		{"not nfc owner", strings.Replace(valid, `"owner": "@ana"`, "\"owner\": \"@aná\"", 1), true, true, ""},
+		{"null list", strings.Replace(valid, `"deny": ["customer.delete"]`, `"deny": null`, 1), false, false, ""},
+		{"empty confidence", strings.Replace(valid, `"status": "accepted",`, `"status": "accepted", "confidence": "",`, 1), false, false, ""},
+		{"amount as a string", strings.Replace(valid, `"amount": 50000`, `"amount": "50000"`, 1), false, false, ""},
+		{"miscased key", strings.Replace(valid, `"deny":`, `"Deny":`, 1), false, false, ""},
+		{"duplicate key", strings.Replace(valid, `"deny": ["customer.delete"],`, `"deny": ["customer.delete"], "deny": [],`, 1), true, false, "a JSON Schema validator reads the decoded value, where the last duplicate key wins (F-0030)"},
+		{"invalid utf-8", strings.Replace(valid, `"owner": "@ana"`, "\"owner\": \"@an\xff\"", 1), true, false, "the validator replaces invalid UTF-8 before validating; actaira rejects it (ADR 0002, rule 4)"},
+		{"limit on a capability not allowed", strings.Replace(valid, `{"capability": "money.refund", "per_operation"`, `{"capability": "money.refnd", "per_operation"`, 1), true, false, "a schema cannot compare two lists"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -141,7 +148,11 @@ func TestLockSchemaAndGoAgree(t *testing.T) {
 		{"axis with value and no source", strings.Replace(s, `{"axis":"detected","value":2}`, `{"axis":"detected","no_source":"x","value":2}`, 1), false, false, ""},
 		{"not observed without reason", strings.Replace(s, `"reason":"no_runner_config",`, ``, 1), false, false, ""},
 		{"bad capability in intent", strings.Replace(s, `"customer.read"`, `"customer.*"`, 1), false, false, ""},
-		{"bad id", strings.Replace(s, `"id":"3ef57d45065ddc29"`, `"id":"3EF57D45065DDC29"`, 1), false, false, ""},
+		{"bad id", upperFirstID(s), false, false, ""},
+		{"no axes", strings.Replace(s, axesOf(s), `"axes":[]`, 1), false, false, ""},
+		{"effective with a value", strings.Replace(s, `{"axis":"effective","no_source":"not_from_repo"}`, `{"axis":"effective","value":0}`, 1), false, false, ""},
+		{"detected twice", strings.Replace(s, `{"axis":"detected","value":2},`, `{"axis":"detected","value":2},{"axis":"detected","value":2},`, 1), false, false, ""},
+		{"negative value", strings.Replace(s, `{"axis":"detected","value":2}`, `{"axis":"detected","value":-2}`, 1), false, false, ""},
 		{"pretty printed", pretty.String(), true, false, "the schema cannot express the canonical form of ADR 0002"},
 	}
 	for _, c := range cases {
@@ -161,4 +172,17 @@ func TestLockSchemaAndGoAgree(t *testing.T) {
 			}
 		})
 	}
+}
+
+// upperFirstID writes the first id of the lockfile in capitals.
+func upperFirstID(s string) string {
+	i := strings.Index(s, `"id":"`) + len(`"id":"`)
+	return s[:i] + strings.ToUpper(s[i:i+16]) + s[i+16:]
+}
+
+// axesOf returns the first "axes":[...] of the lockfile.
+func axesOf(s string) string {
+	i := strings.Index(s, `"axes":[`)
+	j := strings.Index(s[i:], "]")
+	return s[i : i+j+1]
 }

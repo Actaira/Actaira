@@ -373,3 +373,40 @@ Cada fallo encontrado (test en rojo que no era esperado, bug, hallazgo crítico 
   - Rama `e1/paso-1.2c-contrato`.
 - guardia: regla:.claude/rules/cobertura.md
 - lección: L-009 vale también para lo que se enseña a terceros (pasaporte, badge, informe), y una regla de doctrina se carga donde se escribe la doctrina, no solo donde se programa.
+
+## F-0030 Una clave duplicada en actaira.intent.json cambiaba el contrato en silencio
+- fecha: 2026-10-02
+- épica y paso: E1 / 1.3, ronda adversarial 1 (alto 1)
+- síntoma: `intent.Parse` aceptaba `"deny"` dos veces (ganaba la última, vacía), `"Deny"` en vez de `"deny"`, y `limits` o `expires` repetidos. Un `deny` o un límite que la persona ve en el diff dejaba de valer sin aviso. Pasa por accidente: dos ramas que añaden la misma clave al mismo contrato en líneas distintas se fusionan sin conflicto.
+- causa raíz: `encoding/json` v1 se queda con la última clave repetida y casa los nombres sin distinguir mayúsculas, y `DisallowUnknownFields` no lo evita. Se eligió por costumbre, sin mirar qué hace con lo que la persona escribe a mano.
+- corrección: `intent.Parse` lee con `encoding/json/v2` de Go 1.27 (https://pkg.go.dev/encoding/json/v2), que rechaza nombres duplicados, nombres con otras mayúsculas, UTF-8 inválido y números que no son enteros escritos con dígitos. Además rechaza `null` y la cadena vacía en los campos opcionales. Rama `e1/paso-3-modelo`.
+- guardia: test:pkg/intent/intent_test.go::TestIntentRejectsDuplicateOrMiscasedKeys
+- lección: lo que escribe una persona a mano se lee con un decodificador que no perdona: una clave repetida o mal escrita es un error, nunca la última que gana.
+
+## F-0031 Un actaira.lock con salto de línea final no se podía leer
+- fecha: 2026-10-02
+- épica y paso: E1 / 1.3, ronda adversarial 1 (alto 2)
+- síntoma: `Encode` escribía el JSON canónico sin salto de línea final y `Decode` exigía esos bytes exactos. El hook `end-of-file-fixer` de pre-commit, `insert_final_newline` de editorconfig o el editor web de GitHub añaden el salto, y entonces el lockfile quedaba ilegible.
+- causa raíz: el ADR 0002 definió la forma canónica del JSON y se tomó como la forma del fichero, sin pensar en las herramientas que tocan todo fichero de texto.
+- corrección: el fichero es el JSON canónico más un salto de línea. `Encode` lo escribe así, y `Decode` acepta un único `\n` o `\r\n` final (el de `core.autocrlf`) o ninguno, y nada más. El ADR 0002 lo dice. Rama `e1/paso-3-modelo`.
+- guardia: test:pkg/lock/lock_test.go::TestLockFileEndsWithOneNewline
+- lección: un fichero que se commitea convive con las herramientas que normalizan el texto; su formato se define contando con ellas.
+
+## F-0032 Dos agentes con el mismo nombre en un fichero tenían el mismo id
+- fecha: 2026-10-02
+- épica y paso: E1 / 1.3, ronda adversarial 1 (alto 3)
+- síntoma: el `id` era el hash de tipo, framework, fichero y nombre. Dos `Agent(name="test")` en el mismo fichero, lo normal en los tests de un repo, daban el mismo `id`; `Compute` se quedaba con el último y `resolved` dependía del orden de entrada (con el orden A, 0; con el B, 1), y `Encode` escribía dos elementos con el mismo `id`.
+- causa raíz: el `id` se definió por el nombre sin preguntarse si el nombre identifica, y nada comprobaba que los `id` fueran únicos.
+- corrección: `NewID` lleva el ordinal de la definición entre las del mismo tipo, framework, fichero y nombre, en el orden del fichero (lo pone el extractor en el paso 1.4). `Compute` y `Encode` fallan, con el `id` en el mensaje, si dos elementos comparten `id`. Rama `e1/paso-3-modelo`.
+- guardia: test:pkg/lock/lock_test.go::TestLockRejectsTwoThingsWithOneID
+- guardia: test:pkg/coverage/coverage_test.go::TestCoverageRejectsTwoToolsWithOneID
+- lección: un identificador estable se comprueba único donde se usa; si no lo es por construcción, lleva lo que lo desambigua.
+
+## F-0033 El determinismo del bloque coverage no estaba medido y el estado decía que sí
+- fecha: 2026-10-02
+- épica y paso: E1 / 1.3, ronda adversarial 1 (alto 4)
+- síntoma: el test de orden y la ejecución real barajaban solo cuatro listas y calculaban `coverage` una vez. Quitando cuatro ordenaciones del bloque `coverage`, todos los tests seguían en verde, y el estado decía "diez escrituras en orden barajado dan el mismo hash" como si cubriera todo.
+- causa raíz: la prueba de determinismo se escribió con las listas que tenía a mano, no con la lista de todo lo que se ordena, y el texto describió lo que se quería probar, no lo que la prueba hacía.
+- corrección: el test y la ejecución real barajan todas las listas del modelo y las entradas de `coverage.Compute`, y recalculan la cobertura en cada vuelta. Las mutaciones que quitan cada ordenación salen en rojo. El estado dice lo que se mide. Rama `e1/paso-3-modelo`.
+- guardia: test:pkg/lock/lock_test.go::TestLockIsTheSameWhateverTheOrderOfItsInputs
+- lección: una prueba de determinismo baraja todo lo que se ordena, y cada ordenación tiene una mutación que lo demuestra.

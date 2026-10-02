@@ -1,44 +1,33 @@
-# E1 paso 1.3: ejecución real
-fecha: 2026-10-02T14:49:53Z
-commit: 766328c más el paso 1.3 sin commitear
+# E1 paso 1.3: ejecución real (tras la ronda 1 de la pasada adversarial)
+fecha: 2026-10-02T15:13:47Z
+commit: b4de4f3 más las correcciones de la ronda 1 sin commitear
 entorno: go version go1.27.1 linux/amd64
 comando: go run ./evals/sessions/2026-10-02-e1-paso-3-real
 
-run  1: 4844 bytes, sha256 8e97f783dab94dda8601364194f131dbb6076f977e652ca3e10d50174b22e474
-run  2: 4844 bytes, sha256 8e97f783dab94dda8601364194f131dbb6076f977e652ca3e10d50174b22e474
-run  3: 4844 bytes, sha256 8e97f783dab94dda8601364194f131dbb6076f977e652ca3e10d50174b22e474
-run  4: 4844 bytes, sha256 8e97f783dab94dda8601364194f131dbb6076f977e652ca3e10d50174b22e474
-run  5: 4844 bytes, sha256 8e97f783dab94dda8601364194f131dbb6076f977e652ca3e10d50174b22e474
-run  6: 4844 bytes, sha256 8e97f783dab94dda8601364194f131dbb6076f977e652ca3e10d50174b22e474
-run  7: 4844 bytes, sha256 8e97f783dab94dda8601364194f131dbb6076f977e652ca3e10d50174b22e474
-run  8: 4844 bytes, sha256 8e97f783dab94dda8601364194f131dbb6076f977e652ca3e10d50174b22e474
-run  9: 4844 bytes, sha256 8e97f783dab94dda8601364194f131dbb6076f977e652ca3e10d50174b22e474
-run 10: 4844 bytes, sha256 8e97f783dab94dda8601364194f131dbb6076f977e652ca3e10d50174b22e474
+run  1: 5021 bytes, sha256 29eb9c3bf7d1ec52a3ac3e8706e27d0e18d5cf60e5c533637efaef33ef7a7b5e
+run  2: 5021 bytes, sha256 29eb9c3bf7d1ec52a3ac3e8706e27d0e18d5cf60e5c533637efaef33ef7a7b5e
+run  3: 5021 bytes, sha256 29eb9c3bf7d1ec52a3ac3e8706e27d0e18d5cf60e5c533637efaef33ef7a7b5e
+run  4: 5021 bytes, sha256 29eb9c3bf7d1ec52a3ac3e8706e27d0e18d5cf60e5c533637efaef33ef7a7b5e
+run  5: 5021 bytes, sha256 29eb9c3bf7d1ec52a3ac3e8706e27d0e18d5cf60e5c533637efaef33ef7a7b5e
+run  6: 5021 bytes, sha256 29eb9c3bf7d1ec52a3ac3e8706e27d0e18d5cf60e5c533637efaef33ef7a7b5e
+run  7: 5021 bytes, sha256 29eb9c3bf7d1ec52a3ac3e8706e27d0e18d5cf60e5c533637efaef33ef7a7b5e
+run  8: 5021 bytes, sha256 29eb9c3bf7d1ec52a3ac3e8706e27d0e18d5cf60e5c533637efaef33ef7a7b5e
+run  9: 5021 bytes, sha256 29eb9c3bf7d1ec52a3ac3e8706e27d0e18d5cf60e5c533637efaef33ef7a7b5e
+run 10: 5021 bytes, sha256 29eb9c3bf7d1ec52a3ac3e8706e27d0e18d5cf60e5c533637efaef33ef7a7b5e
 read back with lock.Decode: 2 agents, 3 tools, intent with 2 contracts
 
 contracts on 2026-10-02: support in_force, triage draft
 contracts on 2027-04-02: support expired, triage draft
-contract of an agent that is gone: intent: contract for agent f976b96a3651bbfe, which is not in the lockfile (moved or renamed?)
-coverage of support: 1 of 3 known sources observed; not seen: 3
+contract of an agent that is gone: intent: contract for agent 3b929ff2bc352bd3, which is not in the lockfile (moved or renamed?)
+coverage of support: 1 of 3 known sources observed; not seen: 4
 
-actaira.lock, indented here for reading (the file itself is one canonical line):
+actaira.lock, indented here for reading (the file itself is one canonical line and a newline):
 {
   "agents": [
     {
       "confidence": "declared",
       "framework": "openai-agents-python",
-      "id": "f976b96a3651bbfe",
-      "name": "triage",
-      "source": {
-        "column": 10,
-        "file": "agents/triage.py",
-        "line": 12
-      }
-    },
-    {
-      "confidence": "declared",
-      "framework": "openai-agents-python",
-      "id": "fd4cc94df54e0640",
+      "id": "25c59d2dd29b6b36",
       "model": {
         "name": "gpt-5"
       },
@@ -48,12 +37,96 @@ actaira.lock, indented here for reading (the file itself is one canonical line):
         "file": "agents/support.py",
         "line": 30
       }
+    },
+    {
+      "confidence": "declared",
+      "framework": "openai-agents-python",
+      "id": "3b929ff2bc352bd3",
+      "name": "triage",
+      "source": {
+        "column": 10,
+        "file": "agents/triage.py",
+        "line": 12
+      }
     }
   ],
   "coverage": {
     "agents": [
       {
-        "agent": "f976b96a3651bbfe",
+        "agent": "25c59d2dd29b6b36",
+        "axes": [
+          {
+            "axis": "detected",
+            "value": 2
+          },
+          {
+            "axis": "effective",
+            "no_source": "not_from_repo"
+          },
+          {
+            "axis": "effective_unused",
+            "no_source": "not_from_repo"
+          },
+          {
+            "axis": "governed",
+            "no_source": "not_from_repo"
+          },
+          {
+            "axis": "mediated",
+            "no_source": "not_from_repo"
+          },
+          {
+            "axis": "resolved",
+            "value": 2
+          },
+          {
+            "axis": "unresolved",
+            "value": 1
+          }
+        ],
+        "name": "support",
+        "sources": [
+          {
+            "kind": "env_ref",
+            "locations": [
+              {
+                "column": 14,
+                "file": "agents/tools.py",
+                "line": 22
+              }
+            ],
+            "name": "STRIPE_API_KEY",
+            "reason": "no_runner_config",
+            "state": "not_configured"
+          },
+          {
+            "kind": "mcp_server",
+            "locations": [
+              {
+                "column": 5,
+                "file": "agents/support.py",
+                "line": 18
+              }
+            ],
+            "name": "stripe",
+            "reason": "mcp_tools_not_listed",
+            "state": "not_configured"
+          }
+        ],
+        "unresolved": [
+          {
+            "kind": "tool_schema",
+            "location": {
+              "column": 3,
+              "file": "agents/support.py",
+              "line": 40
+            },
+            "reason": "schema_built_at_runtime"
+          }
+        ]
+      },
+      {
+        "agent": "3b929ff2bc352bd3",
         "axes": [
           {
             "axis": "detected",
@@ -106,69 +179,6 @@ actaira.lock, indented here for reading (the file itself is one canonical line):
             "reason": "list_built_at_runtime"
           }
         ]
-      },
-      {
-        "agent": "fd4cc94df54e0640",
-        "axes": [
-          {
-            "axis": "detected",
-            "value": 2
-          },
-          {
-            "axis": "effective",
-            "no_source": "not_from_repo"
-          },
-          {
-            "axis": "effective_unused",
-            "no_source": "not_from_repo"
-          },
-          {
-            "axis": "governed",
-            "no_source": "not_from_repo"
-          },
-          {
-            "axis": "mediated",
-            "no_source": "not_from_repo"
-          },
-          {
-            "axis": "resolved",
-            "value": 2
-          },
-          {
-            "axis": "unresolved",
-            "value": 0
-          }
-        ],
-        "name": "support",
-        "sources": [
-          {
-            "kind": "env_ref",
-            "locations": [
-              {
-                "column": 14,
-                "file": "agents/tools.py",
-                "line": 22
-              }
-            ],
-            "name": "STRIPE_API_KEY",
-            "reason": "no_runner_config",
-            "state": "not_configured"
-          },
-          {
-            "kind": "mcp_server",
-            "locations": [
-              {
-                "column": 5,
-                "file": "agents/support.py",
-                "line": 18
-              }
-            ],
-            "name": "stripe",
-            "reason": "mcp_tools_not_listed",
-            "state": "not_configured"
-          }
-        ],
-        "unresolved": []
       }
     ],
     "repo": {
@@ -176,11 +186,16 @@ actaira.lock, indented here for reading (the file itself is one canonical line):
         {
           "path": "data/fixtures.json",
           "reason": "file_over_1mb"
+        },
+        {
+          "path": "vendor/sdk",
+          "reason": "submodule"
         }
       ],
       "sources": [
         {
           "extractors": [
+            "mcp-config/1",
             "openai-agents-python/1"
           ],
           "kind": "repo",
@@ -196,69 +211,69 @@ actaira.lock, indented here for reading (the file itself is one canonical line):
   "edges": [
     {
       "confidence": "declared",
-      "from": "500e243d80b28998",
-      "kind": "references_env",
-      "source": {
-        "column": 14,
-        "file": "agents/tools.py",
-        "line": 22
-      },
-      "to": "615743a8280f00b9"
-    },
-    {
-      "confidence": "declared",
-      "from": "f976b96a3651bbfe",
-      "kind": "can_call",
-      "source": {
-        "column": 12,
-        "file": "agents/triage.py",
-        "line": 13
-      },
-      "to": "95538f3bf21535b6"
-    },
-    {
-      "confidence": "declared",
-      "from": "f976b96a3651bbfe",
-      "kind": "delegates_to",
-      "source": {
-        "column": 14,
-        "file": "agents/triage.py",
-        "line": 14
-      },
-      "to": "fd4cc94df54e0640"
-    },
-    {
-      "confidence": "declared",
-      "from": "fd4cc94df54e0640",
+      "from": "25c59d2dd29b6b36",
       "kind": "can_call",
       "source": {
         "column": 12,
         "file": "agents/support.py",
         "line": 31
       },
-      "to": "500e243d80b28998"
+      "to": "c21fe805a8c68af3"
     },
     {
       "confidence": "declared",
-      "from": "fd4cc94df54e0640",
+      "from": "25c59d2dd29b6b36",
       "kind": "can_call",
       "source": {
         "column": 26,
         "file": "agents/support.py",
         "line": 31
       },
-      "to": "daa21a1efdb46dc6"
+      "to": "8a4c3ed28f9ad7d4"
     },
     {
       "confidence": "declared",
-      "from": "fd4cc94df54e0640",
+      "from": "25c59d2dd29b6b36",
       "kind": "uses_mcp_server",
       "source": {
         "column": 17,
         "file": "agents/support.py",
         "line": 32
       },
-      "to": "048cdaae1320b7b8"
+      "to": "b0fa4f37877ae4b4"
+    },
+    {
+      "confidence": "declared",
+      "from": "3b929ff2bc352bd3",
+      "kind": "can_call",
+      "source": {
+        "column": 12,
+        "file": "agents/triage.py",
+        "line": 13
+      },
+      "to": "fed4ea9182df22c2"
+    },
+    {
+      "confidence": "declared",
+      "from": "3b929ff2bc352bd3",
+      "kind": "delegates_to",
+      "source": {
+        "column": 14,
+        "file": "agents/triage.py",
+        "line": 14
+      },
+      "to": "25c59d2dd29b6b36"
+    },
+    {
+      "confidence": "declared",
+      "from": "c21fe805a8c68af3",
+      "kind": "references_env",
+      "source": {
+        "column": 14,
+        "file": "agents/tools.py",
+        "line": 22
+      },
+      "to": "6565cf299a34a130"
     }
   ],
   "intent": {
@@ -267,7 +282,7 @@ actaira.lock, indented here for reading (the file itself is one canonical line):
       {
         "accepted_at": "2026-10-02",
         "accepted_by": "@example-owner",
-        "agent": "fd4cc94df54e0640",
+        "agent": "25c59d2dd29b6b36",
         "allow": [
           "customer.read",
           "money.refund"
@@ -300,7 +315,7 @@ actaira.lock, indented here for reading (the file itself is one canonical line):
         "status": "accepted"
       },
       {
-        "agent": "f976b96a3651bbfe",
+        "agent": "3b929ff2bc352bd3",
         "allow": [
           "ticket.read"
         ],
@@ -318,7 +333,7 @@ actaira.lock, indented here for reading (the file itself is one canonical line):
     {
       "command": "npx",
       "confidence": "declared",
-      "id": "048cdaae1320b7b8",
+      "id": "b0fa4f37877ae4b4",
       "name": "stripe",
       "package": {
         "ecosystem": "npm",
@@ -337,7 +352,7 @@ actaira.lock, indented here for reading (the file itself is one canonical line):
   "schema_version": 1,
   "secret_refs": [
     {
-      "id": "615743a8280f00b9",
+      "id": "6565cf299a34a130",
       "locations": [
         {
           "column": 14,
@@ -355,7 +370,7 @@ actaira.lock, indented here for reading (the file itself is one canonical line):
       "description_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
       "effect": "unknown",
       "framework": "openai-agents-python",
-      "id": "500e243d80b28998",
+      "id": "c21fe805a8c68af3",
       "name": "issue_refund",
       "schema_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
       "source": {
@@ -369,7 +384,7 @@ actaira.lock, indented here for reading (the file itself is one canonical line):
       "description_hash": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
       "effect": "unknown",
       "framework": "openai-agents-python",
-      "id": "daa21a1efdb46dc6",
+      "id": "8a4c3ed28f9ad7d4",
       "name": "lookup_customer",
       "schema_hash": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
       "source": {
@@ -382,7 +397,7 @@ actaira.lock, indented here for reading (the file itself is one canonical line):
       "confidence": "unresolved",
       "effect": "unknown",
       "framework": "openai-agents-python",
-      "id": "95538f3bf21535b6",
+      "id": "fed4ea9182df22c2",
       "name": "list_tickets",
       "source": {
         "column": 1,
@@ -392,4 +407,5 @@ actaira.lock, indented here for reading (the file itself is one canonical line):
     }
   ]
 }
+
 exit: 0

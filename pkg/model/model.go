@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"strconv"
+
+	"golang.org/x/text/unicode/norm"
 )
 
 // ID identifies an agent, tool, MCP server, skill or secret reference. It is
@@ -14,12 +16,17 @@ type ID string
 
 // NewID returns the id of a thing of the given kind ("agent", "tool",
 // "mcp_server", "skill", "env_ref"), found by framework in the file (relative
-// to the repository root, with "/") under name. Each part is length-prefixed,
-// so moving characters from one part to the next changes the id.
-func NewID(kind, framework, file, name string) ID {
+// to the repository root, with "/") under name. ordinal tells apart the
+// definitions of the same kind, framework, file and name, in the order of the
+// file, starting at 0: two Agent(name="test") in a test file are 0 and 1
+// (F-0032). Each part is put in Unicode NFC (ADR 0002, rule 4) and
+// length-prefixed, so moving characters from one part to the next changes the
+// id.
+func NewID(kind, framework, file, name string, ordinal int) ID {
 	h := sha256.New()
 	var n [8]byte
-	for _, part := range []string{kind, framework, file, name} {
+	for _, part := range []string{kind, framework, file, name, strconv.Itoa(ordinal)} {
+		part = norm.NFC.String(part)
 		binary.BigEndian.PutUint64(n[:], uint64(len(part)))
 		h.Write(n[:])
 		h.Write([]byte(part))
