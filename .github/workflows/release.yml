@@ -1,0 +1,132 @@
+# Release pipeline of the actaira CLI (E1 step 1.2b; docs/epicas/E1.md, step 1.2).
+#   - release-build: one static Linux binary per architecture, each built on its
+#     native runner and checked by scripts/release/build-static.sh.
+#   - release-dry-run: on every pull request and by hand. checksums.txt signed
+#     with an ephemeral key, with no Fulcio certificate, no Rekor entry and no
+#     OIDC token, so nothing public (Marcos, 2026-10-02). It verifies the
+#     signature and checks that a changed byte fails verification.
+#   - release-publish: only for a pushed v* tag that is on main. Keyless
+#     signature with the identity of this workflow, which leaves a public and
+#     permanent entry in Sigstore: the first one is v0.1.0, tagged only with
+#     Marcos's approval.
+# None of them is the required check (the job `check` of ci.yml, ADR 0000).
+# Actions pinned by commit SHA with their release in a comment
+# (scripts/harness/tests/ci_test.sh); the shape of this file is fixed by
+# scripts/harness/tests/release_test.sh.
+name: release
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  release-build:
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and check the static binary
+        env:
+          ARCH: ${{ matrix.arch }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [ "$REF_TYPE" = tag ]; then version="$REF_NAME"; else version="dryrun-${SHA:0:12}"; fi
+          scripts/release/build-static.sh "$ARCH" "$version" dist
+      - uses: actions/upload-artifact@UPLOAD_SHA # vUPLOAD
+        with:
+          name: actaira-linux-${{ matrix.arch }}
+          path: dist/actaira-linux-${{ matrix.arch }}
+          if-no-files-found: error
+
+  release-dry-run:
+    if: github.event_name != 'push'
+    needs: release-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/download-artifact@DOWNLOAD_SHA # vDOWNLOAD
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: "v3.1.3"
+      - name: Sign and verify with an ephemeral key, without any transparency log
+        working-directory: dist
+        env:
+          # The key lives only in this job and is thrown away with it.
+          COSIGN_PASSWORD: ""
+        run: |
+          sha256sum actaira-linux-amd64 actaira-linux-arm64 > checksums.txt
+          cosign generate-key-pair
+          cosign sign-blob --yes --key cosign.key --tlog-upload=false --bundle checksums.txt.sigstore.json checksums.txt
+          cosign verify-blob --key cosign.pub --insecure-ignore-tlog=true --bundle checksums.txt.sigstore.json checksums.txt
+          sha256sum -c checksums.txt
+          cp checksums.txt tampered.txt
+          printf 'x' >> tampered.txt
+          if cosign verify-blob --key cosign.pub --insecure-ignore-tlog=true --bundle checksums.txt.sigstore.json tampered.txt; then
+            echo "release-dry-run: the signature verifies a changed file" >&2
+            exit 1
+          fi
+
+  release-publish:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: release-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: The tag must be on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - uses: actions/download-artifact@DOWNLOAD_SHA # vDOWNLOAD
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: "v3.1.3"
+      - name: Sign checksums.txt with the identity of this workflow and verify it
+        working-directory: dist
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          sha256sum actaira-linux-amd64 actaira-linux-arm64 > checksums.txt
+          cosign sign-blob --yes --bundle checksums.txt.sigstore.json checksums.txt
+          cosign verify-blob --bundle checksums.txt.sigstore.json --certificate-identity "https://github.com/Actaira/Actaira/.github/workflows/release.yml@refs/tags/${VERSION}" --certificate-oidc-issuer https://token.actions.githubusercontent.com checksums.txt
+      - name: Publish the release, as a draft until its assets are up
+        working-directory: dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          gh release create "$VERSION" --repo "$REPO" --draft --verify-tag --title "$VERSION" --notes "Static Linux binaries of actaira $VERSION. Verify checksums.txt with cosign (docs/epicas/E1.md, step 1.2), then sha256sum -c checksums.txt."
+          gh release upload "$VERSION" --repo "$REPO" actaira-linux-amd64 actaira-linux-arm64 checksums.txt checksums.txt.sigstore.json
+          gh release edit "$VERSION" --repo "$REPO" --draft=false
