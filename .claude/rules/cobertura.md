@@ -4,6 +4,8 @@ paths:
   - "pkg/**"
   - "internal/**"
   - "docs/cobertura.md"
+  - "docs/PLAN.md"
+  - "docs/epicas/**"
 ---
 
 # Reglas de la vista de cobertura
@@ -11,6 +13,7 @@ paths:
 La definición completa está en `docs/cobertura.md`. Estas son las invariantes que ningún cambio puede romper (F-0017 y F-0018):
 
 - **Ninguna salida da un porcentaje de cobertura ni un veredicto de conjunto** ("cubierto", "OK", un check verde). El resumen es "N de M fuentes conocidas observadas" más lo no visto.
+- **Tampoco un pasaporte, un badge, un informe o una página para terceros:** ninguno dice que un agente o una credencial "cumple" el contrato. Dicen las rupturas vistas en lo observado, con N de M fuentes y lo no visto al lado, y un badge no lleva estado (F-0029).
 - **Un contador solo da número si se ha visto todo lo que podría cambiarlo.**
   - Si no, dice qué falta: "sin fuente" o "uso desconocido". Mediadas da el número de lo visto, siempre con "llamadas no mediadas: sin fuente" al lado mientras no haya una fuente que las vea.
   - Nunca da 0 por no haber mirado.

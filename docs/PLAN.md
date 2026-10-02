@@ -1,5 +1,7 @@
 # Actaira: plan de construcción
 
+**Versión 2.1, 2 de octubre de 2026.** Decisiones de Marcos: el **contrato de capacidades** pasa a ser la idea central del producto (sección 0) y se fija la estrategia de producto: quién es quién, `actaira inspect` con el registro público de servidores MCP como primer lanzamiento, y el builder como primer plan de pago (secciones 0, 2, 5 y 9).
+
 **Versión 2.0 (definitiva), 28 de septiembre de 2026.** Integra todo lo decidido: un solo nombre, sin plazos, prueba de 7 días con topes, despliegue en Azure con escala a cero programado con Claude Code, cumplimiento como capa, y una revisión de coherencia de 52 puntos sobre el texto. Historial: La 1.6 fija el nombre, **Actaira** para todo (núcleo abierto y plataforma); quita todos los plazos, porque el orden lo marcan las dependencias y la prioridad es el núcleo abierto y la plataforma self-serve; adelanta una plataforma self-serve sin runner; y deja el cumplimiento como una capa. La 1.5 añade una fase previa sin código (nombre nuevo porque "seamark" está ocupado, y conversaciones con builders), corrige la cuña (el lockfile por hash ya lo tienen otros; lo propio es la semántica de capacidades), recorta la fase 1 a lo que mueve la adopción y añade las features que el mercado ya da por hechas (flujos tóxicos, SARIF, baseline, Agent Skills, Vercel AI SDK, deriva programada, etiquetas OWASP). La 1.4 recorta lo que no hace falta para probar la cuña: fases acotadas, C0 mínimo, C1 y C2 como un solo lanzamiento, capacidades potenciales frente a efectivas, C8 al backlog, C5 limitado a efectos de primer orden, compliance fuera de la portada, precio con cuota de acciones y los builders como primer cliente de pago. La 1.3 mete la IA donde aporta (sección 3, "La IA dentro") y fija qué va en el código abierto y qué en Actaira Cloud (sección 9). La 1.2 cerró los tres datos que quedaban por comprobar: permisos de Salesforce y de HubSpot contra su documentación, y el anexo A de ISO/IEC 42001 contra el texto de la norma. Plan para construir desde cero (sin código de actaira-sys ni del antiguo seamark en Python; sí su doctrina y sus lecciones) una plataforma self-serve de **assurance continuo para agentes de IA en producción**:
 
 - **Actaira open source**, el núcleo abierto (Apache-2.0) en GitHub: la CLI `actaira`, la GitHub Action y el lockfile `actaira.lock`. Se lo instala el desarrollador.
@@ -30,46 +32,54 @@ Tras esas dos, hubo tres revisiones más: una externa de 8 puntos (1.4), una hos
 
 La observabilidad dice qué hizo el agente ayer. Nadie dice, de forma sencilla, qué puede hacer hoy.
 
+**Qué es Actaira: el contrato de capacidades de tus agentes.** Declaras qué puede hacer cada agente; Actaira lo vigila en cada PR, te da los permisos justos, demuestra si alguien puede saltárselo, lo hace cumplir en ejecución y te da la prueba firmada para tu cliente. El contrato se escribe una vez en el repo y es la única fuente de verdad, del PR al auditor (sección 0).
+
 **Qué hace Actaira, de menos a más:**
 
-1. **En el repo, gratis (Actaira open source).** Lee el código del agente, sus tools, sus servidores MCP y sus skills, y genera un **lockfile de capacidades**. En cada PR que cambia algo importante comenta:
+1. **En el repo, gratis (Actaira open source).** `actaira inspect` dice qué hace cada tool de un servidor MCP antes de instalarlo, sin ejecutar nada. Además, Actaira lee el código del agente, sus tools, sus servidores MCP y sus skills, y genera un **lockfile de capacidades** con el contrato de cada agente. En cada PR que cambia algo importante comenta:
    - "este cambio le da al agente la capacidad potencial de borrar clientes, por esta causa, y afecta a estos 3 agentes";
+   - si el cambio **rompe el contrato**, y en ese caso el check falla;
+   - el camino, paso a paso, desde una entrada no fiable hasta una capacidad irreversible;
    - avisos de **flujos tóxicos**: entrada no fiable, más datos sensibles, más salida al exterior en el mismo agente.
-2. **En la nube, self-serve (Actaira Cloud, fase 2).** La flota entera, el historial de capacidades, alertas cuando algo cambia, IA incluida sin clave y un **informe de capacidades por cliente** para builders. Prueba de 7 días con topes, y se paga con tarjeta.
-3. **Capacidades efectivas (fase 3).** Un runner en la infraestructura del cliente, sin sacar sus secretos, confirma contra AWS, Kubernetes, GitHub, Salesforce, Zendesk o HubSpot lo que la credencial del agente permite de verdad. Avisa si un permiso cambia aunque nadie toque el código.
-4. **Control (fase 4).** Bloquea antes de que ocurra: políticas, aprobaciones humanas, presupuestos de autonomía y kill switch granular. La credencial la guarda Actaira, así que el agente no puede saltarse el control.
-5. **Prueba (fase 5).** Evidencia firmada por el propio cliente que **caduca sola** cuando cambia algo de lo que depende. Encima, una **capa de cumplimiento** opcional que la traduce a SOC 2, ISO 27001, ISO 42001, AI Act, AIUC-1 y CSA AI-CAIQ.
+2. **En la nube, self-serve (Actaira Cloud, fase 2).** Para el builder, primero: un **contrato por cliente** y un **pasaporte por agente** que puede enseñar a sus clientes. Además, la flota entera, el historial de capacidades, alertas cuando algo cambia e IA incluida sin clave. Prueba de 7 días con topes, y se paga con tarjeta.
+3. **Capacidades efectivas (fase 3).** Un runner en la infraestructura del cliente, sin sacar sus secretos, confirma contra AWS, Kubernetes, GitHub, Salesforce, Zendesk o HubSpot lo que la credencial del agente permite de verdad. Avisa si un permiso cambia aunque nadie toque el código, y propone desde el contrato la credencial mínima.
+4. **Control (fase 4).** Bloquea antes de que ocurra: el contrato se compila en política, con aprobaciones humanas, presupuestos de autonomía y kill switch granular. La credencial la guarda Actaira, así que el agente no puede saltarse el control.
+5. **Prueba (fase 5).** Evidencia firmada por el propio cliente que **caduca sola** cuando cambia algo de lo que depende, y el pasaporte firmado. Encima, una **capa de cumplimiento** opcional que la traduce a SOC 2, ISO 27001, ISO 42001, AI Act, AIUC-1 y CSA AI-CAIQ.
 
 **Lo especial, comprobado frente a Snyk, Cisco, mcplock, agent-bom, Vanta, Noma, Obsidian y LangSmith:**
 
 | Qué | Por qué nadie más lo da así |
 |---|---|
+| **El contrato de capacidades** | Una sola declaración por agente que se usa en el PR, en las credenciales, en ejecución y ante terceros. No está comprobado frente a la competencia: se comprueba al cierre de la E2, con `verificador-apis`, antes de que la web diga "único" |
 | **Capacidades con efecto, causa y blast radius en el PR** | Los demás comparan hashes o inventarios; Actaira dice "gana `customer.delete` porque `customer-mcp` pasó de la 2.3.1 a la 2.4.0, y afecta a 3 agentes" |
 | **Detectada, potencial y efectiva, separadas** | Lo gratis dice lo que tu código podría exponer; lo de pago, lo que el agente puede de verdad. Honesto y fácil de vender |
 | **Evidencia que caduca por dependencia**, firmada por el cliente y anclada fuera | Los demás prueban que un registro no se alteró; ninguno, que la conclusión sigue siendo cierta |
-| **Modo builder**, con informe y página por cada cliente | Pensado para quien opera agentes para otras empresas, que puede enseñarlo y revenderlo |
+| **Modo builder**, con contrato por cliente y pasaporte por agente | Pensado para quien opera agentes para otras empresas, que puede enseñarlo y revenderlo |
 | **IA que nunca rebaja un riesgo** | La IA propone y explica, pero solo puede subir la gravedad y nunca decide |
 | **Cobertura honesta** | Dice siempre qué no ve (lo `unseen`), en vez de prometer control total: N de M fuentes observadas, nunca un porcentaje (`docs/cobertura.md`) |
 
-**En una frase:** Actaira te dice qué puede hacer cada agente, te deja decidir qué se le permite y te da la prueba. Empieza gratis en el PR y crece hasta una plataforma self-serve.
+**En una frase:** Actaira te dice qué puede hacer cada agente, te deja decidir qué se le permite y te da la prueba. Lo que decides queda escrito en el contrato de capacidades. Empieza gratis en el PR y crece hasta una plataforma self-serve.
 
 ---
 
 ## 0. La idea en seis líneas
 
-**La frase:** Actaira detecta cuándo un cambio de código o de MCP le da a un agente una capacidad nueva.
+**La frase:** Actaira, el contrato de capacidades de tus agentes. Declaras qué puede hacer cada agente; Actaira lo vigila en cada PR, te da los permisos justos, demuestra si alguien puede saltárselo, lo hace cumplir en ejecución y te da la prueba firmada para tu cliente.
 
-- **Actaira open source (gratis):** lo que tu código **podría** exponer, es decir, las capacidades potenciales.
+- **Actaira open source (gratis):** lo que tu código **podría** exponer, es decir, las capacidades potenciales, y si un cambio rompe el contrato.
 - **Actaira Cloud (de pago, self-serve):** lo que el agente desplegado **puede hacer de verdad**, es decir, las capacidades efectivas, y el control y la prueba encima.
 
 **La idea:**
 
-1. **A quién:** el desarrollador que construye agentes usa Actaira open source gratis. El **primer cliente de pago es el builder**: quien construye y opera agentes para varias empresas, por ejemplo uno de atención al cliente cuyos agentes tocan Salesforce, Zendesk o Stripe de cada cliente. Tiene el problema multiplicado por cliente y puede enseñar y revender la prueba. (Todos los ejemplos del plan son hipotéticos.)
+1. **Quién es quién** (todos los ejemplos del plan son hipotéticos):
+   - **El desarrollador es la distribución.** Usa Actaira open source gratis, sin cuenta y sin ruido. El gancho es una pregunta: "¿qué hace este MCP?", que responde `actaira inspect` antes de instalarlo.
+   - **El builder es el primer cliente de pago:** quien construye y opera agentes para varias empresas, por ejemplo uno de atención al cliente cuyos agentes tocan Salesforce, Zendesk o Stripe de cada cliente. Tiene el problema multiplicado por cliente, y paga por el contrato y el pasaporte que enseña a sus clientes.
+   - **Enterprise llega sin venta directa:** por adopción interna, o por integraciones que exportan el contrato (JSON estable, SARIF, AI-BOM). El plan Enterprise queda en el backlog hasta que haya equipo.
 2. **Qué dolor:** nadie sabe qué **puede** hacer cada agente hoy, qué cambió sin tocar su código, qué rompe si cae una credencial, ni cómo demostrarlo a un cliente o a un auditor.
 3. **Qué no es:** ni observabilidad, ni evals, ni gateway de LLM. Eso lo tienen LangSmith, Langfuse o el propio builder, y Actaira lo **ingiere**.
-4. **Qué es:** un grafo vivo que une **activos, capacidades, acciones, consecuencias y evidencia**. Encima lleva control en tiempo de ejecución y un **estado de evidencia** que se vigila 24/7 y caduca solo cuando cambia algo de lo que depende.
-5. **Cómo entra:** gratis y sin hablar con nadie. `actaira` genera en el repo un **lockfile de capacidades** (`actaira.lock`) y **solo comenta en un PR cuando cambian capacidades** de escritura o irreversibles, con el Capability Diff, la causa y el blast radius.
-6. **Cómo cobra:** Actaira Cloud aporta la flota, las capacidades efectivas, el control en tiempo de ejecución, la evidencia firmada, la exportación a cumplimiento, el modo builder multicliente y el soporte. Se cobra por agente activo, con una cuota de acciones gobernadas incluida en cada plan.
+4. **Qué es:** un grafo vivo que une **activos, capacidades, acciones, consecuencias y evidencia**, con el **contrato de capacidades** de cada agente en el centro. Encima lleva control en tiempo de ejecución y un **estado de evidencia** que se vigila 24/7 y caduca solo cuando cambia algo de lo que depende.
+5. **Cómo entra:** gratis y sin hablar con nadie. `actaira inspect` responde "¿qué hace este MCP?" sin instalar ni ejecutar nada. `actaira` genera en el repo un **lockfile de capacidades** (`actaira.lock`), con el contrato, y **solo comenta en un PR cuando cambian capacidades** de escritura o irreversibles o se rompe el contrato, con el Capability Diff, la causa y el blast radius.
+6. **Cómo cobra:** primero, el **plan Builder**: contrato por cliente y pasaporte por agente, con la marca del builder. Después, el plan **Team**. Actaira Cloud aporta además la flota, las capacidades efectivas, el control en tiempo de ejecución, la evidencia firmada, la exportación a cumplimiento y el soporte. Se cobra por agente activo, con una cuota de acciones gobernadas incluida en cada plan (sección 9).
 
 **A quién va el núcleo abierto, y qué pasa con el antiguo seamark en Python:** va a quien **construye** agentes de producto (OpenAI Agents SDK, LangGraph, Vercel AI SDK, MCP, Agent Skills), no a quien configura agentes de código. El repo en Python (`seamark`, configuración de Claude Code, Cursor y Codex) se archiva con un aviso o se renombra a `-legacy`, según se decida en la fase previa, y su configuración pasa a ser una fuente más del grafo más adelante.
 
@@ -79,12 +89,42 @@ La observabilidad dice qué hizo el agente ayer. Nadie dice, de forma sencilla, 
 - **Si Actaira deja de vigilar**, el runner del cliente lo detecta por un latido y el estado pasa a `error`. El silencio nunca se lee como "todo bien".
 - **Lo que no es:** un informe de aseguramiento (ISAE 3000) ni una opinión de auditoría, y así se dice en cada página que ve un tercero.
 
+### El contrato de capacidades
+
+**Qué es.** El equipo declara una vez en el repo qué debe poder hacer cada agente. Es el bloque `intent` de `actaira.lock`, en un formato abierto, el **Agent Capability Manifest** (ACM), cuyo borrador se publica en `docs/spec/` en la E1. Esa misma declaración se usa en cuatro sitios, y es la única fuente de verdad del PR al auditor:
+
+| Dónde | Para qué | Épica |
+|---|---|---|
+| En el PR | Dice si el cambio rompe el contrato, y entonces el check falla. Enseña el camino desde una entrada no fiable hasta una capacidad irreversible | E2 |
+| En las credenciales | Compila la credencial mínima exacta (política IAM, clave restringida de Stripe, token de grano fino de GitHub) y propone recortarla con un PR que fusiona una persona | E5 |
+| En ejecución | Se compila en política Cedar, primero en modo sombra y después aplicada | E6 |
+| Ante terceros | El pasaporte por agente: la v1, con enlace y badge, en la E3; el firmado, en la E7 | E3 y E7 |
+
+**Qué lleva, por agente:** capacidades permitidas y prohibidas, límites por operación y por periodo, dominios de salida permitidos, responsable y caducidad.
+
+**Doctrina** (se suma a la de `CLAUDE.md`):
+
+1. **El contrato lo escribe y lo firma una persona.** `actaira intent init` puede proponer un borrador a partir del lockfile actual, marcado `inferred`, que no vale hasta que alguien lo acepta. En el repo, la firma es la aceptación registrada (quién y cuándo), que protege la revisión del PR; la firma criptográfica llega con el pasaporte firmado de la E7.
+2. **La exposición máxima solo se calcula con límites escritos** en el contrato o en la política. Si falta un límite, sale "sin límite", nunca un número inventado.
+3. **Sin contrato, el agente sale "sin contrato",** no como error. Un contrato pasada su caducidad se enseña como caducado; qué pasa entonces con lo que prohibía lo decide el paso 1.3 de la E1.
+4. **Actaira sigue sin ejecutar código del repo analizado.** Los tests de ataque los genera Actaira, con tools simuladas, y los ejecuta el cliente en su propia CI si quiere (opt-in). Su resultado entra como evidencia en la E7.
+
+**Reparto por épica:**
+
+- **E1:** el bloque `intent` en el esquema v1 del lockfile y el borrador del ACM, con su JSON Schema y su validador en la CLI (`actaira intent validate`).
+- **E2:** `actaira intent init`; el diff contra el contrato, con el check en rojo si se rompe; y la alcanzabilidad estática desde entradas no fiables hasta capacidades irreversibles, también la heredada entre agentes (subagentes y handoffs), con el camino paso a paso.
+- **E3:** el contrato por cliente del builder; el pasaporte por agente v1, con enlace y badge; los avisos a todos los clientes que usan un MCP cuando una versión nueva añade una capacidad irreversible; y la máquina del tiempo sobre el historial de lockfiles.
+- **E5:** el compilador de credenciales desde el contrato y el PR que recorta la credencial hasta el contrato, validado con el simulador oficial donde lo hay.
+- **E6:** el contrato compilado en política Cedar, el modo sombra antes de aplicar y la exposición máxima acotada.
+- **E7:** el pasaporte firmado, la máquina del tiempo con evidencia y los tests de ataque que pasa el cliente, como evidencia.
+
 ---
 
 ## 1. Qué cubre, punto por punto
 
 | Necesidad | Cómo la cubre | Dónde | Límite honesto |
 |---|---|---|---|
+| 0. Qué debe poder hacer cada agente | El contrato de capacidades (sección 0): bloque `intent` de `actaira.lock`, en el formato abierto ACM, usado en el PR, las credenciales, la ejecución y el pasaporte | E1 (esquema), E2 (PR), E3 (pasaporte), E5, E6 y E7 | Lo escribe y lo acepta una persona; sin contrato, el agente sale "sin contrato" |
 | 1. Inventario real de agentes | Gemelo digital por agente y versión: modelo, hash del prompt, tools, servidores MCP, subagentes, memoria, secretos referenciados, identidades, despliegues | C1 (repo), C3 y C4 (runtime), C9 (flota) | Solo lo que está en repos conectados o pasa por el runner, el SDK u OTel; lo demás sale como "no inventariado" |
 | 2. Lo que el agente **puede** hacer | Grafo de capacidades: agente, tool, credencial, sistema, acción; declaradas, condicionales y efectivas | C2 (declaradas), C3 (efectivas) | Lo efectivo solo existe para fuentes que exponen permisos reales; un scope OAuth grueso no es una capacidad efectiva |
 | 3. Fan-out causal | Primer salto: tool call y su efecto directo confirmado, con correlación con los registros de auditoría de los SaaS; varios saltos en la fase 6 | C5 | Los SaaS no propagan trazas; se publica qué porcentaje de efectos se confirma de verdad |
@@ -113,7 +153,7 @@ La observabilidad dice qué hizo el agente ayer. Nadie dice, de forma sencilla, 
 | Quién | Qué tiene | Qué no tiene y es de Actaira |
 |---|---|---|
 | LangSmith (Fleet y Gateway) | Registro, versiones, RBAC, credenciales, gateway de LLM, trazas, evals; control de tools y MCP anunciado | Neutralidad de framework, permisos efectivos por identidad, cambios sin cambio de código, evidencia que caduca, multicliente |
-| Snyk Agent Scan (Apache-2.0, antes mcp-scan de Invariant) | Escaneo de configuraciones de agentes, MCP y skills; **fijación de tools por hash** (rug pull); análisis de flujos tóxicos; modo CI; `snyk aibom` en CycloneDX | Semántica de capacidades con efecto, causa y blast radius entre agentes; potencial frente a efectiva; evidencia que caduca; modo builder |
+| Snyk Agent Scan (Apache-2.0, antes mcp-scan de Invariant) | Escaneo de configuraciones de agentes, MCP y skills; **fijación de tools por hash** (rug pull) y **análisis de flujos tóxicos**, gratis; modo CI; `snyk aibom` en CycloneDX | La semántica (qué hace cada tool y por qué, con efecto, causa y blast radius entre agentes); el contrato de capacidades; potencial frente a efectiva; evidencia que caduca; modo builder |
 | Galileo Agent Control (código abierto, marzo de 2026) | Plano de control centralizado de guardrails | Grafo de capacidades, blast radius, evidencia |
 | AWS AgentCore Policy (GA, marzo de 2026) | Cedar sobre las tools del gateway de AgentCore | Pensado para el ecosistema AgentCore; no hace grafo ni evidencia multiplataforma |
 | Microsoft Agent 365 y Entra Agent ID | Registro e identidad de agentes en el mundo Microsoft | Neutralidad, diff en PR, evidencia verificable |
@@ -126,12 +166,18 @@ La observabilidad dice qué hizo el agente ayer. Nadie dice, de forma sencilla, 
 | Vanta AI Governance (acceso anticipado, 30 jul 2026) | Inventario de agentes, qué puede hacer cada uno, trust center | Pasa de ser destino de exportación a competidor desde arriba (GRC); sin diff en el PR ni capacidades efectivas por identidad |
 | Plimsoll Action | Diff de capacidades por release a partir de lo observado en ejecución (eBPF), comentario y SARIF | Trabaja sobre lo observado, no sobre el código |
 
-**Dónde se gana:** el lockfile por hash ya **no** es diferencial: Snyk y varias herramientas abiertas lo tienen, y aquí es solo lo mínimo que se espera. La cuña es la **semántica**: traducir tools a **capacidades con efecto** ("gana `customer.delete`"), decir la **causa** y el **blast radius entre agentes**, marcar **flujos tóxicos**, y separar **potencial** de **efectiva**. Antes del lanzamiento se publica una tabla comparada y medida contra Snyk Agent Scan y mcplock sobre los mismos repos. Encima, lo que nadie tiene junto:
+**Dónde se gana:** el lockfile por hash ya **no** es diferencial, y los flujos tóxicos tampoco: Snyk Agent Scan ya fija las tools por hash y detecta flujos tóxicos gratis, y varias herramientas abiertas hacen lo primero. Aquí son solo lo mínimo que se espera. La diferencia que se enseña en `actaira inspect` y en el comentario del PR es doble:
 
+- **la semántica:** qué hace cada tool y por qué. Traducir tools a **capacidades con efecto** ("gana `customer.delete`"), decir la **causa** y el **blast radius entre agentes**, y separar **potencial** de **efectiva**;
+- **el contrato:** qué debe poder hacer cada agente, y si el cambio lo rompe (sección 0).
+
+Antes del lanzamiento se publica una tabla comparada y medida contra Snyk Agent Scan y mcplock sobre los mismos repos. Al cierre de la E2, `verificador-apis` comprueba a los competidores del momento antes de que la web diga "único". Encima, lo que nadie tiene junto:
+
+- el **contrato de capacidades**, usado en el PR, las credenciales, la ejecución y el pasaporte;
 - el **diff de capacidades con efecto, causa y blast radius** en el PR;
 - las **capacidades efectivas** confirmadas por identidad, a la vista del desarrollador;
 - la **evidencia que caduca** cuando cambia aquello de lo que depende, firmada por el cliente y anclada fuera;
-- el **modo multicliente para builders**, con informe por cliente;
+- el **modo multicliente para builders**, con contrato por cliente y pasaporte por agente;
 - la **regla de monotonía** de la IA: puede subir la gravedad, nunca bajarla.
 
 **Dónde se puede perder:** si LangSmith cierra tools y MCP, si Snyk añade semántica de capacidades, o si Vanta AI Governance y agent-bom llegan desde arriba a lo efectivo y a la evidencia antes de que el núcleo abierto tenga adopción. La ventana depende de lanzar pronto. La defensa es la neutralidad de framework y la evidencia verificable por terceros.
@@ -301,13 +347,13 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 | Fase | Qué se construye | Bloques |
 |---|---|---|
 | **Previa (sin código)** | Marca "Actaira" comprobada en OEPM y EUIPO, organización `actaira` en GitHub,. Lista de 30 builders con nombre y conversaciones con un guion de 5 preguntas. Tabla comparada contra Snyk Agent Scan y mcplock | Ninguno |
-| **0. Núcleo abierto: la primitiva** | `actaira.lock` con tools fijadas por hash y versión del servidor MCP; modelo de capacidades; extractores | C0, C1 |
-| **1. Núcleo abierto: Capability Diff** | Un solo lanzamiento: extractores (OpenAI Agents SDK, LangGraph, Vercel AI SDK, configuraciones MCP de los clientes conocidos, Agent Skills), lockfile, `init` y `accept` con motivo, diff con causa, flujos tóxicos, blast radius potencial, SARIF, etiquetas OWASP, deriva programada de MCP remotos, pre-commit y plantilla de GitLab CI. **El estudio sale cuando el rastreador tenga historia suficiente para medir cambios**, sin fecha fija | C2 |
-| **2. Plataforma self-serve: la base** | Actaira Cloud sin runner. Alta con GitHub, y la Action sube el lockfile. Vista de flota entre repos, historial y diff de capacidades, alertas, IA incluida sin clave, informe de capacidades por cliente para builders y cobro. Es la primera experiencia de pago y no necesita tocar la infraestructura del cliente | C9 (base), C6 (alertas) |
-| **3. Plataforma: capacidades efectivas** | Runner, conectores de identidad (el primero, el que pidan los builders), deriva de capacidades sin cambio de código, mínimo privilegio | C3 |
-| **4. Plataforma: control** | Intermediación de credenciales, políticas, aprobaciones, kill switch, presupuestos de autonomía | C4 |
-| **5. Plataforma: assurance** | Evidencia que caduca en la nube, página de estado de evidencia con la marca del builder, **capa de cumplimiento** | C6, C7 |
-| **6. Ampliación** | Efectos de varios saltos, memoria, registros de plataforma, Enterprise | C5 ampliado, C8 |
+| **0. Núcleo abierto: la primitiva** | `actaira.lock` con tools fijadas por hash y versión del servidor MCP; modelo de capacidades; extractores; el bloque `intent` del contrato y el borrador del ACM con su validador | C0, C1 |
+| **1. Núcleo abierto: Capability Diff** | Primero, `actaira inspect` y el registro público de servidores MCP, que salen en la v0.2.0, el primer lanzamiento público. Después: extractores (OpenAI Agents SDK, LangGraph, Vercel AI SDK, configuraciones MCP de los clientes conocidos, Agent Skills), lockfile, `init` y `accept` con motivo, `intent init`, diff con causa y contra el contrato, alcanzabilidad desde entradas no fiables, flujos tóxicos, blast radius potencial, SARIF, etiquetas OWASP, deriva programada de MCP remotos, pre-commit y plantilla de GitLab CI. **El estudio sale cuando el rastreador tenga historia suficiente para medir cambios**, sin fecha fija | C2 |
+| **2. Plataforma self-serve: la base** | Actaira Cloud sin runner. Alta con GitHub, y la Action sube el lockfile. Primero, lo del builder: subinquilinos, contrato por cliente, pasaporte por agente v1 y el plan Builder; después, el plan Team. En los dos: vista de flota entre repos, historial y diff de capacidades, máquina del tiempo, alertas (también la de un MCP que gana una capacidad irreversible), IA incluida sin clave y cobro. Es la primera experiencia de pago y no necesita tocar la infraestructura del cliente | C9 (base), C6 (alertas) |
+| **3. Plataforma: capacidades efectivas** | Runner, conectores de identidad (el primero, el que pidan los builders), deriva de capacidades sin cambio de código, mínimo privilegio, el compilador de credenciales desde el contrato y la mejora del plan Builder con capacidades efectivas | C3 |
+| **4. Plataforma: control** | Intermediación de credenciales, el contrato compilado en políticas con modo sombra, exposición máxima acotada, aprobaciones, kill switch, presupuestos de autonomía | C4 |
+| **5. Plataforma: assurance** | Evidencia que caduca en la nube, página de estado de evidencia con la marca del builder, pasaporte firmado, máquina del tiempo con evidencia, tests de ataque como evidencia, **capa de cumplimiento** | C6, C7 |
+| **6. Ampliación** | Efectos de varios saltos, memoria, registros de plataforma, Enterprise cuando haya equipo | C5 ampliado, C8 |
 
 **De dónde sale la lista de tools de un MCP sin conectarse:** del paquete fijado (versión de npm o PyPI) y del `tools/list` capturado en la base de conocimiento pública para los servidores del registro, más las tools definidas en el código. Criterio de "listo cuando" de la fase 1: medir en el corpus en cuántos PRs reales saltaría el comentario, para no vender una demo que en repos de verdad no aparece.
 
@@ -321,9 +367,17 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 | Señal | Cómo se mide | Qué decide |
 |---|---|---|
 | Adopción del núcleo | Repos públicos con la Action, con un método publicado: búsqueda de `uses:` con captura fechada, descargas de releases, registro voluntario y telemetría opt-in. Además, builders con la Action en un repo privado, confirmado por ellos | Si el mensaje funciona; si no, se revisa el mensaje y la demo, sin parar la construcción |
-| Dolor contado | Conversaciones con builders de la lista | Qué conector va primero en la fase 3 y qué pide el informe por cliente |
-| Disposición a pagar | Cartas de intención con precio objetivo, o pilotos pagados del informe por cliente | Precio de la plataforma y cuándo se gasta en pentest, legal y atestación |
+| Dolor contado | Conversaciones con builders de la lista | Qué conector va primero en la fase 3 y qué piden el contrato por cliente y el pasaporte |
+| Disposición a pagar | Cartas de intención con precio objetivo, o pilotos pagados del plan Builder | Precio de la plataforma y cuándo se gasta en pentest, legal y atestación |
 | Retención | Uso repetido del núcleo y de la plataforma | Cuándo buscar socio |
+
+**Métricas de producto (no comerciales).** Dicen si el producto se usa, no se venden ni llevan objetivo inventado. Cada una se publica con su método y su fecha en `evals/results/`, y lo que el método no ve se dice:
+
+| Desde | Métrica | De dónde sale |
+|---|---|---|
+| La v0.2.0 | Descargas de la CLI | Contador de descargas de los assets de cada release de GitHub. Cuenta descargas, no usuarios |
+| La v0.2.0 | Visitas al registro público de servidores MCP | Las analíticas del alojamiento de la web estática, sin cookies. El método se fija en el paso 2.3 de la E2 |
+| La E3 | Builders en prueba que crean un pasaporte para un cliente | La propia plataforma: inquilinos en prueba con al menos un pasaporte de un subinquilino |
 
 **Lo único que sí se frena: el gasto.** Constituir la SL, el pentest, las plantillas legales y la atestación SOC 2 o ISO 27001 esperan a que haya clientes que paguen. Los pilotos se facturan con un sistema compatible con Verifactu.
 
@@ -403,10 +457,11 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
   - modelo, hash del prompt de sistema, tools con firma y descripción, subagentes y handoffs;
   - servidores MCP, almacenes de memoria referenciados, secretos referenciados por nombre (nunca su valor) y proveedores externos.
 - **Cuarentena, definida aquí:** las descripciones de tools, los docstrings y el resto del texto del repo son datos del atacante. Se guardan y se hashean, y nunca entran en un prompt.
-- `actaira mcp inspect`, solo si el usuario lo pide:
-  - Con HTTP, lee `tools/list` y guarda el hash del esquema y de la descripción de cada tool.
-  - Con stdio, **solo en Linux dentro de un contenedor** (`--network none`, sistema de ficheros de solo lectura, usuario sin privilegios). En macOS y Windows, solo HTTP.
-  - Las anotaciones se guardan como pistas no fiables.
+- **`actaira inspect`** (E2, paso 2.3; en C2), que **nunca instala ni ejecuta nada en la máquina del usuario**:
+  - un servidor HTTP remoto se consulta con `tools/list`, y se guarda el hash del esquema y de la descripción de cada tool;
+  - un paquete stdio no se arranca: sus tools salen de las instantáneas del rastreador, que lo ejecuta en su propio contenedor sin red. Lo que no está en ninguna instantánea sale `unseen`, con su motivo;
+  - las anotaciones se guardan como pistas no fiables.
+- **El contrato de capacidades** (sección 0): el bloque `intent` en el esquema v1 de `actaira.lock` y el borrador del formato abierto ACM, con su JSON Schema y su validador (`actaira intent validate`).
 - **Rastreador del estudio:** captura diaria de `tools/list` de servidores MCP **HTTP públicos** del registro MCP, que acumula historia para C2.
 - `actaira.lock`: determinista (mismo repo, mismo fichero byte a byte) y pensado para commitearse.
 - **Honestidad por construcción:** lo que el extractor no entiende sale como `unresolved`, con su fichero y su línea.
@@ -422,7 +477,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 
 | Crítica | Corrección |
 |---|---|
-| Arrancar un MCP stdio de `.mcp.json` es ejecutar código del repo, y "sandbox" no estaba definido | Contenedor Linux sin red; en macOS y Windows, solo HTTP |
+| Arrancar un MCP stdio de `.mcp.json` es ejecutar código del repo, y "sandbox" no estaba definido | Contenedor Linux sin red; en macOS y Windows, solo HTTP. Desde la versión 2.1 del plan, `inspect` no arranca ningún stdio en la máquina del usuario: solo lo hace el rastreador, en su contenedor |
 | C1 dependía de bloques posteriores (lista de extractores, cuarentena) | Lista cerrada y cuarentena definidas en C1 |
 | Las tools dinámicas no se ven en estático | `unresolved` con ubicación y tasa publicada; en tiempo de ejecución las ve el proxy |
 | Recall contra etiquetas propias es circular | Segunda persona a ciegas, kappa y umbral mínimo |
@@ -434,15 +489,19 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 **Entregables:**
 
 - **Base de conocimiento de capacidades abierta:** traduce tools conocidas a acciones con efecto. Por ejemplo, `stripe.refunds.create` pasa a ser `money.refund`, escritura irreversible. Empieza por las 50 tools más frecuentes del corpus; lo que no está sale como `effect: unknown`.
+- **`actaira inspect` y el registro público de servidores MCP, el primer lanzamiento público (v0.2.0):** el gancho del desarrollador, "¿qué hace este MCP?".
+  - `actaira inspect <npm:paquete@versión | pypi:paquete==versión | https://url-remota | ruta a una config MCP>` dice qué hace cada tool (efecto, recurso, etiquetas de flujo, flujos tóxicos, anotaciones que mienten y procedencia), con su causa y su fuente, sin instalar ni ejecutar nada en la máquina del usuario.
+  - El registro es una web estática generada desde `actaira-kb` con los mismos datos: lo declarado por cada servidor frente a lo potencial según la base de conocimiento, sin mezclarlos, y el historial por versión, sin puntuaciones.
 - **`actaira diff`** entre la base y la cabeza del PR:
   - capacidades nuevas, perdidas y cambiadas;
   - tools cuyo hash de esquema o descripción cambió;
-  - efecto y sistemas alcanzados.
+  - efecto y sistemas alcanzados;
+  - si el cambio rompe el contrato de algún agente (sección 0). Un agente sin contrato sale "sin contrato", no como error.
 - **`actaira blast`:** dada una credencial, un MCP o una tool, qué agentes y sistemas toca.
 - **GitHub Action con el patrón de dos workflows:**
   - `pull_request` calcula sin permisos de escritura y sube un artefacto.
   - `workflow_run` comenta, sin parsear nunca código del fork con un token de escritura.
-  - Un check que falla si aparece una capacidad irreversible nueva; la revisión obligatoria de CODEOWNERS se configura como protección de rama y se documenta así.
+  - Un check que falla si aparece una capacidad irreversible nueva o si el cambio rompe el contrato; la revisión obligatoria de CODEOWNERS se configura como protección de rama y se documenta así.
 - **Primera ejecución y ruido, lo que decide si se desinstala:**
   - `actaira init` crea la base en un repo existente sin comentar nada;
   - `actaira accept <capacidad> --reason --owner --until` deja la aceptación en el lockfile, hallazgo a hallazgo;
@@ -450,6 +509,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
   - `unresolved` y `effect: unknown` van plegados al final, nunca como alarma;
   - criterio medido: menos de 1 comentario por cada 20 PRs del corpus benigno.
 - **Flujos tóxicos:** marca el agente que junta entrada no fiable, datos sensibles y un canal de salida externo (la "trifecta letal"). Es una consulta sobre el grafo con tres etiquetas más en la base de conocimiento.
+- **Alcanzabilidad:** desde cada entrada no fiable hasta cada capacidad irreversible, también la heredada entre agentes (subagentes y handoffs), con el camino paso a paso. Es estática: dice que el camino existe en el código, no que alguien lo haya recorrido.
 - **Anotaciones que mienten:** avisa cuando `readOnlyHint` o `destructiveHint` contradicen el efecto de la base de conocimiento.
 - **Deriva programada:** una Action con `schedule` vuelve a leer las tools de los MCP remotos y abre un issue si cambian, sin esperar a un PR.
 - **Salidas y canales:**
@@ -517,6 +577,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 - **Vigilantes de cambio**, con sondeo cada 15 minutos o menos y webhooks donde existan. El hash de las tools MCP se calcula en el proxy sobre la sesión real del agente (dato mediado). El sondeo desde el runner se marca `observed` con la identidad usada, y si el servidor da listas distintas por identidad, se avisa.
 - **Alerta** "ha adquirido `customer.delete`", con la ruta en el grafo, la fuente, la hora y el blast radius, y una explicación de la IA (pieza 2) cuando la hay.
 - **Mínimo privilegio** (pieza 3): la diferencia entre lo efectivo y lo observado durante un periodo configurable se calcula sin IA. Hasta que haya llamadas vistas en ejecución, se calcula con la capacidad potencial de las tools del agente, y solo da número si se ha visto todo lo que podría usar la credencial; si no, esos permisos salen como uso desconocido (`docs/cobertura.md`); la IA redacta el cambio de permisos por sistema (política IAM, permission set de Salesforce, clave restringida de Stripe), que se valida y se enseña como diff de capacidades.
+- **Compilador de credenciales desde el contrato** (sección 0): la credencial mínima exacta por sistema (política IAM, clave restringida de Stripe, token de grano fino de GitHub) sale del contrato y de los mapeos de permisos por sistema de la base de conocimiento. Donde la credencial está como código en el repo, Actaira propone un PR que la recorta hasta el contrato y lo fusiona una persona. Se valida con el simulador oficial donde lo hay; donde no, sale `declared`.
 
 **Listo cuando:**
 
@@ -552,6 +613,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 - **Política como código**, con `actaira policy test` y validación en la CI con la CLI de Cedar.
 - **Políticas en lenguaje natural** (pieza 4): de la frase a Cedar con casos de prueba; eval con 100 frases escritas por otra persona: el 100 % de las propuestas aceptadas compila y pasa sus casos, y 0 amplían capacidades sin la marca roja.
 - **Paquete de política firmado** con antigüedad máxima (ADR 7) y **fallo por regla** (ADR 8).
+- **Del contrato a la política** (sección 0): el contrato se compila en política Cedar, que se ve como diff de capacidades y firma una persona. Corre primero en **modo sombra**, que registra lo que habría bloqueado sin bloquear, y se aplica después. La **exposición máxima** de cada agente solo se calcula con los límites escritos en el contrato o en la política; si falta uno, sale "sin límite".
 
 **Listo cuando:**
 
@@ -628,6 +690,7 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 - Resumen diario (pieza 5): prioridad determinista y versionada; la IA solo lo redacta, con citas y como mucho tres acciones.
 - **Latido**: si Actaira deja de evaluar, el runner lo detecta y el estado pasa a `error`.
 - **Página de estado de evidencia** compartible por agente o cliente, verificable sin cuenta, con el aviso fijo "no es una opinión de auditoría ni un informe de aseguramiento".
+- **Pasaporte firmado** (sección 0): el pasaporte por agente de la fase 2, firmado y verificable fuera de Actaira; la **máquina del tiempo con evidencia** (qué podía hacer el agente en una fecha, con la evidencia de entonces); y los **tests de ataque** que genera Actaira con tools simuladas y ejecuta el cliente en su CI (opt-in), cuyo resultado entra como evidencia.
 
 **Listo cuando:**
 
@@ -735,7 +798,9 @@ Las señales de mercado no paran la construcción. Deciden qué entra antes en l
 - **Alta y primera pantalla:** alta con GitHub, conexión de repos con la GitHub App y la Action que sube el lockfile, y primera pantalla con valor en menos de 10 minutos; desde la fase 3, runner con un comando.
 - **Consola de flota:** cambios de capacidad, políticas violadas, evidencia caducada, dependencias MCP desconocidas y permisos excesivos.
 - **Ficha de agente** con el porqué, el blast radius y los botones revocar, pedir aprobación y aceptar cambio.
-- **Modo builder multicliente:** subinquilinos por cliente, con políticas y evidencia propias y una página de estado de evidencia con la marca del builder.
+- **Modo builder multicliente, lo primero:** subinquilinos por cliente, con un **contrato por cliente** y un **pasaporte por agente v1** (capacidades potenciales, contrato y cobertura, con la marca del builder, un enlace verificable y un badge sin estado; nunca dice que el agente "cumple", F-0029). Después, políticas y evidencia propias y una página de estado de evidencia con la marca del builder.
+- **Máquina del tiempo** sobre el historial de lockfiles: qué podía hacer cada agente en un commit o una fecha.
+- **Aviso por MCP:** cuando el rastreador ve que una versión nueva de un servidor MCP añade una capacidad irreversible, avisa a cada inquilino que lo usa, con los datos de ese inquilino y sin cruzarlos con los de otro.
 - **IA incluida por defecto** (las siete piezas) con un modelo alojado en la UE y cuota por plan. Se puede usar clave propia o apagarla por inquilino. El proveedor del modelo figura como subencargado en el DPA, con retención cero donde el proveedor la ofrezca.
 - **Investigador de incidentes** (pieza 6).
 - **Ask Actaira:**
@@ -833,29 +898,34 @@ Son objetivos hasta que un eval los produce; se guardan con fecha y commit.
 
 ## 9. Self-serve, precio y soporte
 
+**Quién paga y quién no** (sección 0): el desarrollador usa el open source gratis y es la distribución. El builder es el primer cliente de pago, por el contrato por cliente y el pasaporte que enseña a sus clientes. Team es el segundo plan. Enterprise no se vende de forma directa: llega por adopción interna o por integraciones que exportan el contrato (JSON estable, SARIF, AI-BOM), y su plan queda en el backlog hasta que haya equipo.
+
 **Unidad de cobro:** agente activo, es decir, un agente con eventos en los últimos 30 días, sin contar versiones ni despliegues.
 
 **Por qué además hay una cuota:** el agente es la unidad mental, pero no mide el coste. Una empresa puede tener 3 agentes y 10 millones de ejecuciones, y otra 80 agentes y 100.000. Por eso cada plan incluye una cuota de **acciones gobernadas** (decisiones de política y eventos ingeridos) y días de evidencia. Al principio la cuota es un límite blando: se avisa y se habla, sin cobro por exceso automático, que complica el self-serve antes de saber cuánto consume un cliente real. El exceso de pago llega cuando haya datos de uso.
 
-| Plan | Qué incluye | Precio orientativo |
+**Precios:** los pone Marcos en `config/pricing.yaml`, y el código y el producto de Stripe los leen de ahí. Claude Code no inventa precios. Las cifras de abajo son la referencia de la versión 2.0 del plan, a validar, y el código no las usa.
+
+| Plan | Qué incluye | Precio |
 |---|---|---|
-| **Open source** | CLI, Action, lockfile, diff, flujos tóxicos, blast radius potencial, SARIF, `verify` | 0 |
-| **Builder, piloto (fase 2)** | Informe de capacidades por cliente: potenciales en la fase 2, efectivas con un conector desde la fase 3 | 300 a 800 EUR por informe, a validar |
+| **Open source** | CLI, Action, lockfile con el contrato (`intent`, en formato ACM), `inspect`, diff y check contra el contrato, alcanzabilidad, flujos tóxicos, blast radius potencial, SARIF, JSON estable, AI-BOM, `verify`; y el registro público de servidores MCP | 0 |
 | **Prueba (nube, fase 2)** | 7 días de la plataforma, con topes duros de uso (ver abajo); después pasa a solo lectura y vuelve al open source | 0 |
-| **Team (desde la fase 2, self-serve)** | Flota, historial y diff de capacidades, alertas, IA incluida, cuota de acciones; desde la fase 3, capacidades efectivas; desde la 4, control | Referencia 299 EUR al mes, a validar |
-| **Builder con suscripción (desde la fase 3)** | Subinquilinos por cliente, informes y página de estado de evidencia por cliente | Base de 500 a 1.500 EUR al mes más importe por agente activo, a validar |
-| **Enterprise** | BYOC, SCIM, retención larga, capa de cumplimiento completa; además, detrás de la atestación SOC 2 o ISO 27001 | Anual |
+| **Builder (desde la fase 2, el primer plan de pago)** | Subinquilinos por cliente, contrato por cliente y pasaporte por agente v1 (capacidades potenciales, contrato y cobertura, con la marca del builder, enlace verificable y badge sin estado), más todo lo de Team. Desde la fase 3 mejora con capacidades efectivas; desde la 5, pasaporte firmado y página de estado de evidencia | Suscripción, en `config/pricing.yaml`. Referencia 2.0: base de 500 a 1.500 EUR al mes más importe por agente activo |
+| **Team (desde la fase 2, el segundo plan)** | Flota, historial y diff de capacidades, máquina del tiempo, alertas, IA incluida, cuota de acciones; desde la fase 3, capacidades efectivas; desde la 4, control | Suscripción, en `config/pricing.yaml`. Referencia 2.0: 299 EUR al mes |
+| **Enterprise (backlog hasta que haya equipo)** | BYOC, SCIM, retención larga, capa de cumplimiento completa; además, detrás de la atestación SOC 2 o ISO 27001 | Anual, cuando se abra |
+
+El informe de piloto de pago único de la versión 2.0 (300 a 800 EUR por informe) sale de la tabla: lo sustituye el plan Builder de suscripción. Es una interpretación de Claude Code de la decisión del 2 de octubre de 2026, anotada como discrepancia en `docs/estado/E1.md`; si Marcos lo quiere, vuelve como pago único en el paso de cobro de la E3.
 
 **Qué va en Actaira open source y qué en Actaira Cloud.**
 
 No se recorta el código abierto. Es el motor de adopción y los números de GitHub que convencen a un socio: si el núcleo gratis es flojo, no hay estudio que lo salve. La línea es otra:
 
 - **Código abierto:** todo lo que necesita una persona en un repo.
-  - Discover, lockfile, diff, blast radius declarado, `verify`.
-  - Base de conocimiento ya clasificada.
+  - Discover, lockfile, el contrato y su validador, `inspect`, diff, blast radius declarado, `verify`.
+  - Base de conocimiento ya clasificada y el registro público de servidores MCP.
   - IA opcional con su clave o con un modelo local.
 - **Actaira Cloud:** todo lo que necesita un equipo de forma continua.
-  - Flota, capacidades efectivas, control en tiempo de ejecución, evidencia vigilada, exportación y modo builder.
+  - Flota, capacidades efectivas, control en tiempo de ejecución, evidencia vigilada, exportación y el modo builder, con contrato por cliente y pasaporte.
   - **La IA ya puesta**, sin clave.
 
 **Por qué esa línea y no esconder la IA en Actaira Cloud:**
@@ -869,8 +939,8 @@ No se recorta el código abierto. Es el motor de adopción y los números de Git
 | Plan | Cuota de IA |
 |---|---|
 | Prueba | Tope en euros por cuenta y tope global mensual (ver "Cómo la prueba gratuita nunca da pérdidas") |
-| Team y Builder | Uso razonable incluido |
-| Enterprise | Clave propia o modelo propio si lo exige su política |
+| Builder y Team | Uso razonable incluido |
+| Enterprise (backlog) | Clave propia o modelo propio si lo exige su política |
 
 **Soporte y disponibilidad, dicho con honestidad:**
 
@@ -922,7 +992,8 @@ La plataforma self-serve se sirve desde el dominio que ya tienes, con subdominio
 |---|---|---|---|
 | `actaira.com` | Web pública: qué hace, demo, precios, blog, el estudio | Página estática en Cloudflare Pages (sustituye al servidor de Hetzner) | 0 |
 | `docs.actaira.com` | Documentación de la CLI, la Action y la plataforma | Estática, generada desde el repo | 0 |
-| `app.actaira.com` | Actaira Cloud: alta con GitHub, flota, diff, alertas, informe por cliente, cobro | Azure Container Apps en la UE, con escala a cero (ADR 16) | Casi 0 sin usuarios; cubierto al principio por créditos de Microsoft for Startups |
+| Registro público de servidores MCP | Web estática generada desde `actaira-kb`: qué hace cada tool, lo declarado por el servidor frente a lo potencial según la base de conocimiento y el historial por versión, sin puntuaciones | GitHub Pages de `actaira-kb`; un dominio propio solo si Marcos lo pide | 0 |
+| `app.actaira.com` | Actaira Cloud: alta con GitHub, flota, diff, alertas, contrato por cliente y pasaporte, cobro | Azure Container Apps en la UE, con escala a cero (ADR 16) | Casi 0 sin usuarios; cubierto al principio por créditos de Microsoft for Startups |
 | `status.actaira.com` | Página de estado con el SLO | Servicio gratuito o estática | 0 |
 | `github.com/actaira` | Núcleo abierto | GitHub | 0 |
 
@@ -986,7 +1057,7 @@ La plataforma self-serve se sirve desde el dominio que ya tienes, con subdominio
   - si puedes probar que no hace X;
   - qué pasó en este incidente y cómo se revoca esta capacidad.
 
-  Actaira les deja responder con un informe o una página de estado de evidencia que pueden enseñar y revender, así que mejora su propio producto. La venta es entre técnicos (tú con su CTO), que sí puedes hacer solo. Cada builder que enseña su página a sus clientes vende Actaira por ti.
+  Actaira les deja responder con el contrato y el pasaporte de cada agente, y más adelante con la página de estado de evidencia, que pueden enseñar y revender, así que mejora su propio producto. La venta es entre técnicos (tú con su CTO), que sí puedes hacer solo. Cada builder que enseña su página a sus clientes vende Actaira por ti.
 
 ---
 
@@ -1065,6 +1136,7 @@ Las 45 de la 1.1 están aplicadas, y también las de las revisiones de la 1.4 y 
 | **Revisión hostil de la 1.5** (25 hallazgos, 5 críticos): decisión pendiente, cuña que ya no es exclusiva, nombre ocupado, demo que en repos reales no saldría, adopción que no se podía medir | Fase previa sin código con decisión escrita, nombre y conversaciones con builders; cuña reescrita en semántica de capacidades; tools de MCP desde el paquete fijado y medición en el corpus; método de medición publicado; primer producto de pago en una frase; precios reducidos a lo vendible; marcos aplazados sacados de C7 y C9; textos viejos alineados |
 | **Barrido de mercado de la 1.5** (20 features) | En la fase 1: flujos tóxicos, SARIF, baseline con `accept`, Agent Skills, Vercel AI SDK, OWASP, deriva programada, anotaciones que mienten, procedencia del registro, pre-commit y GitLab, telemetría opt-in. Justo después: servidor MCP, playground, AI-BOM, lockfile firmado. En la fase 2: importar hallazgos de envenenamiento de tools de Snyk y Cisco, tarjetas A2A. En la fase 5, con la capa de cumplimiento: AIUC-1 y AI-CAIQ prerrellenado. Fase 6: registros de plataforma (AWS Agent Registry, Agent 365, Copilot Studio) |
 | **Decisiones de Marcos en la 1.6** | Nombre único Actaira (open source y Cloud); sin plazos en ninguna parte; prioridad al núcleo abierto y a la plataforma self-serve, que se adelanta sin runner; las señales de mercado ya no paran la construcción, solo el gasto; cumplimiento como capa (ADR 15) |
+| **Decisiones de Marcos en la 2.1** (2 de octubre de 2026) | El contrato de capacidades como idea central, con su doctrina y su reparto por épica (sección 0). Quién es quién: el desarrollador es la distribución, el builder el primer cliente de pago y Enterprise llega sin venta directa, con su plan en el backlog. `actaira inspect` y el registro público como primer lanzamiento (v0.2.0); el registro es producto, no comercial. El plan Builder de suscripción entra en la fase 2, con el precio en `config/pricing.yaml`; Team es el segundo plan. Métricas de producto en la sección 5. Frente a Snyk Agent Scan, la diferencia es la semántica y el contrato (sección 2) |
 
 **Lo que ninguna revisión elimina:**
 

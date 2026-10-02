@@ -83,9 +83,9 @@ Una lección que no se ha convertido en algo que se comprueba solo sigue siendo 
 - dónde se comprueba: lint:scripts/harness/check-personal.sh, test:scripts/harness/tests/personal_test.sh (el correo de contacto, en `test_project_contact_email_passes_outside_code`, `test_other_personal_email_fails_next_to_the_contact_email`, `test_contact_email_fixed_in_code_fails` y `test_contact_email_without_its_config_fails`) y test:scripts/harness/tests/merge-pr_test.sh::test_refuses_a_squash_message_with_personal_data
 
 ## L-009 Un contador solo da número si se ha visto todo lo que podría cambiarlo
-- nace de: F-0017
-- regla: es la doctrina "nunca inferir lo no observado" de `CLAUDE.md`, aplicada a los contadores. Antes de dar un número o un estado se lista lo que podría cambiarlo: fuentes, partes saltadas, entradas `unresolved`, llamadas que nada ve. Si algo de eso no está observado, se dice qué falta en vez del número
-- dónde se comprueba: regla:.claude/rules/cobertura.md (pendiente de guardia automática: los tests con nombre de `docs/cobertura.md`, que escribe cada épica)
+- nace de: F-0017, F-0029
+- regla: es la doctrina "nunca inferir lo no observado" de `CLAUDE.md`, aplicada a los contadores. Antes de dar un número o un estado se lista lo que podría cambiarlo: fuentes, partes saltadas, entradas `unresolved`, llamadas que nada ve. Si algo de eso no está observado, se dice qué falta en vez del número. Vale también para lo que ve un tercero: un pasaporte, un badge o un informe nunca dicen "cumple" (F-0029)
+- dónde se comprueba: regla:.claude/rules/cobertura.md, que se carga con el código, `docs/cobertura.md`, el plan y las épicas (pendiente de guardia automática: los tests con nombre de `docs/cobertura.md` y de la E3, que escribe cada épica)
 
 ## L-010 Un fichero generado que la CI comprueba se prueba contra el árbol de la CI
 - nace de: F-0018

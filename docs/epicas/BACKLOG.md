@@ -12,6 +12,7 @@
 | Comentario en merge requests de GitLab | Usuarios de GitLab | Token de proyecto o de grupo |
 | Windows nativo | Petición de usuarios | Pipe con ACL; firma con SignPath Foundation |
 | BYOC y SCIM | Clientes Enterprise | Plano de control en la nube del cliente |
+| Plan Enterprise | Que haya equipo (decisión de Marcos del 2026-10-02) | Sin venta directa: Enterprise llega por adopción interna o por integraciones que exportan el contrato (JSON estable, SARIF, AI-BOM). Incluye BYOC, SCIM, retención larga, la capa de cumplimiento completa y la atestación SOC 2 o ISO 27001 (`docs/PLAN.md`, sección 9) |
 | OSCAL y marcos en backlog (ENS, NIS2, DORA, RGPD, NIST AI RMF) | Un cliente lo pide | Anexo DORA y LEI solo con cliente financiero |
 | PDF del informe generado en el servidor | Clientes que lo exigen | Coste medido antes de añadir Chromium sin interfaz |
 | Azure Marketplace | Clientes que compran por Marketplace | Requisitos de la oferta SaaS de Microsoft comprobados antes de empezar |

@@ -349,3 +349,27 @@ Cada fallo encontrado (test en rojo que no era esperado, bug, hallazgo crítico 
   - Rama `e1/paso-2a-parser`.
 - guardia: test:scripts/harness/tests/guard-git_test.sh::test_orders_in_claude_md_and_skills_pass_the_guard
 - lección: L-014.
+
+## F-0028 El registro público llamaba "detectado" a lo potencial
+- fecha: 2026-10-02
+- épica y paso: E1 / 1.2c, ronda adversarial única (crítico 1)
+- síntoma: la E2 (paso 2.3) y el plan decían que el registro público enseña "lo declarado frente a lo detectado", con lo detectado definido como el efecto de la base, los flujos tóxicos y las anotaciones que mienten. Eso es lo potencial: se mezclaban dos de las tres palabras que la doctrina 2 de `CLAUDE.md` separa. Además, las tools de una instantánea pública ni siquiera cuentan como detectadas (`docs/cobertura.md`).
+- causa raíz: la frase venía literal del encargo, y se copió sin traducirla al vocabulario de la doctrina. Ninguna regla de `.claude/rules/` se carga al editar el plan o las épicas, así que nada recordaba las tres palabras al escribirlas.
+- corrección:
+  - la E2 y el plan dicen "lo declarado por el servidor frente a lo potencial según la base de conocimiento", sin mezclarlos, y `inspect` enseña lo de la base como potencial y las tools de la instantánea como tales;
+  - la regla nueva `.claude/rules/producto.md`, que se carga con el plan, las épicas, la especificación y el código, fija las tres palabras y pide traducir un encargo que las use con otro sentido, anotándolo como discrepancia.
+  - Rama `e1/paso-1.2c-contrato`.
+- guardia: regla:.claude/rules/producto.md
+- lección: un encargo se escribe con el vocabulario de la doctrina; si usa otro, se traduce y se anota la diferencia.
+
+## F-0029 El pasaporte daba un "cumple" que nadie puede observar entero
+- fecha: 2026-10-02
+- épica y paso: E1 / 1.2c, ronda adversarial única (crítico 2)
+- síntoma: el pasaporte v1 de la E3 enseñaba "si el agente lo cumple" y la E5 "si la credencial cumple el contrato", y el badge no entraba en el test de veredicto. En la E3 las fuentes MCP siguen `not_configured` y hay `unresolved` y `effect: unknown`, así que "cumple" sería un veredicto de conjunto sobre lo no visto.
+- causa raíz: es L-009 otra vez (F-0017): un estado que se da sin haber visto todo lo que podría cambiarlo. La regla `.claude/rules/cobertura.md` lo prohíbe, pero solo se cargaba con el código y `docs/cobertura.md`, no al escribir el plan ni las épicas, y no nombraba el pasaporte ni el badge.
+- corrección:
+  - el pasaporte y la E5 dicen las rupturas vistas en lo observado, con N de M fuentes y lo no visto al lado, nunca "cumple"; el badge no lleva estado y entra en el test;
+  - `.claude/rules/cobertura.md` se carga también con `docs/PLAN.md` y `docs/epicas/`, y nombra el pasaporte, el badge, el informe y las páginas para terceros.
+  - Rama `e1/paso-1.2c-contrato`.
+- guardia: regla:.claude/rules/cobertura.md
+- lección: L-009 vale también para lo que se enseña a terceros (pasaporte, badge, informe), y una regla de doctrina se carga donde se escribe la doctrina, no solo donde se programa.
