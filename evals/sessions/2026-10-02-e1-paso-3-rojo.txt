@@ -1,0 +1,11 @@
+# E1 paso 1.3: tests en rojo antes de construir
+fecha: 2026-10-02T14:36:24Z
+commit: 766328c más los tests nuevos sin commitear
+comando: go test -count=1 ./pkg/...
+
+FAIL	github.com/actaira/actaira/pkg/coverage [build failed]
+ok  	github.com/actaira/actaira/pkg/extract/treesitter	12.084s
+FAIL	github.com/actaira/actaira/pkg/intent [build failed]
+FAIL	github.com/actaira/actaira/pkg/lock [build failed]
+FAIL	github.com/actaira/actaira/pkg/model [build failed]
+FAIL

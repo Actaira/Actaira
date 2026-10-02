@@ -324,7 +324,7 @@ Cada arista lleva fuente, fecha y nivel de confianza:
 - `conditional`: depende de un contexto que no se conoce.
 - `effective`: respaldada por una respuesta de API guardada.
 - `observed`: vista en tiempo de ejecución.
-- `inferred`: propuesta por la IA. Se enseña, pero no cuenta para ninguna decisión ni evidencia hasta que la confirma una persona o la base de conocimiento.
+- `inferred`: propuesta por la IA, o por una regla de Actaira sin que la haya confirmado nadie, como el borrador de contrato de `actaira intent init` (ADR 0004). Se enseña, pero no cuenta para ninguna decisión ni evidencia hasta que la confirma una persona o, si no es un contrato, la base de conocimiento.
 
 **Estados de evidencia:** `vigente`, `caducada`, `insuficiente`, `no_aplica` y `error`.
 
