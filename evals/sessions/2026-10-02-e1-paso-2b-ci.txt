@@ -1,0 +1,31 @@
+# E1 paso 1.2b: ejecución real en la CI del PR #7
+fecha: 2026-10-02T14:09:01Z
+commit de la rama: b4935dd61ba819795f0dc89951f31197bc240b90 (la CI corre sobre el commit de fusión del PR)
+workflow: release.yml, run 37017524605; checks de gh pr checks 7:
+
+release-dry-run	pass	6s
+release-publish	skipping	0
+check	pass	2m9s
+check-macos	pass	43s
+check-ubuntu-26	pass	2m10s
+release-build (amd64, ubuntu-24.04)	pass	24s
+release-build (arm64, ubuntu-24.04-arm)	pass	20s
+
+## release-build (arm64, ubuntu-24.04-arm)
+build-static: dist/actaira-linux-arm64, estático; dice "actaira dryrun-110303ddf688" en alpine:3.24 y en ubuntu:20.04
+
+## release-dry-run: salida de la firma de prueba (cada llamada a cosign con sudo unshare -n)
+Private key written to cosign.key
+Public key written to cosign.pub
+Flag --tlog-upload has been deprecated, prefer using a --signing-config file with no transparency log services
+Using payload from: checksums.txt
+Signing artifact...
+Wrote bundle to file checksums.txt.sigstore.json
+WARNING: Skipping tlog verification is an insecure practice that lacks transparency and auditability verification for the blob.
+Verified OK
+actaira-linux-amd64: OK
+actaira-linux-arm64: OK
+WARNING: Skipping tlog verification is an insecure practice that lacks transparency and auditability verification for the blob.
+Error: failed to verify signature: could not verify message: invalid signature when validating ASN.1 encoded signature
+error during command execution: failed to verify signature: could not verify message: invalid signature when validating ASN.1 encoded signature
+Cleaning up orphan processes
