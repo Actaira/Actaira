@@ -178,7 +178,8 @@ test_dry_run_signs_with_an_ephemeral_key_and_no_transparency_log() {
   assert_eq "$direct" "" "llamadas directas a cosign, sin unshare"
   assert_contains "$block" "--key cosign.key" "firma con la clave efímera"
   assert_contains "$block" "--key cosign.pub" "verificación con la clave efímera"
-  assert_contains "$block" "tampered" "prueba con un byte cambiado"
+  assert_contains "$block" "$(printf "cp checksums.txt tampered.txt\n          printf 'x' >> tampered.txt")" "copia con un byte cambiado"
+  assert_contains "$block" "verify-blob --key cosign.pub --insecure-ignore-tlog=true --bundle checksums.txt.sigstore.json tampered.txt" "verificación de la copia cambiada"
   assert_contains "$block" "could not verify message" "el motivo del fallo con un byte cambiado"
   assert_not_contains "$block" "certificate-identity" "la prueba no usa identidad de Fulcio"
 }
