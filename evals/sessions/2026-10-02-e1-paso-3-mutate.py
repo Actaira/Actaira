@@ -96,7 +96,7 @@ MUTATIONS = [
      "\tif t.Effect != model.EffectUnknown {\n", "\tif false {\n",
      "./pkg/lock", "TestLockRejectsWhatTheModelDoesNotAllow"),
     ("intent: no caduca", INT,
-     "\t\tcase c.Expires < d:\n", "\t\tcase false:\n",
+     "\t\tcase c.Expires < d:\n", "\t\tcase c.Expires < d && false:\n",
      "./pkg/intent", "TestDraftOrExpiredIntentDoesNotCount"),
     ("intent: la misma capacidad en allow y deny", INT,
      '\t\t\tif list.name == "deny" && allowed[cap] {\n', "\t\t\tif false {\n",
@@ -166,7 +166,7 @@ MUTATIONS = [
      "\t\tif sources[i].Kind == s.Kind && sources[i].Name == s.Name {\n", "\t\tif false {\n",
      "./pkg/coverage", "TestCoverageGroupsSourcesByKindAndName"),
     ("coverage: entradas repetidas", COV,
-     "\t\tif x == e {\n\t\t\treturn entries\n", "\t\tif false {\n\t\t\treturn entries\n",
+     "\t\tif x == e {\n\t\t\treturn entries\n", "\t\tif x == e && false {\n\t\t\treturn entries\n",
      "./pkg/coverage", "TestCoverageCountsEachUnresolvedLocationOnce"),
     ("coverage: un directorio saltado solo por su ruta exacta", COV,
      '\treturn file == path || strings.HasPrefix(file, strings.TrimSuffix(path, "/")+"/")', '\treturn file == path || strings.HasPrefix(file, "")&&false',
@@ -189,8 +189,8 @@ MUTATIONS = [
     ("lock: un contrato inválido entra", LOCK,
      "\t\tif err := l.Intent.Validate(); err != nil {\n", "\t\tif err := l.Intent.Validate(); err != nil && false {\n",
      "./pkg/lock", "TestLockRejectsAnOrphanOrInvalidContract"),
-    ("esquema del lockfile: ejes sin contar", LSCH,
-     '"minItems": 7,\n                "maxItems": 7,', '"minItems": 0,',
+    ("esquema del lockfile: effective con valor", LSCH,
+     '{ "contains": { "properties": { "axis": { "const": "effective" } }, "required": ["no_source"] }, "minContains": 1, "maxContains": 1 }', '{ "contains": { "properties": { "axis": { "const": "effective" } } }, "minContains": 1, "maxContains": 1 }',
      "./pkg/lock", "TestLockSchemaAndGoAgree"),
 ]
 

@@ -151,15 +151,41 @@ func shuffledParts(p parts, r *rand.Rand) parts {
 	return s
 }
 
+// shuffledCoverage shuffles the lists of a computed coverage block, as another
+// caller of Encode could hand them over.
+func shuffledCoverage(c coverage.Coverage, r *rand.Rand) coverage.Coverage {
+	s := c
+	s.Agents = shuffle(r, c.Agents)
+	for i := range s.Agents {
+		s.Agents[i].Axes = shuffle(r, s.Agents[i].Axes)
+		s.Agents[i].Unresolved = shuffle(r, s.Agents[i].Unresolved)
+		s.Agents[i].Sources = shuffle(r, s.Agents[i].Sources)
+		for j := range s.Agents[i].Sources {
+			s.Agents[i].Sources[j].Locations = shuffle(r, s.Agents[i].Sources[j].Locations)
+		}
+	}
+	s.Repo.Sources = shuffle(r, c.Repo.Sources)
+	for j := range s.Repo.Sources {
+		s.Repo.Sources[j].Locations = shuffle(r, s.Repo.Sources[j].Locations)
+		s.Repo.Sources[j].Extractors = shuffle(r, s.Repo.Sources[j].Extractors)
+	}
+	s.Repo.Unresolved = shuffle(r, c.Repo.Unresolved)
+	s.Repo.Skipped = shuffle(r, c.Repo.Skipped)
+	return s
+}
+
 // F-0033: the same model gives the same bytes whatever the order of every
-// list, with the coverage computed again from the shuffled input each time
+// list: the input is shuffled and the coverage computed again from it, and
+// then the lists of the computed coverage are shuffled too
 // (docs/cobertura.md, total order; E1 step 1.3).
 func TestLockIsTheSameWhateverTheOrderOfItsInputs(t *testing.T) {
 	p := sampleParts()
 	want := encode(t, build(t, p))
 	r := rand.New(rand.NewPCG(1, 2))
 	for i := 0; i < 50; i++ {
-		if got := encode(t, build(t, shuffledParts(p, r))); !bytes.Equal(got, want) {
+		l := build(t, shuffledParts(p, r))
+		l.Coverage = shuffledCoverage(l.Coverage, r)
+		if got := encode(t, l); !bytes.Equal(got, want) {
 			t.Fatalf("run %d: the lockfile depends on the order of its inputs:\nwant %s\ngot  %s", i, want, got)
 		}
 	}

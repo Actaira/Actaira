@@ -158,9 +158,10 @@ func Parse(data []byte) (Manifest, error) {
 }
 
 // noNull rejects a null anywhere in the document: the schema never allows it,
-// and decoding it would look like a missing field.
+// and decoding it would look like a missing field. Repeated names and invalid
+// UTF-8 are left to jsonv2.Unmarshal, the one place that rejects them.
 func noNull(data []byte) error {
-	dec := jsontext.NewDecoder(bytes.NewReader(data))
+	dec := jsontext.NewDecoder(bytes.NewReader(data), jsontext.AllowDuplicateNames(true), jsontext.AllowInvalidUTF8(true))
 	for {
 		tok, err := dec.ReadToken()
 		if errors.Is(err, io.EOF) {
